@@ -1,0 +1,185 @@
+[
+  { 
+    "type": "title-group-number",
+    "text": "Список",
+    "registerIndex": [0, 16, 17, 18],
+    "prefixes": ["Iреак.", "Uном. ", "Rшунт.", "Istat"],
+    "postfixes": ["W", "V", "Om", "   mA"],
+    "x": 620,
+    "y": 180,
+    "description": "Текст + и массив чисел"
+  },
+  { 
+    "registerIndex": 16,
+    "description": "Ввод значения",
+    "type": "title-input-send",
+    "text": "Регистр №16",
+    "prefix": "Reg16",
+    "x": 20,
+    "y": 470
+  },
+  {
+    "registerIndex": 17,
+    "description": "Ввод значения",
+    "type": "title-input-send",
+    "text": "Регистр №17",
+    "x": 240,
+    "y": 470
+  },
+  {
+    "registerIndex": 0,
+    "description": "Текст + число",
+    "type": "title-number",
+    "text": "Реактивный ток №0",
+    "prefix": "Iреак.",
+    "postfix": "A",
+    "x": 5 ,
+    "y": 5
+  },
+  {
+    "register": {"address": "0", "type": "uint16"},
+    "description": "Текст + число",
+    "type": "title-number",
+    "text": "Реактивный ток №0",
+    "prefix": "Iреак.",
+    "postfix": "A",
+    "x": 5,
+    "y": 5
+  },
+  {
+    "regAddress": 0,
+    "regType": "uint16",
+    "description": "Текст + число",
+    "type": "title-number",
+    "text": "Реактивный ток №0",
+    "prefix": "Iреак.",
+    "postfix": "A",
+    "x": 5,
+    "y": 5
+  },
+  {
+    "regAddress": 1,
+    "regByte": 7,
+    "regType": "byte",
+    "description": "Кнопка форсировки",
+    "type": "toggle-button",
+    "text": "Вкл",
+    "prefix": "Форсировка",
+    "x": 50,
+    "y": 50
+  },
+  {
+    "registerIndex": 1,
+    "description": "Текст + число",
+    "type": "title-number",
+    "prefix": "REG1   = ",
+    "text": "Напряжение статора №1",
+    "x": 220,
+    "y": 160
+  },
+  {
+    "registerIndex": 2,
+    "description": "Текст + число",
+    "type": "title-number",
+    "text": "Ток статора №2",
+    "x": 455,
+    "y": 160
+  },
+  {
+    "registerIndex": 3,
+    "description": "Текст + число",
+    "type": "title-number",
+    "text": "Напряжение ротора №3",
+    "x": 227,
+    "y": 240
+  },
+  {
+    "registerIndex": 4,
+    "description": "Текст + число",
+    "type": "title-number",
+    "text": "Ток ротора №4",
+    "x": 455,
+    "y": 240
+  },
+
+  {
+    "registerIndex": "-",
+    "description": "Просто текст",
+    "type": "only-title",
+    "text": "АНИКРОН ТМ-03/тм-08",
+    "x": 307,
+    "y": 20
+  },
+  {
+    "registerIndex": "-",
+    "prefix": "ФорсЯровка:",
+    "description": "Кнопка",
+    "type": "toggle-button",
+    "x": 10,
+    "y": 350,
+    "state": true
+  },
+  {
+    "registerIndex": "-",
+    "description": "Просто текст",
+    "type": "only-title",
+    "text": "Форсировка",
+    "x": 320,
+    "y": 354
+  },
+  {
+    "registerIndex": "-",
+    "description": "Кнопка",
+    "type": "toggle-button",
+    "x": 227,
+    "y": 405,
+    "state": false
+  },
+  {
+    "registerIndex": "-",
+    "description": "Просто текст",
+    "type": "only-title",
+    "text": "Опробование",
+    "x": 320,
+    "y": 409
+  },
+  {
+    "registerIndex": "-",
+    "description": "Просто текст",
+    "type": "only-title",
+    "text": "Регистры №16 и №17:",
+    "x": 570,
+    "y": 354
+  },
+  {
+    "registerIndex": 16,
+    "description": "Просто число",
+    "prefix":"REG16 = ",
+    "postfix":"A",
+    "type": "only-number",
+    "x": 600,
+    "y": 520
+  },
+  {
+    "registerIndex": 0,
+    "description": "Просто число",
+    "type": "only-number",
+    "x": 500,
+    "y": 400
+  },
+  {
+    "registerIndex": 17,
+    "description": "Просто число",
+    "type": "only-number",
+    "x": 680,
+    "y": 400
+  },
+  {
+    "registerIndex": "-",
+    "description": "Просто текст",
+    "type": "only-title",
+    "text": "- Чё 300? \n - А че приборы?",
+    "x": 600,
+    "y": 455
+  }
+]
