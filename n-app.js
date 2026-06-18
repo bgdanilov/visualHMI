@@ -81,9 +81,10 @@ function initializeDataSourcesAndParams() {
 function bufferInit() {
     const bufferSize = numRegistersToRead * bytesPerRegister;
     testBuffer = Buffer.alloc(bufferSize);
-    testBuffer.writeUInt16LE(100, 0); // Регистр 0 (смещение 0)
-    testBuffer.writeUInt16LE(200, 2); // Регистр 1 (смещение 2)
-    testBuffer.writeUInt16LE(300, 4); // Регистр 2 (смещение 4)
+    testBuffer.writeUInt8(0, 0); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 1); // Регистр 1 (смещение 2)
+    testBuffer.writeUInt8(184, 2); // Регистр 2 (смещение 4)
+    testBuffer.writeUInt8(64, 3); // Регистр 2 (смещение 4)
 
     return testBuffer;
 }
@@ -279,6 +280,12 @@ app.post('/api/registers/:regId', (req, res) => {
     }
 
     try {
+        
+        
+        
+        
+        
+        
         // --- Логика определения смещения и валидации ---
         const BYTES_PER_REGISTER = 2; // Предполагаем 16-бит регистры
         const START_REGISTER_NUMBER = 0; // Или тот номер, с которого начинаются ваши регистры

@@ -3,7 +3,7 @@
 let renderArea = document.getElementById('render-area');
 const projectConfig = 'projectConfig.json';
 const blocksConfig = 'blocksData2.json'; // Путь к API, который отдает JSON настроек блоков.
-const updateIntervalMs = 100; // Интервал обновления в миллисекундах
+const updateIntervalMs = 500; // Интервал обновления в миллисекундах
 let isEditMode = false;
 
 /** Создает новый DOM-элемент блока. */
@@ -219,22 +219,49 @@ function createBlock2(blockData) {
             <div class="content">
                 <span class="title">${blockData.text}</span>
             </div>
-            <div class="content">
-                <input type="text" class="input-value-field" id="input-reg-${blockData.registerIndex}" placeholder="Введите значение">
+            <div class="content" data-reg="${blockData.regAddress}" data-type="${blockData.regType}">
+                <input type="text" class="input-value-field" id="input-reg-${blockData.regAddress}" placeholder="Введите значение">
             </div>
             <div class="content">
                 <button class="modbus-send-button" 
-                    data-reg="${blockData.registerIndex}" 
+                    data-reg="${blockData.regAddress}" 
                     data-command="writeSingleRegister"
-                    data-target-element="output-display-id-${blockData.registerIndex}"> 
+                    data-target-element="output-display-id-${blockData.regAddress}"> 
                 Отправить
             </button>
             </div>`;
             break;
-        default:
-            console.warn(`Неизвестный тип блока: ${blockData.type} для ID ${id}`);
-            blockElement.textContent = `Неизвестный тип: ${blockData.type}`;
-            return null; // Возвращаем null, если тип неизвестен
+        case 'title-input':
+            text = blockData.text !== undefined ? blockData.text : '';
+            prefix = blockData.prefix !== undefined ? blockData.prefix : '';
+            postfix = blockData.postfix !== undefined ? blockData.postfix : '';
+            blockElement.innerHTML += `
+                <div class="content">
+                    <span class="title">${text}</span>
+                </div>
+                <div class="content" data-reg="${blockData.regAddress}" data-type="${blockData.regType}">
+                    <span class="prefix">${prefix}</span>
+                    <input type="text" class="input-value-field" placeholder="Введите значение">
+                    <span class="prefix">${postfix}</span>
+                </div>`;
+            break;
+        case 'send-button':
+            blockElement.innerHTML += `
+                <div class="content">
+                    <button class="modbus-send-button" 
+                        data-reg="${blockData.regAddress}" 
+                        data-command="writeSingleRegister"
+                        data-target-element="output-display-id-${blockData.regAddress}"> 
+                        ${blockData.text}
+                </button>
+                </div>`;
+            break;
+        // default:
+        //     console.warn(`Неизвестный тип блока: ${blockData.type} для ID ${id}`);
+
+        //    break;
+        //blockElement.textContent = `Неизвестный тип: ${blockData.type}`;
+        //return null; // Возвращаем null, если тип неизвестен
     }
     return blockElement;
 }
@@ -326,6 +353,7 @@ async function updateUI() {
 }
 
 let modbusDisplaySpanCache = new Map();
+let modbusDisplayInputCache = new Map();
 let allSpanElementsNodeList;
 
 /** Собираем Map элементов страницы для вывода в них данных Modbus */
@@ -372,6 +400,83 @@ function collectModbusDisplayElements(renderArea) {
     console.log("modbusDisplaySpanCache", modbusDisplaySpanCache);
     return modbusDisplaySpanCache;
 }
+
+
+function collectModbusElements(renderArea) {
+    if (!renderArea) {
+        console.error("Ошибка: renderAreaElement не определен для сбора элементов.");
+        return new Map();
+    }
+
+    modbusDisplaySpanCache.clear(); // Очищаем перед новым сбором
+    modbusDisplayInputCache.clear(); // Очищаем перед новым сбором
+
+    // 1. Получаем все div.content, у которых есть data-reg кроме -
+    const blockDivs = renderArea.querySelectorAll('div.content[data-reg]:not([data-reg="-"])');
+    //console.log(`Найдено ${blockDivs.length} родительских div.block-content с data-reg.`);
+
+    if (blockDivs.length === 0) {
+        console.warn("Внимание: Не найдено ни одного элемента '.block-content[data-reg]'. Проверьте HTML структуру и селектор.");
+    }
+
+    // 2. Для каждого такого div находим его span.number и группируем по data-reg
+    blockDivs.forEach(parentDiv => {
+        let regId = parentDiv.dataset.reg;
+        let regType = parentDiv.dataset.type;
+        // console.log("regType", regType);
+        // console.log('  Все атрибуты:', Array.from(parentDiv.attributes).map(a => `${a.name}=${a.value}`));
+
+        // Находим span.number внутри этого родительского div
+        const span = parentDiv.querySelector('span.number');
+        // Находим input.number внутри этого родительского div
+        const input = parentDiv.querySelector('input');
+
+        if (span) {
+            // Получаем текущий массив спанов для этого regId
+            const existingSpans = modbusDisplaySpanCache.get(regId);
+
+            if (existingSpans) {
+                // Если массив уже существует, добавляем текущий span в него
+                existingSpans.spans.push(span);
+                // Обновляем тип последним значением
+                existingSpans.registerType = regType;
+            } else {
+                // Если массива еще нет, создаем новый массив с текущим span
+                modbusDisplaySpanCache.set(regId, {
+                    "registerType": regType,
+                    "spans": [span]
+                });
+            }
+            // --- Конец логики ---
+        } else if (input) {
+            // Получаем текущий массив инпутов для этого regId
+            const existingInputs = modbusDisplayInputCache.get(regId);
+
+            if (existingInputs) {
+                // Если массив уже существует, добавляем текущий span в него
+                existingInputs.inputs.push(input);
+                // Обновляем тип последним значением
+                existingInputs.registerType = regType;
+            } else {
+                // Если массива еще нет, создаем новый массив с текущим инпутом
+                modbusDisplayInputCache.set(regId, {
+                    "registerType": regType,
+                    "inputs": [input]
+                });
+            }
+            // --- Конец логики ---
+        } else {
+            console.warn(`В div.block-content[data-reg="${regId}"] не найден span.display-number.`);
+        }
+    });
+
+    console.log(`Заполнено ${modbusDisplaySpanCache.size} уникальных register IDs в кэш (Map).`);
+    console.log("modbusDisplaySpanCache", modbusDisplaySpanCache);
+    console.log("modbusDisplayInputCache", modbusDisplayInputCache);
+    return modbusDisplaySpanCache;
+}
+
+
 
 function collectModbusDisplayElements2(renderArea) {
     if (!renderArea) {
@@ -467,46 +572,113 @@ async function pollModbusUpdates() {
 }
 
 async function pollModbusUpdates2() {
-    // console.log("Запрос данных для обновления...");
     try {
         const response = await fetch('/api/modbus');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        // Используем Uint8Array для сырых байт
         const bytes = new Uint8Array(await response.arrayBuffer());
-        // console.log("bytes", bytes);
+        const dataView = new DataView(bytes.buffer);
 
-        if (ArrayBuffer.isView(bytes) && !Array.isArray(bytes)) {
-            // это типизированный массив (Uint8Array, Int16Array и т.д.)
-            bytes.forEach(regInfo => {
-                // Получаем массив всех span-элементов, связанных с этим regInfo.reg
-                const spansToUpdate = modbusDisplaySpanCache.get(regInfo.reg);
+        for (const [registerNumber, regInfo] of modbusDisplaySpanCache) {
+            // Вычисляем смещение (предполагаем, что регистры нумеруются с 40001)
+            const offset = registerNumber * 2;
 
-                //console.log("modbusDisplaySpanCache", modbusDisplaySpanCache);
-                // console.log("spans", spansToUpdate);
+            // Проверка, что данные не выходят за границы
+            if (offset + getBytesCount(regInfo.registerType) > bytes.length) {
+                console.warn(`Недостаточно данных для регистра ${registerNumber}`);
+                continue;
+            }
 
-                if (spansToUpdate && Array.isArray(spansToUpdate)) {
-                    // Проходим по каждому спану в массиве и обновляем его
-                    spansToUpdate.forEach(span => {
-                        if (regInfo.state !== undefined) {
-                            span.innerHTML = regInfo.state;
+            // === SWITCH ===
+            const registerType = regInfo?.registerType;
+
+            if (!registerType || typeof registerType !== 'string') {
+                //console.warn(`Регистр ${registerNumber}: некорректный registerType`);
+                continue;
+            }
+
+            let value;
+
+            switch (registerType) {
+                case 'u2': value = dataView.getUint16(offset, true); break;
+                case 's2': value = dataView.getInt16(offset, true); break;
+                case 'f4': value = dataView.getFloat32(offset, true); break;
+                default:
+                    if (registerType.startsWith('b')) {
+                        const bitIndex = parseInt(registerType.substring(1));
+                        if (bitIndex >= 0 && bitIndex <= 15) {
+                            value = (dataView.getUint16(offset, true) >> bitIndex) & 1;
                         } else {
-                            span.innerHTML = '--'; // Значение state отсутствует
+                            console.warn(`Неверный бит: ${bitIndex} в ${registerType}`);
+                            value = undefined;
                         }
-                    });
+                    } else {
+                        console.warn(`Неизвестный тип: ${registerType}`);
+                        value = undefined;
+                    }
+            }
+
+            // Обновляем все спаны для этого регистра
+            for (const span of regInfo.spans) {
+                if (value !== undefined && !isNaN(value)) {
+                    // Форматирование для float
+                    if (regInfo.registerType === 'f4') {
+                        span.innerHTML = value.toFixed(2);
+                    } else {
+                        span.innerHTML = value;
+                    }
                 } else {
-                    // console.warn(`Не найдено ни одного спана для обновления по регистру "${regInfo.reg}".`);
+                    span.innerHTML = '--';
                 }
-            });
-        } else {
-            console.warn("Полученные данные регистров не являются массивом.");
+            }
         }
 
     } catch (error) {
         console.error('Ошибка при загрузке обновлений состояний регистров:', error);
     }
 }
+
+// Вспомогательная функция
+function getBytesCount(registerType) {
+    if (registerType === 'f4') return 4;
+    return 2; // u2, s2, bx
+}
+
+
+
+// ========== ЗАПИСЬ РЕГИСТРОВ ==========
+async function sendModbusData2(regId, valueToSend) {
+    console.log(`Отправка в Modbus: Регистр=${regId}, Значение=${valueToSend}`);
+
+    try {
+        const response = await fetch(`/api/registers/${regId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ state: valueToSend })
+        });
+
+        if (!response.ok) {
+            let errorMsg = `HTTP error ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorMsg;
+            } catch (e) { }
+            throw new Error(errorMsg);
+        }
+
+        const result = await response.json();
+        console.log('Modbus write response:', result);
+        return result;
+
+    } catch (error) {
+        console.error('Ошибка при отправке данных в Modbus:', error);
+        throw error;
+    }
+}
+
 
 // Функция для отправки данных в Modbus (будет вызываться из обработчика)
 async function sendModbusData(regId, valueToSend) {
@@ -594,47 +766,9 @@ function setupModbusSendHandlers() {
                 numericValue = valueToSend; // Отправляем как есть, если не удалось преобразовать в число
             }
             // --- Отправляем данные ---
-            await sendModbusData(reg, valueToSend);
+            await sendModbusData2(reg, valueToSend);
         });
     });
-}
-
-// --- Новый код для измерения времени ---
-
-let modbusUpdateTimer = null; // Для хранения ID интервала, чтобы его можно было остановить при необходимости
-
-/**
- * Обертка для функции pollModbusUpdates, которая измеряет время ее выполнения.
- */
-async function timedPollModbusUpdates() {
-    // Записываем время перед началом выполнения
-    const startTime = performance.now();
-    console.log("DEBUG: startTime is:", typeof startTime, startTime);
-
-    try {
-        // Вызываем оригинальную функцию
-        await pollModbusUpdates2();
-    } catch (error) {
-        // Обрабатываем ошибки, если pollModbusUpdates может их выбросить
-        console.error("Ошибка при выполнении pollModbusUpdates:", error);
-    } finally {
-        // Записываем время после завершения выполнения (даже если была ошибка)
-        const endTime = performance.now();
-        console.log("DEBUG: endTime is:", typeof endTime, endTime);
-
-        // Переводим в миллисекунды
-        const durationInMs = endTime - startTime;
-
-        console.log(`pollModbusUpdates выполнился(лась) за ${durationInMs} мс.`);
-
-        // ВАЖНО: Здесь можно добавить логику для определения,
-        // нужно ли останавливать интервал, если выполнение превышает допустимое время.
-        // Например:
-        // if (durationInMs > updateIntervalMs * 1.5) { // Если выполнение длится более чем в 1.5 раза дольше интервала
-        //     console.warn(`pollModbusUpdates выполняется дольше интервала (${durationInMs.toFixed(3)} мс > ${updateIntervalMs} мс). Остановка интервала.`);
-        //     clearInterval(modbusUpdateTimer);
-        // }
-    }
 }
 
 // --- ИНИЦИАЛИЗАЦИЯ ---
@@ -646,12 +780,10 @@ async function initializePage() {
         : false;
     if (isEditUIMode === false) {
         await updateUI();
-        collectModbusDisplayElements2(renderArea);
+        //collectModbusDisplayElements2(renderArea);
+        collectModbusElements(renderArea);
         setupModbusSendHandlers();
-        //setInterval(pollModbusUpdates, updateIntervalMs);
-        // --- Изменение здесь: используем timedPollModbusUpdates вместо pollModbusUpdates ---
-        modbusUpdateTimer = setInterval(timedPollModbusUpdates, updateIntervalMs);
-        // --- Конец изменения ---
+        setInterval(pollModbusUpdates2, updateIntervalMs);
 
     } else {
         setInterval(updateUI, 500);

@@ -112,7 +112,7 @@ span.number {
 
 
 /* Стиль для поля ввода */
-.title-input-send input[type="text"] {
+.title-input-send input[type="text"], .title-input input[type="text"] {
     width: calc(100% - 32px); /* Учитываем padding */
     padding: 8px;
     margin: 5px 0 10px 0;
@@ -129,7 +129,7 @@ span.number {
 }
 
 /* Стиль для кнопки "Отправить" */
-.title-input-send button {
+.title-input-send button, .send-button button {
     cursor: pointer;
     padding: 8px 15px;
     border: none;
@@ -139,6 +139,6 @@ span.number {
     transition: background-color 0.2s ease;
 }
 
-.title-input-send button:hover {
+.title-input-send button:hover, .send-button button:hover {
     background-color: #0056b3;
 }
