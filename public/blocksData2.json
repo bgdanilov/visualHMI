@@ -1,7 +1,6 @@
 [
   { 
     "regAddress": [0, 1, 2, 16, 17],
-    "regType": ["uint16", "uint16", "uint16", "uint16", "uint16"],
     "type": "title-group-number",
     "text": "Список",
     "prefixes": ["Iреак.", "Uном. ", "Rшунт.", "Istat", "P"],
@@ -11,7 +10,7 @@
     "description": "Текст + и массив чисел"
   },
   {
-    "regAddress": [16, 17],
+    "regAddress": [0, 16, 17],
     "x": 650,
     "y": 520,
     "type": "send-button",
@@ -48,7 +47,7 @@
     "description": "Кнопка-удержание"
   },
   { 
-    "regAddress": 16,
+    "regAddress": 0,
     "regType": "f4",
     "x": 20,
     "y": 470,
@@ -56,7 +55,7 @@
     "autoSend": false,
     "minValue": 0,
     "maxValue": 0,
-    "text": "Регистр №16",
+    "text": "Регистр №0",
     "description": "Ввод значения"
   },
   { 
@@ -98,13 +97,13 @@
     "description": "Текст + число"
   },
   {
-    "regAddress": 1,
-    "regType": "u2",
+    "regAddress": 0,
+    "regType": "f4",
     "regMode": "r",
-    "x": 50,
+    "x": 60,
     "y": 150,
     "type": "title-number",
-    "text": "Реактивный ток №1",
+    "text": "Реактивный ток №0",
     "prefix": "Iреак.",
     "postfix": "A",
     "description": "Текст + число"

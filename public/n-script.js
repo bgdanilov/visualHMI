@@ -7,122 +7,6 @@ const updateIntervalMs = 500; // Интервал обновления в мил
 let isEditMode = false;
 
 /** Создает новый DOM-элемент блока. */
-function createBlock(blockData) {
-    const blockElement = document.createElement('div');
-    blockElement.classList.add('block');
-    blockElement.classList.add(`${blockData.type}`); // Класс для стилизации по типу
-
-    blockElement.id = blockData.id;
-    blockElement.style.left = `${blockData.x}px`;
-    blockElement.style.top = `${blockData.y}px`;
-
-    let prefix = null;
-    let postfix = null;
-
-    switch (blockData.type) {
-        case 'only-number':
-            prefix = blockData.prefix !== undefined ? blockData.prefix : '';
-            postfix = blockData.postfix !== undefined ? blockData.postfix : '';
-            blockElement.innerHTML += `
-                <div class="content" data-reg="${blockData.registerIndex}">
-                <span class="prefix">${prefix}</span>
-                <span class="number">${blockData.value !== undefined ? blockData.value : '--'}</span>
-                <span class="postfix">${postfix}</span>
-                </div>`;
-            break;
-        case 'only-title':
-            // Обрабатываем перенос строки перед вставкой в HTML
-            let titleText = blockData.text !== undefined ? blockData.text : '';
-            titleText = titleText.replace(/\n/g, '<br>'); // Заменяем все \n на <br>
-
-            blockElement.innerHTML += `
-                <div class="content">
-                    <span class="title">${titleText}</span>
-                </div>`;
-            break;
-        case 'title-number':
-            prefix = blockData.prefix !== undefined ? blockData.prefix : '';
-            postfix = blockData.postfix !== undefined ? blockData.postfix : '';
-            blockElement.innerHTML += `
-                <div class="content">
-                        <span class="title">${blockData.text}</span>
-                </div>
-                <div class="content" data-reg="${blockData.registerIndex}">
-                        <span class="prefix">${prefix}</span>
-                        <span class="number">${blockData.value !== undefined ? blockData.value : '--'}</span>
-                        <span class="postfix">${postfix}</span>
-                </div>`;
-            break;
-        case 'title-group-number':
-            // Проверяем, является ли blockData.registerIndex массивом
-            if (Array.isArray(blockData.registerIndex)) {
-                blockElement.innerHTML += `
-                    <div class="content">
-                        <span class="title">${blockData.text}</span>
-                    </div>`;
-
-                // Если это массив, проходим по каждому элементу массива
-                blockData.registerIndex.forEach((regIdx, i) => {
-                    prefix = (blockData.prefixes && blockData.prefixes[i]) || "";
-                    postfix = (blockData.postfixes && blockData.postfixes[i]) || "";
-                    const val = (Array.isArray(blockData.value) ? blockData.value[i] : blockData.value) || "--";
-
-                    blockElement.innerHTML += `
-                <div class="content" data-reg="${regIdx}">
-                    <span class="prefix">${prefix}</span>
-                    <span class="number">${val}</span>
-                    <span class="postfix">${postfix}</span>
-                </div>
-            `;
-                });
-            } else {
-                // Если blockData.registerIndex не массив (возможно, старый формат или ошибка)
-                // Обработка как для одного значения, или сообщение об ошибке
-                console.warn(`blockData.registerIndex не является массивом. Обрабатываем как единичное значение.`);
-                blockElement.innerHTML += `
-                <div class="block-content" data-reg="${blockData.registerIndex}">
-                    <span class="text-display">${blockData.text !== undefined ? blockData.text : 'Число:'}</span>
-                    <span class="number-display">${blockData.value !== undefined ? blockData.value : '--'}</span>
-                </div>
-            `;
-            }
-            // Здесь не нужно setup, только установка начального значения
-            break;
-        case 'toggle-button':
-            prefix = blockData.prefix !== undefined ? blockData.prefix : '';
-            blockElement.innerHTML += `
-                <div class="content" data-reg="${blockData.registerIndex}">
-                <span class="prefix btn">${prefix}</span>
-                <button class="toggle-button off">Выкл</button>
-                </div>
-            `;
-            setupToggleButton(blockElement, blockData.registerIndex);
-            break;
-        case 'title-input-send':
-            blockElement.innerHTML += `
-            <div class="content">
-                <span class="title">${blockData.text}</span>
-            </div>
-            <div class="content">
-                <input type="text" class="input-value-field" id="input-reg-${blockData.registerIndex}" placeholder="Введите значение">
-            </div>
-            <div class="content">
-                <button class="modbus-send-button" 
-                    data-reg="${blockData.registerIndex}" 
-                    data-command="writeSingleRegister"
-                    data-target-element="output-display-id-${blockData.registerIndex}"> 
-                Отправить
-            </button>
-            </div>`;
-            break;
-        default:
-            console.warn(`Неизвестный тип блока: ${blockData.type} для ID ${id}`);
-            blockElement.textContent = `Неизвестный тип: ${blockData.type}`;
-            return null; // Возвращаем null, если тип неизвестен
-    }
-    return blockElement;
-}
-
 function createBlock2(blockData) {
     const blockElement = document.createElement('div');
     blockElement.classList.add('block');
@@ -356,52 +240,6 @@ let modbusDisplaySpanCache = new Map();
 let modbusDisplayInputCache = new Map();
 let allSpanElementsNodeList;
 
-/** Собираем Map элементов страницы для вывода в них данных Modbus */
-function collectModbusDisplayElements(renderArea) {
-    if (!renderArea) {
-        console.error("Ошибка: renderAreaElement не определен для сбора элементов.");
-        return new Map();
-    }
-
-    modbusDisplaySpanCache.clear(); // Очищаем перед новым сбором
-
-    // 1. Получаем все div.content, у которых есть data-reg кроме -
-    const blockDivs = renderArea.querySelectorAll('div.content[data-reg]:not([data-reg="-"])');
-    //console.log(`Найдено ${blockDivs.length} родительских div.block-content с data-reg.`);
-
-    if (blockDivs.length === 0) {
-        console.warn("Внимание: Не найдено ни одного элемента '.block-content[data-reg]'. Проверьте HTML структуру и селектор.");
-    }
-
-    // 2. Для каждого такого div находим его span.number и группируем по data-reg
-    blockDivs.forEach(parentDiv => {
-        const regId = parentDiv.getAttribute('data-reg');
-        // Находим span.number внутри этого родительского div
-        const span = parentDiv.querySelector('span.number');
-
-        if (span) {
-            // Получаем текущий массив спанов для этого regId
-            const existingSpans = modbusDisplaySpanCache.get(regId);
-
-            if (existingSpans) {
-                // Если массив уже существует, добавляем текущий span в него
-                existingSpans.push(span);
-            } else {
-                // Если массива еще нет, создаем новый массив с текущим span
-                modbusDisplaySpanCache.set(regId, [span]);
-            }
-            // --- Конец логики ---
-        } else {
-            console.warn(`В div.block-content[data-reg="${regId}"] не найден span.display-number.`);
-        }
-    });
-
-    console.log(`Заполнено ${modbusDisplaySpanCache.size} уникальных register IDs в кэш (Map).`);
-    console.log("modbusDisplaySpanCache", modbusDisplaySpanCache);
-    return modbusDisplaySpanCache;
-}
-
-
 function collectModbusElements(renderArea) {
     if (!renderArea) {
         console.error("Ошибка: renderAreaElement не определен для сбора элементов.");
@@ -449,24 +287,17 @@ function collectModbusElements(renderArea) {
             }
             // --- Конец логики ---
         } else if (input) {
-            // Получаем текущий массив инпутов для этого regId
-            const existingInputs = modbusDisplayInputCache.get(regId);
-
-            if (existingInputs) {
-                // Если массив уже существует, добавляем текущий span в него
-                existingInputs.inputs.push(input);
-                // Обновляем тип последним значением
-                existingInputs.registerType = regType;
-            } else {
-                // Если массива еще нет, создаем новый массив с текущим инпутом
+            // Сохраняем ТОЛЬКО ПЕРВЫЙ найденный input для этого регистра
+            if (!modbusDisplayInputCache.has(regId)) {
                 modbusDisplayInputCache.set(regId, {
-                    "registerType": regType,
-                    "inputs": [input]
+                    registerType: regType,
+                    element: input
                 });
             }
             // --- Конец логики ---
         } else {
             console.warn(`В div.block-content[data-reg="${regId}"] не найден span.display-number.`);
+            console.warn(`Дубль input для регистра ${regId} — пропускаем.`);
         }
     });
 
@@ -476,102 +307,8 @@ function collectModbusElements(renderArea) {
     return modbusDisplaySpanCache;
 }
 
-
-
-function collectModbusDisplayElements2(renderArea) {
-    if (!renderArea) {
-        console.error("Ошибка: renderAreaElement не определен для сбора элементов.");
-        return new Map();
-    }
-
-    modbusDisplaySpanCache.clear(); // Очищаем перед новым сбором
-
-    // 1. Получаем все div.content, у которых есть data-reg кроме -
-    const blockDivs = renderArea.querySelectorAll('div.content[data-reg]:not([data-reg="-"])');
-    //console.log(`Найдено ${blockDivs.length} родительских div.block-content с data-reg.`);
-
-    if (blockDivs.length === 0) {
-        console.warn("Внимание: Не найдено ни одного элемента '.block-content[data-reg]'. Проверьте HTML структуру и селектор.");
-    }
-
-    // 2. Для каждого такого div находим его span.number и группируем по data-reg
-    blockDivs.forEach(parentDiv => {
-        let regId = parentDiv.dataset.reg;
-        let regType = parentDiv.dataset.type;
-        console.log("regType", regType);
-        console.log('  Все атрибуты:', Array.from(parentDiv.attributes).map(a => `${a.name}=${a.value}`));
-
-        // Находим span.number внутри этого родительского div
-        const span = parentDiv.querySelector('span.number');
-
-        if (span) {
-            // Получаем текущий массив спанов для этого regId
-            const existingSpans = modbusDisplaySpanCache.get(regId);
-
-            if (existingSpans) {
-                // Если массив уже существует, добавляем текущий span в него
-                existingSpans.spans.push(span);
-                // Обновляем тип последним значением
-                existingSpans.registerType = regType;
-            } else {
-                // Если массива еще нет, создаем новый массив с текущим span
-                modbusDisplaySpanCache.set(regId, {
-                    "registerType": regType,
-                    "spans": [span]
-                });
-            }
-            // --- Конец логики ---
-        } else {
-            console.warn(`В div.block-content[data-reg="${regId}"] не найден span.display-number.`);
-        }
-    });
-
-    console.log(`Заполнено ${modbusDisplaySpanCache.size} уникальных register IDs в кэш (Map).`);
-    console.log("modbusDisplaySpanCache", modbusDisplaySpanCache);
-    return modbusDisplaySpanCache;
-}
-
-
-
 // Отправляет на сервер запрос данных регистров.
 async function pollModbusUpdates() {
-    // console.log("Запрос данных для обновления...");
-    try {
-        const response = await fetch('/api/modbus');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const registersData = await response.json();
-        console.log("regData", registersData);
-
-        if (Array.isArray(registersData)) {
-            registersData.forEach(regInfo => {
-                // Получаем массив всех span-элементов, связанных с этим regInfo.reg
-                const spansToUpdate = modbusDisplaySpanCache.get(regInfo.reg);
-
-                if (spansToUpdate && Array.isArray(spansToUpdate)) {
-                    // Проходим по каждому спану в массиве и обновляем его
-                    spansToUpdate.forEach(span => {
-                        if (regInfo.state !== undefined) {
-                            span.innerHTML = regInfo.state;
-                        } else {
-                            span.innerHTML = '--'; // Значение state отсутствует
-                        }
-                    });
-                } else {
-                    // console.warn(`Не найдено ни одного спана для обновления по регистру "${regInfo.reg}".`);
-                }
-            });
-        } else {
-            // console.warn("Полученные данные регистров не являются массивом.");
-        }
-
-    } catch (error) {
-        //  console.error('Ошибка при загрузке обновлений состояний регистров:', error);
-    }
-}
-
-async function pollModbusUpdates2() {
     try {
         const response = await fetch('/api/modbus');
         if (!response.ok) {
@@ -650,14 +387,17 @@ function getBytesCount(registerType) {
 
 
 // ========== ЗАПИСЬ РЕГИСТРОВ ==========
-async function sendModbusData2(regId, valueToSend) {
-    console.log(`Отправка в Modbus: Регистр=${regId}, Значение=${valueToSend}`);
+async function sendModbusData2(regId, valueToSend, registerType) {
+    console.log(`Отправка в Modbus: Регистр=${regId}, Значение=${valueToSend}, Тип=${registerType}`);
 
     try {
         const response = await fetch(`/api/registers/${regId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: valueToSend })
+            body: JSON.stringify({
+                state: valueToSend,
+                registerType: registerType
+            })
         });
 
         if (!response.ok) {
@@ -680,93 +420,53 @@ async function sendModbusData2(regId, valueToSend) {
 }
 
 
-// Функция для отправки данных в Modbus (будет вызываться из обработчика)
-async function sendModbusData(regId, valueToSend) {
-    valueToSend = parseInt(valueToSend, 10);
-    console.log(`Отправка в Modbus: Регистр=${regId}, Значение=${valueToSend}`);
-    try {
-        const response = await fetch(`/api/registers/${regId}`, { // Используем новый API маршрут
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: valueToSend }) // Отправляем новое состояние
-        });
-
-        if (!response.ok) {
-            // Если сервер вернул ошибку, пытаемся получить сообщение из тела ответа
-            let errorMsg = `HTTP error ${response.status}`;
-            try {
-                const errorData = await response.json();
-                errorMsg = errorData.message || errorMsg;
-            } catch (e) { /* Игнорируем ошибки парсинга JSON, если тело не JSON */ }
-            throw new Error(errorMsg);
-        }
-
-        const result = await response.json(); // Ожидаем ответ от сервера
-        //console.log('Modbus write response:', result);
-    } catch (error) {
-        console.error('Ошибка при отправке данных в Modbus:', error);
-    }
-}
-
-
-// Функция для добавления обработчиков
 function setupModbusSendHandlers() {
-    // Находим все элементы, которые должны отправлять данные в Modbus
     const sendElements = document.querySelectorAll('button[data-reg]');
-    console.log(`Найдено ${sendElements.length} элементов для отправки в Modbus.`);
-    console.log("element", sendElements);
 
     sendElements.forEach(element => {
-        // Убедимся, что мы не вешаем обработчик несколько раз (если этот код выполняется повторно)
-        // Можно добавить класс, который означает, что обработчик уже установлен
         if (element.classList.contains('modbus-send-handler-attached')) {
             return;
         }
         element.classList.add('modbus-send-handler-attached');
 
         element.addEventListener('click', async (event) => {
-            event.preventDefault(); // Предотвращаем стандартное действие (если это ссылка или кнопка)
-            const reg = element.getAttribute('data-reg');
+            event.preventDefault();
+            const regAttr = element.getAttribute('data-reg');
 
-            if (!reg) {
+            if (!regAttr) {
                 console.error("Не хватает атрибутов для отправки Modbus:", element);
                 return;
             }
 
-            let valueToSend = null;
+            const regs = regAttr.split(',').map(r => r.trim());
 
-            // --- Получаем значение для отправки ---
-            // if (valueSource === 'self') {
-            // Берем значение из самого элемента
-            // Если это div, можем взять innerText, если есть data-value, то его
-            //    valueToSend = element.innerText || element.getAttribute('data-value');
-            // } else {
-            // Ищем элемент по ID, указанному в data-value-source
-            const sourceElement = document.getElementById(`input-reg-${reg}`);
-            if (sourceElement) {
-                console.log("d", sourceElement.value);
-                // Если это input, textarea, select - берем value
-                if (sourceElement.tagName === 'INPUT' || sourceElement.tagName === 'TEXTAREA' || sourceElement.tagName === 'SELECT') {
-                    valueToSend = sourceElement.value;
-
-                } else {
-                    // Иначе, пробуем innerText
-                    valueToSend = sourceElement.innerText;
+            for (const reg of regs) {
+                // === БЕРЁМ ДАННЫЕ ИЗ КЭША ===
+                const regInfo = modbusDisplayInputCache.get(reg);
+                
+                if (!regInfo) {
+                    console.error(`Регистр ${reg} не найден в кэше modbusDisplayInputCache.`);
+                    continue;
                 }
-            } else {
-                console.error(`Элемент-источник значения "${valueSource}" не найден.`);
-                return; // Прерываем, если источник не найден
-            }
-            //   }
 
-            // --- Преобразуем значение, если нужно ---
-            let numericValue = parseFloat(valueToSend);
+                const inputElement = regInfo.element;
+                const registerType = regInfo.registerType || 'u2';
 
-            if (isNaN(numericValue)) {
-                numericValue = valueToSend; // Отправляем как есть, если не удалось преобразовать в число
+                if (!inputElement) {
+                    console.error(`Для регистра ${reg} нет элемента в кэше.`);
+                    continue;
+                }
+
+                let valueToSend = inputElement.value;
+
+                if (valueToSend === null || valueToSend === undefined || valueToSend === '') {
+                    console.error(`Пустое значение для регистра ${reg}`);
+                    continue;
+                }
+
+                console.log(`[DEBUG] Отправка: reg=${reg}, value=${valueToSend}, type=${registerType}`);
+                await sendModbusData2(reg, valueToSend, registerType);
             }
-            // --- Отправляем данные ---
-            await sendModbusData2(reg, valueToSend);
         });
     });
 }
@@ -780,10 +480,9 @@ async function initializePage() {
         : false;
     if (isEditUIMode === false) {
         await updateUI();
-        //collectModbusDisplayElements2(renderArea);
         collectModbusElements(renderArea);
         setupModbusSendHandlers();
-        setInterval(pollModbusUpdates2, updateIntervalMs);
+        setInterval(pollModbusUpdates, updateIntervalMs);
 
     } else {
         setInterval(updateUI, 500);

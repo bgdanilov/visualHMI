@@ -82,9 +82,23 @@ function bufferInit() {
     const bufferSize = numRegistersToRead * bytesPerRegister;
     testBuffer = Buffer.alloc(bufferSize);
     testBuffer.writeUInt8(0, 0); // Регистр 0 (смещение 0)
-    testBuffer.writeUInt8(0, 1); // Регистр 1 (смещение 2)
-    testBuffer.writeUInt8(184, 2); // Регистр 2 (смещение 4)
-    testBuffer.writeUInt8(64, 3); // Регистр 2 (смещение 4)
+    testBuffer.writeUInt8(0, 1); // Регистр 1 (смещение 1)
+    testBuffer.writeUInt8(184, 2); // Регистр 2 (смещение 2)
+    testBuffer.writeUInt8(64, 3); // Регистр 3 (смещение 3)
+    testBuffer.writeUInt8(0, 4); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 5); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 6); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 7); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 8); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 9); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 10); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 11); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 12); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 13); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 14); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 15); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 16); // Регистр 0 (смещение 0)
+    testBuffer.writeUInt8(0, 17); // Регистр 0 (смещение 0)
 
     return testBuffer;
 }
@@ -265,30 +279,24 @@ function valueToLEBytes(value, buffer, offset, bytesPerRegister = 2) {
 
 app.post('/api/registers/:regId', (req, res) => {
     const regId = parseInt(req.params.regId);
-    const newState = req.body.state;  // Ожидаем поле 'state' в теле запроса
+    const newState = req.body.state;        // Значение для записи
+    const registerType = req.body.registerType || 'u2';  // Тип регистра (по умолчанию u2)
 
-    // Проверка с правильными именами полей
+    // Проверка обязательных полей
     if (isNaN(regId) || newState === undefined) {
         return res.status(400).json({ 
             error: "Необходимо указать номер регистра в URL и поле 'state' в теле запроса." 
         });
     }
 
-    if (!mapped_memory) {
+    if (!testBuffer) {
         console.error("Ошибка: Память устройства не отображена для записи.");
         return res.status(500).json({ error: "Память устройства не отображена или не имеет прав на запись." });
     }
 
-    try {
-        
-        
-        
-        
-        
-        
-        // --- Логика определения смещения и валидации ---
-        const BYTES_PER_REGISTER = 2; // Предполагаем 16-бит регистры
-        const START_REGISTER_NUMBER = 0; // Или тот номер, с которого начинаются ваши регистры
+    try {    
+        const BYTES_PER_REGISTER = 2;
+        const START_REGISTER_NUMBER = 0;
 
         // Преобразуем номер регистра в индекс (смещение)
         const registerIndex = parseInt(regId, 10) - START_REGISTER_NUMBER;
@@ -297,22 +305,85 @@ app.post('/api/registers/:regId', (req, res) => {
             return res.status(400).json({ error: `Недопустимый номер регистра: ${regId}.` });
         }
 
-        const offset = registerIndex * BYTES_PER_REGISTER; // Рассчитываем смещение в байтах
+        const offset = registerIndex * BYTES_PER_REGISTER;
 
-        // Проверяем, что смещение и размер регистра не выходят за пределы отображенной памяти
-        if (offset + BYTES_PER_REGISTER > device_size) {
-            console.error(`Ошибка записи: Смещение ${offset} + размер ${BYTES_PER_REGISTER} превышает device_size ${device_size}.`);
-            return res.status(400).json({ error: `Регистр ${reg}Id выходит за пределы устройства.` });
+        // Проверяем, что смещение не выходит за пределы буфера
+        if (offset + BYTES_PER_REGISTER > testBuffer.length) {
+            console.error(`Ошибка записи: Смещение ${offset} + размер ${BYTES_PER_REGISTER} превышает размер буфера ${testBuffer.length}.`);
+            return res.status(400).json({ error: `Регистр ${regId} выходит за пределы устройства.` });
         }
 
-        // --- Преобразуем новое значение в байты и записываем ---
-        valueToLEBytes(newState, mapped_memory, offset, BYTES_PER_REGISTER);
+        // === ЗАПИСЬ В ЗАВИСИМОСТИ ОТ ТИПА ===
+        const numericValue = parseFloat(newState);
+        if (isNaN(numericValue)) {
+            return res.status(400).json({ error: `Некорректное значение: ${newState}. Ожидается число.` });
+        }
 
-        console.log(`[Server Write] Записано значение ${newState} в регистр ${regId} (смещение ${offset}).`);
-        res.status(200).json({ message: `Состояние регистра ${regId} обновлено на ${newState}.` });
+        // Определяем тип регистра и записываем
+        if (registerType === 'u2') {
+            // Беззнаковое 16-битное целое (0...65535)
+            if (numericValue < 0 || numericValue > 65535) {
+                return res.status(400).json({ error: `Значение ${numericValue} вне диапазона для u2 (0...65535).` });
+            }
+            testBuffer.writeUInt16LE(numericValue, offset);
+            console.log(`[u2] Записано ${numericValue} в регистр ${regId} (смещение ${offset})`);
+
+        } else if (registerType === 's2') {
+            // Знаковое 16-битное целое (-32768...32767)
+            if (numericValue < -32768 || numericValue > 32767) {
+                return res.status(400).json({ error: `Значение ${numericValue} вне диапазона для s2 (-32768...32767).` });
+            }
+            testBuffer.writeInt16LE(numericValue, offset);
+            console.log(`[s2] Записано ${numericValue} в регистр ${regId} (смещение ${offset})`);
+
+        } else if (registerType === 'f4') {
+            // 32-битное число с плавающей точкой (занимает 4 байта)
+            // Для f4 нужно проверить, что регистр не выходит за границы
+            if (offset + 4 > testBuffer.length) {
+                return res.status(400).json({ error: `Недостаточно места для f4 в регистре ${regId}.` });
+            }
+            testBuffer.writeFloatLE(numericValue, offset);
+            console.log(`[f4] Записано ${numericValue} в регистр ${regId} (смещение ${offset})`);
+
+        } else if (registerType && registerType.startsWith('b')) {
+            // Битовая операция: b0...b15
+            const bitIndex = parseInt(registerType.substring(1));
+            if (bitIndex < 0 || bitIndex > 15) {
+                return res.status(400).json({ error: `Некорректный бит: ${bitIndex}. Допустимо 0...15.` });
+            }
+
+            // Читаем текущее значение регистра
+            const currentValue = testBuffer.readUInt16LE(offset);
+            
+            // Устанавливаем или сбрасываем бит
+            let newValue;
+            if (numericValue === 0) {
+                // Сбросить бит
+                newValue = currentValue & ~(1 << bitIndex);
+            } else if (numericValue === 1) {
+                // Установить бит
+                newValue = currentValue | (1 << bitIndex);
+            } else {
+                return res.status(400).json({ error: `Для битового регистра допустимы только 0 или 1. Получено: ${numericValue}` });
+            }
+
+            testBuffer.writeUInt16LE(newValue, offset);
+            console.log(`[b${bitIndex}] Записан бит ${numericValue} в регистр ${regId} (смещение ${offset}). Новое значение: ${newValue}`);
+
+        } else {
+            return res.status(400).json({ error: `Неизвестный тип регистра: ${registerType}.` });
+        }
+
+        res.status(200).json({ 
+            message: `Состояние регистра ${regId} обновлено на ${newState}.`,
+            registerType: registerType,
+            value: numericValue
+        });
+
+        console.log("test buffer", testBuffer);
 
     } catch (error) {
-        console.error(`Ошибка записи данных в mmap на сервере: ${error.message}`);
+        console.error(`Ошибка записи данных: ${error.message}`);
         if (!res.headersSent) {
             res.status(500).json({ error: "Не удалось записать данные в устройство." });
         }
