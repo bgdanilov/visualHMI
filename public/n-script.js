@@ -338,7 +338,7 @@ async function pollModbusUpdates() {
             const rawValue = dataView.getUint16(offset, true);
 
             regInfo.toggles.forEach(button => {
-                // ✅ НЕ ОБНОВЛЯЕМ ОТПРАВЛЯЮЩУЮСЯ КНОПКУ
+                // НЕ ОБНОВЛЯЕМ ОТПРАВЛЯЮЩУЮСЯ КНОПКУ
                 if (button.disabled) return;
 
                 const parentContent = button.closest('.content');
@@ -361,7 +361,7 @@ async function pollModbusUpdates() {
         for (const [registerNumber, regInfo] of modbusDisplayInputCache) {
             const regKey = String(registerNumber);
             
-            // ✅ НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ РЕГИСТР ОТПРАВЛЯЕТСЯ
+            // НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ РЕГИСТР ОТПРАВЛЯЕТСЯ
             if (sendingRegisters.has(regKey)) continue;
 
             const offset = registerNumber * 2;
@@ -376,7 +376,7 @@ async function pollModbusUpdates() {
 
             if (value !== undefined && !isNaN(value) && regInfo.element) {
                 const displayValue = regInfo.registerType === 'f4' ? value.toFixed(2) : value;
-                // ✅ НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ ОН ЗАБЛОКИРОВАН
+                // НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ ОН ЗАБЛОКИРОВАН
                 if (!regInfo.element.disabled) {
                     regInfo.element.value = displayValue;
                 }
@@ -489,6 +489,8 @@ function setupSendButton(blockElement) {
     });
 }
 
+// --- ФУНКЦИИ ДЛЯ TOGGLE BUTTON ---
+
 async function updateToggleButtonFromModbus(regId, button) {
     try {
         console.log(`🔄 Обновление кнопки для регистра ${regId} из /api/modbus`);
@@ -506,6 +508,9 @@ async function updateToggleButtonFromModbus(regId, button) {
                 button.classList.toggle('on', currentState);
                 button.classList.toggle('off', !currentState);
                 button.textContent = currentState ? 'Вкл' : 'Выкл';
+                
+                // ✅ Убираем класс ожидания
+                button.classList.remove('waiting');
                 
                 console.log(`🔄 Обновлено: состояние=${currentState ? 'Вкл' : 'Выкл'}, значение=${value}, бит=${bitIndex}`);
                 return currentState;
@@ -540,19 +545,16 @@ function setupToggleButton(blockElement, blockId, registerType) {
 
         isProcessing = true;
         toggleButton.disabled = true;
-        toggleButton.textContent = '⏳';
-        toggleButton.style.opacity = '0.6';
+        // ✅ Добавляем CSS-класс для состояния ожидания
+        toggleButton.classList.add('waiting');
 
         try {
-            // ✅ Отправляем b0 (сервер сам делает Ч-М-З)
             await sendModbusData(reg, newState ? 1 : 0, registerType || 'b0');
             
             console.log(`✅ Команда отправлена, ждем синхронизации...`);
             
-            // ✅ Ждем синхронизации с реальным устройством
             await new Promise(resolve => setTimeout(resolve, 400));
             
-            // ✅ Проверяем и обновляем кнопку из /api/modbus
             await updateToggleButtonFromModbus(reg, toggleButton);
             
         } catch (error) {
@@ -563,12 +565,15 @@ function setupToggleButton(blockElement, blockId, registerType) {
             setTimeout(() => {
                 toggleButton.textContent = isOn ? 'Вкл' : 'Выкл';
                 toggleButton.style.borderColor = '';
+                // ✅ Убираем класс ожидания
+                toggleButton.classList.remove('waiting');
             }, 1500);
         } finally {
             setTimeout(() => {
                 isProcessing = false;
                 toggleButton.disabled = false;
-                toggleButton.style.opacity = '1';
+                // ✅ Убираем класс ожидания
+                toggleButton.classList.remove('waiting');
             }, 150);
         }
     });

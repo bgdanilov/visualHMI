@@ -117,6 +117,42 @@ span.number {
     transform: none !important;
 }
 
+
+/* Состояние ОЖИДАНИЯ (серый фон, текст остается) */
+.toggle-button.waiting {
+    background-color: #bdbdbd !important;
+    color: #666 !important;
+    border-color: #999 !important;
+    opacity: 0.7;
+    cursor: wait;
+    pointer-events: none;
+}
+
+
+/* Анимация пульсации для состояния ожидания */
+@keyframes pulse-waiting {
+    0% { opacity: 0.7; }
+    50% { opacity: 0.9; }
+    100% { opacity: 0.7; }
+}
+
+.toggle-button.waiting {
+    animation: pulse-waiting 1s ease-in-out infinite;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* Стиль для поля ввода */
 .title-input-send input[type="text"], .title-input input[type="text"] {
     width: calc(100% - 32px); /* Учитываем padding */

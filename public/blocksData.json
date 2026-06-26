@@ -193,8 +193,8 @@
     "type": "toggle-button",
     "text": "Вкл",
     "prefix": "20[1]",
-    "x": 360,
-    "y": 545
+    "x": 500,
+    "y": 490
   },
   {
     "regAddress": 20,
@@ -203,7 +203,7 @@
     "type": "toggle-button",
     "text": "Вкл",
     "prefix": "20[2]",
-    "x": 550,
+    "x": 640,
     "y": 490
   }
 ]
