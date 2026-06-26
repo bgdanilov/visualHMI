@@ -89,6 +89,7 @@ span.number {
     justify-content: left; /* Префикс и постфикс выравниваются по левому краю */
     white-space: pre;
     min-width: 3ch;
+    flex-shrink: 0;
 }
 
 /* Стиль для кнопки "Вкл/Откл" */
@@ -155,12 +156,18 @@ span.number {
 
 /* Стиль для поля ввода */
 .title-input-send input[type="text"], .title-input input[type="text"] {
-    width: calc(100% - 32px); /* Учитываем padding */
+    /*width: calc(100% - 32px); /* Учитываем padding */
     padding: 8px;
     margin: 5px 0 10px 0;
     border: 1px solid #ccc;
     border-radius: 3px;
+    font-size: 1.3em;
+    font-weight: bold;
 }
+/*.title-input input[type="text"]:not(:placeholder-shown) {
+    font-size: 1.2em;
+    font-weight: bold;
+}*/
 
 /* Стиль для поля вывода числа */
 .number-display {

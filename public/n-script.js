@@ -15,26 +15,29 @@ const modbusToggleButtonCache = new Map();
 // --- ОТСЛЕЖИВАНИЕ ОТПРАВЛЯЕМЫХ РЕГИСТРОВ ---
 const sendingRegisters = new Set();
 
+// --- ОТСЛЕЖИВАНИЕ РЕДАКТИРУЕМЫХ INPUT ---
+const editingInputs = new Set();
+
 // --- ФУНКЦИИ ДЛЯ РАБОТЫ С /API/MODBUS ---
 
 async function readRegisterValue(regId) {
     try {
         const response = await fetch('/api/modbus');
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
+
         const bytes = new Uint8Array(await response.arrayBuffer());
         const dataView = new DataView(bytes.buffer);
-        
+
         const registerNumber = parseInt(regId);
         const offset = registerNumber * 2;
-        
+
         if (offset + 2 > bytes.length) {
             throw new Error(`Недостаточно данных для регистра ${registerNumber}`);
         }
-        
+
         const value = dataView.getUint16(offset, true);
         return value;
-        
+
     } catch (error) {
         console.error('❌ Ошибка чтения регистра:', error);
         throw error;
@@ -98,7 +101,7 @@ function createBlock(blockData) {
                     postfix = blockData.postfixes?.[i] || '';
                     regType = blockData.regType?.[i] || '';
                     const val = Array.isArray(blockData.value) ? blockData.value[i] : blockData.value;
-                    
+
                     blockElement.innerHTML += `
                         <div class="content" data-reg="${regIdx}" data-type="${regType}">
                             <span class="prefix">${prefix}</span>
@@ -126,20 +129,28 @@ function createBlock(blockData) {
             setupToggleButton(blockElement, blockData.regAddress, blockData.regType);
             break;
 
-        case 'title-input':
-            const text = blockData.text || '';
-            prefix = blockData.prefix || '';
-            postfix = blockData.postfix || '';
-            blockElement.innerHTML = `
-                <div class="content">
-                    <span class="title">${text}</span>
-                </div>
-                <div class="content" data-reg="${blockData.regAddress}" data-type="${blockData.regType}">
-                    <span class="prefix">${prefix}</span>
-                    <input id="${blockData.id}" type="text" class="input-value-field" placeholder="Введите значение">
-                    <span class="postfix">${postfix}</span>
-                </div>`;
-            break;
+            case 'title-input':
+                const text = blockData.text || '';
+                prefix = blockData.prefix || '';
+                postfix = blockData.postfix || '';
+                const size = blockData.size || 10;
+                // Учитываем размер шрифта: 1.3em ≈ 20px, на символ ~12px
+                const wPx = size * 12 + 10; // +10 на padding
+                
+                blockElement.innerHTML = `
+                    <div class="content">
+                        <span class="title">${text}</span>
+                    </div>
+                    <div class="content" data-reg="${blockData.regAddress}" data-type="${blockData.regType}">
+                        <span class="prefix">${prefix}</span>
+                        <input id="${blockData.id}" type="text" class="input-value-field" 
+                               placeholder="..." 
+                               style="width: ${wPx}px;">  <!-- ← исправлено на wPx -->
+                        <span class="postfix">${postfix}</span>
+                    </div>`;
+                
+                setupInputHandlers(blockElement, blockData.regAddress);
+                break;
 
         case 'send-button':
             blockElement.innerHTML = `
@@ -186,7 +197,7 @@ async function loadAndProcessBlocks() {
 async function updateUI() {
     try {
         const blocks = await loadAndProcessBlocks();
-        
+
         if (!renderArea) {
             console.error('renderArea не найден');
             return;
@@ -327,7 +338,7 @@ async function pollModbusUpdates() {
         // --- ОБНОВЛЕНИЕ ТОГГЛ-КНОПОК ---
         for (const [registerNumber, regInfo] of modbusToggleButtonCache) {
             const regKey = String(registerNumber);
-            
+
             const offset = registerNumber * 2;
 
             if (offset + 2 > bytes.length) {
@@ -360,9 +371,13 @@ async function pollModbusUpdates() {
         // --- ОБНОВЛЕНИЕ INPUT ---
         for (const [registerNumber, regInfo] of modbusDisplayInputCache) {
             const regKey = String(registerNumber);
-            
-            // НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ РЕГИСТР ОТПРАВЛЯЕТСЯ
-            if (sendingRegisters.has(regKey)) continue;
+
+            // ⚠️ НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ:
+            // 1. Регистр отправляется (sendingRegisters)
+            // 2. Регистр редактируется (editingInputs) - пользователь вводит данные
+            if (sendingRegisters.has(regKey) || editingInputs.has(regKey)) {
+                continue;
+            }
 
             const offset = registerNumber * 2;
             const byteCount = getBytesCount(regInfo.registerType);
@@ -382,7 +397,6 @@ async function pollModbusUpdates() {
                 }
             }
         }
-
     } catch (error) {
         console.error('Ошибка опроса Modbus:', error);
     }
@@ -396,7 +410,7 @@ async function sendModbusData(regId, valueToSend, registerType) {
 
     try {
         console.log(`📤 Отправка: регистр=${regId}, значение=${valueToSend}, тип=${registerType}`);
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
@@ -417,7 +431,7 @@ async function sendModbusData(regId, valueToSend, registerType) {
         const result = await response.json();
         console.log(`✅ Ответ сервера:`, result);
         return result;
-        
+
     } catch (error) {
         console.error('❌ Ошибка отправки:', error);
         throw error;
@@ -452,6 +466,7 @@ function setupSendButton(blockElement) {
 
         try {
             for (const reg of regs) {
+                const regKey = String(reg);
                 const regInfo = modbusDisplayInputCache.get(reg);
                 if (!regInfo) {
                     console.error(`Регистр ${reg} не найден в кэше`);
@@ -464,7 +479,21 @@ function setupSendButton(blockElement) {
                     continue;
                 }
 
+                // Отправляем значение
                 await sendModbusData(reg, value, regInfo.registerType || 'u2');
+
+                // ✅ После отправки - убираем из редактируемых
+                editingInputs.delete(regKey);
+
+                // ✅ Сбрасываем визуальный индикатор
+                if (regInfo.element) {
+                    regInfo.element.style.backgroundColor = '#e8f5e9'; // зеленый фон - успех
+                    regInfo.element.style.borderColor = 'green';
+                    setTimeout(() => {
+                        regInfo.element.style.backgroundColor = '';
+                        regInfo.element.style.borderColor = '#ccc';
+                    }, 1000);
+                }
             }
 
             sendButton.textContent = 'Отправлено';
@@ -477,9 +506,16 @@ function setupSendButton(blockElement) {
             }, 2000);
 
         } catch (error) {
+            console.error('❌ Ошибка отправки:', error);
             sendButton.textContent = 'Ошибка';
             sendButton.classList.remove('sending');
             sendButton.classList.add('error');
+
+            // При ошибке тоже убираем из редактируемых
+            for (const reg of regs) {
+                editingInputs.delete(String(reg));
+            }
+
             setTimeout(() => {
                 sendButton.textContent = originalText;
                 sendButton.disabled = false;
@@ -494,24 +530,24 @@ function setupSendButton(blockElement) {
 async function updateToggleButtonFromModbus(regId, button) {
     try {
         console.log(`🔄 Обновление кнопки для регистра ${regId} из /api/modbus`);
-        
+
         const value = await readRegisterValue(regId);
-        
+
         const parentContent = button.closest('.content');
         const buttonRegType = parentContent?.dataset?.type || 'b0';
-        
+
         if (buttonRegType?.startsWith('b')) {
             const bitIndex = parseInt(buttonRegType.substring(1));
             if (bitIndex >= 0 && bitIndex <= 15) {
                 const currentState = ((value >> bitIndex) & 1) === 1;
-                
+
                 button.classList.toggle('on', currentState);
                 button.classList.toggle('off', !currentState);
                 button.textContent = currentState ? 'Вкл' : 'Выкл';
-                
+
                 // ✅ Убираем класс ожидания
                 button.classList.remove('waiting');
-                
+
                 console.log(`🔄 Обновлено: состояние=${currentState ? 'Вкл' : 'Выкл'}, значение=${value}, бит=${bitIndex}`);
                 return currentState;
             }
@@ -535,7 +571,7 @@ function setupToggleButton(blockElement, blockId, registerType) {
         const isOn = toggleButton.classList.contains('on');
         const newState = !isOn;
         const reg = toggleButton.dataset.reg;
-        
+
         if (!reg) {
             console.error('Нет data-reg у кнопки');
             return;
@@ -550,18 +586,18 @@ function setupToggleButton(blockElement, blockId, registerType) {
 
         try {
             await sendModbusData(reg, newState ? 1 : 0, registerType || 'b0');
-            
+
             console.log(`✅ Команда отправлена, ждем синхронизации...`);
-            
+
             await new Promise(resolve => setTimeout(resolve, 400));
-            
+
             await updateToggleButtonFromModbus(reg, toggleButton);
-            
+
         } catch (error) {
             console.error(`❌ Ошибка:`, error);
             toggleButton.textContent = '❌';
             toggleButton.style.borderColor = 'red';
-            
+
             setTimeout(() => {
                 toggleButton.textContent = isOn ? 'Вкл' : 'Выкл';
                 toggleButton.style.borderColor = '';
@@ -575,6 +611,46 @@ function setupToggleButton(blockElement, blockId, registerType) {
                 // ✅ Убираем класс ожидания
                 toggleButton.classList.remove('waiting');
             }, 150);
+        }
+    });
+}
+
+// --- НАСТРОЙКА INPUT ---
+function setupInputHandlers(blockElement, regAddress) {
+    const input = blockElement.querySelector('.input-value-field');
+    if (!input) return;
+
+    const regKey = String(regAddress);
+
+    // При фокусе - добавляем в список редактируемых
+    input.addEventListener('focus', () => {
+        editingInputs.add(regKey);
+        console.log(`✏️ Начало редактирования регистра ${regAddress}`);
+        // Визуальный индикатор редактирования
+        input.style.backgroundColor = '#fff8e1';
+        input.style.borderColor = '#ff9800';
+    });
+
+    // При потере фокуса - просто убираем индикатор, НЕ отправляем
+    input.addEventListener('blur', () => {
+        // Не убираем из editingInputs сразу!
+        // Ждем, пока кнопка отправит значение
+        input.style.backgroundColor = '';
+        input.style.borderColor = '#ccc';
+        console.log(`✏️ Завершено редактирование регистра ${regAddress}`);
+    });
+
+    // Отмена редактирования по Escape (возвращаем старое значение)
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            // Убираем фокус, не отправляя
+            input.blur();
+            // Удаляем из редактируемых
+            editingInputs.delete(regKey);
+            // Возвращаем старый цвет
+            input.style.backgroundColor = '';
+            input.style.borderColor = '#ccc';
+            console.log(`✏️ Редактирование отменено для регистра ${regAddress}`);
         }
     });
 }

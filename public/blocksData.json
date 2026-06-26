@@ -1,65 +1,31 @@
 [
   { 
-    "regAddress": 0,
-    "regType": "f4",
-    "x": 20,
-    "y": 20,
-    "type": "title-input",
-    "autoSend": false,
-    "minValue": 0,
-    "maxValue": 0,
-    "text": "Регистр №0",
-    "description": "Ввод значения"
-  },
-  { 
-    "regAddress": 2,
-    "regType": "f4",
-    "x": 20,
-    "y": 120,
-    "type": "title-input",
-    "autoSend": false,
-    "minValue": 0,
-    "maxValue": 0,
-    "text": "Регистр №2",
-    "description": "Ввод значения"
-  },
-  { 
-    "regAddress": 4,
-    "regType": "f4",
-    "x": 20,
-    "y": 220,
-    "type": "title-input",
-    "autoSend": false,
-    "minValue": 0,
-    "maxValue": 0,
-    "text": "Регистр №4",
-    "description": "Ввод значения"
-  },
-  { 
     "regAddress": 16,
     "regType": "f4",
     "x": 20,
-    "y": 320,
+    "y": 300,
     "type": "title-input",
     "autoSend": false,
     "minValue": 0,
     "maxValue": 0,
     "prefix": "Ток",
     "postfix": "А",
-    "description": "Ввод значения"
+    "description": "Ввод значения",
+    "size": 5
   },
   { 
     "regAddress": 18,
     "regType": "f4",
     "x": 20,
-    "y": 403,
+    "y": 393,
     "type": "title-input",
     "autoSend": false,
     "minValue": 0,
     "maxValue": 0,
     "prefix": "Мощность",
     "postfix": "W",
-    "description": "Ввод значения"
+    "description": "Ввод значения",
+    "size": 5
   },
   {
     "regAddress": [0, 2, 4, 16, 18],
@@ -173,7 +139,8 @@
     "type": "title-input",
     "prefix": "№20",
     "postfix": "",
-    "description": "Текст + число"
+    "description": "Текст + число",
+    "size": 3
   },
 
   {
