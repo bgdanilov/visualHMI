@@ -52,7 +52,7 @@ p, span, h2 {
 }
 
 .title-group-number .content:not(:first-child) {
-    justify-content: left;
+    justify-content: right;
 }
 
 .content span {
@@ -81,12 +81,14 @@ span.number {
 
 .title-group-number .content span.number {
     font-size: 1.1em;
+    min-width: 5ch;
 }
 
 .content .prefix,
 .content .postfix {
-    text-align: left; /* Префикс и постфикс выравниваются по левому краю */
+    justify-content: left; /* Префикс и постфикс выравниваются по левому краю */
     white-space: pre;
+    min-width: 3ch;
 }
 
 /* Стиль для кнопки "Вкл/Откл" */
@@ -101,15 +103,19 @@ span.number {
 }
 
 .toggle-button.on {
-    background-color: #4CAF50; /* Зеленый */
+    background-color: #4CAF50; /* Зеленый для Вкл */
     color: white;
 }
 
 .toggle-button.off {
-    background-color: #f44336; /* Красный */
+    background-color: #f44336; /* Красный для Выкл */
     color: white;
 }
-
+.toggle-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
 
 /* Стиль для поля ввода */
 .title-input-send input[type="text"], .title-input input[type="text"] {

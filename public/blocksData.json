@@ -124,9 +124,8 @@
     "regMode": "r",
     "x": 630,
     "y": 220,
-    "type": "title-number",
-    "text": "Лампа 12",
-    "prefix": "Out",
+    "type": "only-number",
+    "prefix": "12[12]",
     "postfix": "",
     "description": "Текст + число"
   },
@@ -154,8 +153,28 @@
     "postfix": "A",
     "description": "Текст + число"
   },
-
-
+  {
+    "regAddress": 20,
+    "regType": "u2",
+    "regMode": "r",
+    "x": 630,
+    "y": 280,
+    "type": "only-number",
+    "prefix": "№20",
+    "postfix": "",
+    "description": "Текст + число"
+  },
+  {
+    "regAddress": 20,
+    "regType": "b0",
+    "regMode": "r",
+    "x": 630,
+    "y": 360,
+    "type": "title-input",
+    "prefix": "№20",
+    "postfix": "",
+    "description": "Текст + число"
+  },
 
   {
     "regAddress": 20,
@@ -163,18 +182,28 @@
     "description": "Кнопка форсировки",
     "type": "toggle-button",
     "text": "Вкл",
-    "prefix": "Форсировка",
+    "prefix": "20[0]",
     "x": 360,
     "y": 490
   },
   {
-    "regAddress": 21,
-    "regType": "b0",
+    "regAddress": 20,
+    "regType": "b1",
     "description": "Кнопка форсировки",
     "type": "toggle-button",
     "text": "Вкл",
-    "prefix": "Реверс",
+    "prefix": "20[1]",
     "x": 360,
     "y": 545
+  },
+  {
+    "regAddress": 20,
+    "regType": "b2",
+    "description": "Кнопка форсировки",
+    "type": "toggle-button",
+    "text": "Вкл",
+    "prefix": "20[2]",
+    "x": 550,
+    "y": 490
   }
 ]

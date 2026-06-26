@@ -14,6 +14,7 @@ const totalBytes = numRegistersToRead * bytesPerRegister;
 let mapped_memory = null;
 let testBuffer = null;
 let isDataInitialized = false;
+let source = null;
 
 // 1. Статические файлы и middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -26,16 +27,15 @@ function initializeDataSourcesAndParams() {
     if (testBuffer) {
         source = testBuffer;
         console.log("Используется testBuffer.");
+        return true;
     } else if (mapped_memory) {
         source = mapped_memory;
         console.log("Используется mapped_memory.");
+        return true;
     } else {
         console.error("Ошибка: Источник данных не определен.");
         return false;
     }
-
-    console.log("Инициализация данных и параметров прошла успешно.");
-    return true;
 }
 
 function bufferInit() {
@@ -242,15 +242,22 @@ app.listen(port, () => {
     // testBuffer = bufferInit();  // Для тестового буфера
     // mapped_memory = mmapInit(); // Для реального устройства
     
-    // По умолчанию используем testBuffer
-   // testBuffer = bufferInit();
-    mapped_memory = mmapInit();
+    // По умолчанию используем mapped_memory
+    try {
+        mapped_memory = mmapInit();
+        console.log('✅ Используется mapped_memory (реальное устройство)');
+    } catch (error) {
+        console.log('⚠️ Ошибка mmap, используем testBuffer');
+        testBuffer = bufferInit();
+        console.log('✅ Используется testBuffer (тестовый режим)');
+    }
 
     isDataInitialized = initializeDataSourcesAndParams();
 
     if (!isDataInitialized) {
         console.error("Критическая ошибка: Не удалось инициализировать данные.");
+        process.exit(1);
     } else {
-        console.log("Сервер готов к приему запросов.");
+        console.log("✅ Сервер готов к приему запросов.");
     }
 });

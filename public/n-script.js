@@ -10,6 +10,36 @@ let isEditUIMode = false;
 // --- КЭШИ ---
 const modbusDisplaySpanCache = new Map();
 const modbusDisplayInputCache = new Map();
+const modbusToggleButtonCache = new Map();
+
+// --- ОТСЛЕЖИВАНИЕ ОТПРАВЛЯЕМЫХ РЕГИСТРОВ ---
+const sendingRegisters = new Set();
+
+// --- ФУНКЦИИ ДЛЯ РАБОТЫ С /API/MODBUS ---
+
+async function readRegisterValue(regId) {
+    try {
+        const response = await fetch('/api/modbus');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        const dataView = new DataView(bytes.buffer);
+        
+        const registerNumber = parseInt(regId);
+        const offset = registerNumber * 2;
+        
+        if (offset + 2 > bytes.length) {
+            throw new Error(`Недостаточно данных для регистра ${registerNumber}`);
+        }
+        
+        const value = dataView.getUint16(offset, true);
+        return value;
+        
+    } catch (error) {
+        console.error('❌ Ошибка чтения регистра:', error);
+        throw error;
+    }
+}
 
 // --- ФУНКЦИИ СОЗДАНИЯ БЛОКОВ ---
 
@@ -27,7 +57,7 @@ function createBlock(blockData) {
             prefix = blockData.prefix || '';
             postfix = blockData.postfix || '';
             blockElement.innerHTML = `
-                <div class="content" data-reg="${blockData.registerIndex}">
+                <div class="content" data-reg="${blockData.regAddress}" data-type="${blockData.regType}">
                     <span class="prefix">${prefix}</span>
                     <span class="number">${blockData.value ?? '--'}</span>
                     <span class="postfix">${postfix}</span>
@@ -87,8 +117,9 @@ function createBlock(blockData) {
 
         case 'toggle-button':
             prefix = blockData.prefix || '';
+            regType = blockData.regType || '';
             blockElement.innerHTML = `
-                <div class="content" data-reg="${blockData.regAddress}">
+                <div class="content" data-reg="${blockData.regAddress}" data-type="${regType}">
                     <span class="prefix btn">${prefix}</span>
                     <button class="toggle-button off" data-reg="${blockData.regAddress}">${blockData.text}</button>
                 </div>`;
@@ -182,41 +213,86 @@ function collectModbusElements() {
 
     modbusDisplaySpanCache.clear();
     modbusDisplayInputCache.clear();
+    modbusToggleButtonCache.clear();
 
     const blockDivs = renderArea.querySelectorAll('div.content[data-reg]:not([data-reg="-"])');
 
     blockDivs.forEach(parentDiv => {
         const regId = parentDiv.dataset.reg;
         const regType = parentDiv.dataset.type;
-        const span = parentDiv.querySelector('span.number');
-        const input = parentDiv.querySelector('input');
 
+        // --- 1. ОБРАБОТКА SPAN ---
+        const span = parentDiv.querySelector('span.number');
         if (span) {
-            const existing = modbusDisplaySpanCache.get(regId);
-            if (existing) {
-                existing.spans.push(span);
-                existing.registerType = regType;
+            const existingSpans = modbusDisplaySpanCache.get(regId);
+            if (existingSpans) {
+                existingSpans.spans.push(span);
+                if (!existingSpans.registerType) {
+                    existingSpans.registerType = regType;
+                }
             } else {
                 modbusDisplaySpanCache.set(regId, {
                     registerType: regType,
                     spans: [span]
                 });
             }
-        } else if (input && !modbusDisplayInputCache.has(regId)) {
+        }
+
+        // --- 2. ОБРАБОТКА INPUT ---
+        const input = parentDiv.querySelector('input');
+        if (input && !modbusDisplayInputCache.has(regId)) {
             modbusDisplayInputCache.set(regId, {
                 registerType: regType,
                 element: input
             });
         }
+
+        // --- 3. ОБРАБОТКА TOGGLE BUTTON ---
+        const toggleButton = parentDiv.querySelector('button.toggle-button');
+        if (toggleButton) {
+            const existingToggles = modbusToggleButtonCache.get(regId);
+            if (existingToggles) {
+                if (!existingToggles.toggles.includes(toggleButton)) {
+                    existingToggles.toggles.push(toggleButton);
+                }
+                if (!existingToggles.registerType) {
+                    existingToggles.registerType = regType;
+                }
+            } else {
+                modbusToggleButtonCache.set(regId, {
+                    registerType: regType,
+                    toggles: [toggleButton]
+                });
+            }
+        }
     });
 
-    console.log(`Собрано ${modbusDisplaySpanCache.size} спанов и ${modbusDisplayInputCache.size} инпутов`);
+    console.log("spans", modbusDisplaySpanCache);
+    console.log("inputs", modbusDisplayInputCache);
+    console.log("toggle-buttons", modbusToggleButtonCache);
 }
 
 // --- ОПРОС MODBUS ---
 
 function getBytesCount(registerType) {
     return registerType === 'f4' ? 4 : 2;
+}
+
+function readRegisterValueFromDataView(dataView, offset, registerType) {
+    let value;
+    switch (registerType) {
+        case 'u2': value = dataView.getUint16(offset, true); break;
+        case 's2': value = dataView.getInt16(offset, true); break;
+        case 'f4': value = dataView.getFloat32(offset, true); break;
+        default:
+            if (registerType?.startsWith('b')) {
+                const bitIndex = parseInt(registerType.substring(1));
+                if (bitIndex >= 0 && bitIndex <= 15) {
+                    value = (dataView.getUint16(offset, true) >> bitIndex) & 1;
+                }
+            }
+    }
+    return value;
 }
 
 async function pollModbusUpdates() {
@@ -227,6 +303,7 @@ async function pollModbusUpdates() {
         const bytes = new Uint8Array(await response.arrayBuffer());
         const dataView = new DataView(bytes.buffer);
 
+        // --- ОБНОВЛЕНИЕ СПАНОВ ---
         for (const [registerNumber, regInfo] of modbusDisplaySpanCache) {
             const offset = registerNumber * 2;
             const byteCount = getBytesCount(regInfo.registerType);
@@ -237,20 +314,7 @@ async function pollModbusUpdates() {
             }
 
             const registerType = regInfo.registerType;
-            let value;
-
-            switch (registerType) {
-                case 'u2': value = dataView.getUint16(offset, true); break;
-                case 's2': value = dataView.getInt16(offset, true); break;
-                case 'f4': value = dataView.getFloat32(offset, true); break;
-                default:
-                    if (registerType?.startsWith('b')) {
-                        const bitIndex = parseInt(registerType.substring(1));
-                        if (bitIndex >= 0 && bitIndex <= 15) {
-                            value = (dataView.getUint16(offset, true) >> bitIndex) & 1;
-                        }
-                    }
-            }
+            let value = readRegisterValueFromDataView(dataView, offset, registerType);
 
             if (value !== undefined && !isNaN(value)) {
                 const displayValue = registerType === 'f4' ? value.toFixed(2) : value;
@@ -259,6 +323,66 @@ async function pollModbusUpdates() {
                 regInfo.spans.forEach(span => span.innerHTML = '--');
             }
         }
+
+        // --- ОБНОВЛЕНИЕ ТОГГЛ-КНОПОК ---
+        for (const [registerNumber, regInfo] of modbusToggleButtonCache) {
+            const regKey = String(registerNumber);
+            
+            const offset = registerNumber * 2;
+
+            if (offset + 2 > bytes.length) {
+                console.warn(`Недостаточно данных для регистра ${registerNumber}`);
+                continue;
+            }
+
+            const rawValue = dataView.getUint16(offset, true);
+
+            regInfo.toggles.forEach(button => {
+                // ✅ НЕ ОБНОВЛЯЕМ ОТПРАВЛЯЮЩУЮСЯ КНОПКУ
+                if (button.disabled) return;
+
+                const parentContent = button.closest('.content');
+                const buttonRegType = parentContent?.dataset?.type || 'b0';
+
+                if (buttonRegType?.startsWith('b')) {
+                    const bitIndex = parseInt(buttonRegType.substring(1));
+                    if (bitIndex >= 0 && bitIndex <= 15) {
+                        const value = (rawValue >> bitIndex) & 1;
+                        const isOn = value === 1;
+                        button.classList.toggle('on', isOn);
+                        button.classList.toggle('off', !isOn);
+                        button.textContent = isOn ? 'Вкл' : 'Выкл';
+                    }
+                }
+            });
+        }
+
+        // --- ОБНОВЛЕНИЕ INPUT ---
+        for (const [registerNumber, regInfo] of modbusDisplayInputCache) {
+            const regKey = String(registerNumber);
+            
+            // ✅ НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ РЕГИСТР ОТПРАВЛЯЕТСЯ
+            if (sendingRegisters.has(regKey)) continue;
+
+            const offset = registerNumber * 2;
+            const byteCount = getBytesCount(regInfo.registerType);
+
+            if (offset + byteCount > bytes.length) {
+                console.warn(`Недостаточно данных для регистра ${registerNumber}`);
+                continue;
+            }
+
+            const value = readRegisterValueFromDataView(dataView, offset, regInfo.registerType);
+
+            if (value !== undefined && !isNaN(value) && regInfo.element) {
+                const displayValue = regInfo.registerType === 'f4' ? value.toFixed(2) : value;
+                // ✅ НЕ ОБНОВЛЯЕМ INPUT, ЕСЛИ ОН ЗАБЛОКИРОВАН
+                if (!regInfo.element.disabled) {
+                    regInfo.element.value = displayValue;
+                }
+            }
+        }
+
     } catch (error) {
         console.error('Ошибка опроса Modbus:', error);
     }
@@ -267,22 +391,38 @@ async function pollModbusUpdates() {
 // --- ОТПРАВКА В MODBUS ---
 
 async function sendModbusData(regId, valueToSend, registerType) {
+    const regKey = String(regId);
+    sendingRegisters.add(regKey);
+
     try {
+        console.log(`📤 Отправка: регистр=${regId}, значение=${valueToSend}, тип=${registerType}`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         const response = await fetch(`/api/registers/${regId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ state: valueToSend, registerType })
+            body: JSON.stringify({ state: valueToSend, registerType: registerType || 'u2' }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `HTTP ${response.status}`);
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log(`✅ Ответ сервера:`, result);
+        return result;
+        
     } catch (error) {
-        console.error('Ошибка отправки в Modbus:', error);
+        console.error('❌ Ошибка отправки:', error);
         throw error;
+    } finally {
+        sendingRegisters.delete(regKey);
     }
 }
 
@@ -349,51 +489,87 @@ function setupSendButton(blockElement) {
     });
 }
 
+async function updateToggleButtonFromModbus(regId, button) {
+    try {
+        console.log(`🔄 Обновление кнопки для регистра ${regId} из /api/modbus`);
+        
+        const value = await readRegisterValue(regId);
+        
+        const parentContent = button.closest('.content');
+        const buttonRegType = parentContent?.dataset?.type || 'b0';
+        
+        if (buttonRegType?.startsWith('b')) {
+            const bitIndex = parseInt(buttonRegType.substring(1));
+            if (bitIndex >= 0 && bitIndex <= 15) {
+                const currentState = ((value >> bitIndex) & 1) === 1;
+                
+                button.classList.toggle('on', currentState);
+                button.classList.toggle('off', !currentState);
+                button.textContent = currentState ? 'Вкл' : 'Выкл';
+                
+                console.log(`🔄 Обновлено: состояние=${currentState ? 'Вкл' : 'Выкл'}, значение=${value}, бит=${bitIndex}`);
+                return currentState;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('❌ Ошибка обновления кнопки:', error);
+        return false;
+    }
+}
+
 function setupToggleButton(blockElement, blockId, registerType) {
     const toggleButton = blockElement.querySelector('.toggle-button');
     if (!toggleButton) return;
 
+    let isProcessing = false;
+
     toggleButton.addEventListener('click', async () => {
+        if (isProcessing || toggleButton.disabled) return;
+
         const isOn = toggleButton.classList.contains('on');
         const newState = !isOn;
-
-        toggleButton.classList.toggle('on');
-        toggleButton.classList.toggle('off');
-        toggleButton.textContent = newState ? 'Вкл' : 'Выкл';
-
         const reg = toggleButton.dataset.reg;
+        
         if (!reg) {
             console.error('Нет data-reg у кнопки');
             return;
         }
 
-        const originalText = toggleButton.textContent;
-        toggleButton.textContent = 'Отправка...';
+        console.log(`🔄 Клик: регистр=${reg}, текущее состояние=${isOn ? 'Вкл' : 'Выкл'}, новое состояние=${newState ? 'Вкл' : 'Выкл'}`);
+
+        isProcessing = true;
         toggleButton.disabled = true;
-        toggleButton.classList.add('sending');
-        await new Promise(resolve => requestAnimationFrame(resolve));
+        toggleButton.textContent = '⏳';
+        toggleButton.style.opacity = '0.6';
 
         try {
-            await sendModbusData(reg, newState ? 1 : 0, registerType || 'u2');
-
-            toggleButton.textContent = 'Отправлено';
-            toggleButton.classList.remove('sending');
-            toggleButton.classList.add('success');
-            setTimeout(() => {
-                toggleButton.textContent = originalText;
-                toggleButton.disabled = false;
-                toggleButton.classList.remove('success');
-            }, 1500);
-
+            // ✅ Отправляем b0 (сервер сам делает Ч-М-З)
+            await sendModbusData(reg, newState ? 1 : 0, registerType || 'b0');
+            
+            console.log(`✅ Команда отправлена, ждем синхронизации...`);
+            
+            // ✅ Ждем синхронизации с реальным устройством
+            await new Promise(resolve => setTimeout(resolve, 400));
+            
+            // ✅ Проверяем и обновляем кнопку из /api/modbus
+            await updateToggleButtonFromModbus(reg, toggleButton);
+            
         } catch (error) {
-            // Откат состояния
-            toggleButton.classList.remove('on', 'off');
-            toggleButton.classList.add(isOn ? 'on' : 'off');
-            toggleButton.textContent = isOn ? 'Вкл' : 'Выкл';
-            toggleButton.disabled = false;
-            toggleButton.classList.remove('sending');
-            toggleButton.classList.add('error');
-            setTimeout(() => toggleButton.classList.remove('error'), 1500);
+            console.error(`❌ Ошибка:`, error);
+            toggleButton.textContent = '❌';
+            toggleButton.style.borderColor = 'red';
+            
+            setTimeout(() => {
+                toggleButton.textContent = isOn ? 'Вкл' : 'Выкл';
+                toggleButton.style.borderColor = '';
+            }, 1500);
+        } finally {
+            setTimeout(() => {
+                isProcessing = false;
+                toggleButton.disabled = false;
+                toggleButton.style.opacity = '1';
+            }, 150);
         }
     });
 }
