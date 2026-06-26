@@ -48,7 +48,7 @@
   },
   { 
     "regAddress": 0,
-    "regType": "f4",
+    "regType": "u2",
     "x": 20,
     "y": 470,
     "type": "title-input",

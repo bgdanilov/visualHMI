@@ -1,5 +1,5 @@
 //console.log = function () { };
-//const addon = require('./build/Release/modbus_mmap');
+const addon = require('./build/Release/modbus_mmap');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -243,8 +243,8 @@ app.listen(port, () => {
     // mapped_memory = mmapInit(); // Для реального устройства
     
     // По умолчанию используем testBuffer
-    testBuffer = bufferInit();
-    // mapped_memory = mmapInit();
+   // testBuffer = bufferInit();
+    mapped_memory = mmapInit();
 
     isDataInitialized = initializeDataSourcesAndParams();
 

@@ -3,7 +3,7 @@
 const renderArea = document.getElementById('render-area');
 const projectConfig = 'projectConfig.json';
 const blocksConfig = 'blocksData.json';
-const updateIntervalMs = 500;
+const updateIntervalMs = 300;
 
 let isEditUIMode = false;
 

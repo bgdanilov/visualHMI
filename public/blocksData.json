@@ -70,12 +70,12 @@
     "description": "Кнопка-отправить"
   },
   { 
-    "regAddress": [0, 2, 4, 16, 18],
-    "regType": ["f4", "f4", "f4", "f4", "f4"],
+    "regAddress": [0, 1, 2, 4, 16, 18, 12],
+    "regType": ["f4", "u2", "f4", "f4", "f4", "f4", "u2"],
     "type": "title-group-number",
     "text": "Список",
-    "prefixes": ["Iреак.", "Uном. ", "Rшунт.", "Istat", "P"],
-    "postfixes": ["W", "V", "Om", "mA", "W"],
+    "prefixes": ["Iреак.", "T", "Uном. ", "Rшунт.", "Istat", "P", ""],
+    "postfixes": ["W", "sec", "V", "Om", "mA", "W", ""],
     "x": 610,
     "y": 20,
     "description": "Текст + и массив чисел"
@@ -116,6 +116,18 @@
     "text": "Сопротивление шунта (№4)",
     "prefix": "Iреак.",
     "postfix": "A",
+    "description": "Текст + число"
+  },
+  {
+    "regAddress": 12,
+    "regType": "b12",
+    "regMode": "r",
+    "x": 630,
+    "y": 220,
+    "type": "title-number",
+    "text": "Лампа 12",
+    "prefix": "Out",
+    "postfix": "",
     "description": "Текст + число"
   },
   {
