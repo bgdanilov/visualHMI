@@ -3,15 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Динамические Блоки</title>
-    <link rel="stylesheet" href="style.css">
+    <title>visualHMI</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-    <div id="render-area">
-        <!-- Блоки будут рендериться сюда -->
+    <div id="app">
+        <header>
+            <h1>📊 visualHMI</h1>
+            <div id="status-bar">
+                <span id="connection-status">🟢 Онлайн</span>
+                <span id="update-info">Обновление: 300ms</span>
+            </div>
+        </header>
+        
+        <main>
+            <div id="render-area"></div>
+        </main>
+        
+        <footer>
+            <div id="debug-info"></div>
+        </footer>
     </div>
 
-    <script src="n-script.js"></script>
+    <!-- Модули JavaScript -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>
