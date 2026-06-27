@@ -1,5 +1,4 @@
 //console.log = function () { };
-const addon = require('./build/Release/modbus_mmap');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -11,8 +10,7 @@ const bytesPerRegister = 2;
 const startRegisterNumber = 0;
 const totalBytes = numRegistersToRead * bytesPerRegister;
 
-let mapped_memory = null;
-let testBuffer = null;
+
 let isDataInitialized = false;
 let source = null;
 
@@ -244,6 +242,7 @@ app.listen(port, () => {
     
     // По умолчанию используем mapped_memory
     try {
+        const addon = require('./build/Release/modbus_mmap');
         mapped_memory = mmapInit();
         console.log('✅ Используется mapped_memory (реальное устройство)');
     } catch (error) {
