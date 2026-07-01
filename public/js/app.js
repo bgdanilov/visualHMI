@@ -70,7 +70,7 @@ class App {
     }
 
     async _loadPages() {
-        const data = await api.loadConfig(CONFIG.BLOCKS);
+        const data = await api.loadStaticJSON(CONFIG.BLOCKS);
 
         if (Array.isArray(data)) {
             this.pages = { main: data };
@@ -121,7 +121,7 @@ class App {
 
         this.updateInterval = setInterval(async () => {
             try {
-                const data = await api.loadConfig(CONFIG.BLOCKS);
+                    const data = await api.loadStaticJSON(CONFIG.BLOCKS);
                 let pages = data;
                 if (Array.isArray(data)) {
                     pages = { main: data };

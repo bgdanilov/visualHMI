@@ -168,7 +168,9 @@
       "regAddress": 16,
       "regType": "f4",
       "x": 20,
+<<<<<<< HEAD
       "y": 100,
+======
       "type": "title-input",
       "autoSend": false,
       "minValue": 0,
@@ -182,7 +184,7 @@
       "regAddress": 18,
       "regType": "f4",
       "x": 20,
-      "y": 393,
+      "y": 170,
       "type": "title-input",
       "autoSend": false,
       "minValue": 0,
@@ -195,7 +197,7 @@
     {
       "regAddress": [0,2,4,16,18],
       "x": 20,
-      "y": 486,
+      "y": 270,
       "type": "send-button",
       "text": "Сохранить",
       "description": "Кнопка-отправить"
