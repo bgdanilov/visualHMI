@@ -168,9 +168,7 @@
       "regAddress": 16,
       "regType": "f4",
       "x": 20,
-<<<<<<< HEAD
       "y": 100,
-======
       "type": "title-input",
       "autoSend": false,
       "minValue": 0,
