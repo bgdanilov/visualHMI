@@ -26,7 +26,7 @@ public/js/           ← ES Modules (import / export)
 - `POST /api/registers/:regId` — запись `{state, registerType}` (по умолч. `u2`)
 
 ## Типы блоков (BLOCK_TYPES)
-`only-number`, `only-title`, `title-number`, `title-group-number`, `toggle-button`, `title-input`, `send-button`
+`only-number`, `only-title`, `title-number`, `title-group-number`, `toggle-button`, `title-input`, `send-button`, `page-button`
 
 ## Ключевые особенности
 - **ModbusUpdater** 3 кэша: `.caches.spans`, `.caches.inputs`, `.caches.toggles`. Ключи — строковые ID регистров.
@@ -40,6 +40,14 @@ public/js/           ← ES Modules (import / export)
 - **Типы регистров:** `u2` (uint16 LE), `s2` (int16 LE), `f4` (float32 LE), `b0`-`b15` (бит).
 - **Битовые регистры** (`b0`-`b15`): при записи mask + shift, при чтении shift + &1.
 
+## Многостраничность
+- `blocksData.json` — объект `{ pageKey: [blocks], ... }` (произвольные ключи: `main`, `settings`, ...)
+- Старый плоский массив автоматически оборачивается в `{ main: [...] }`
+- `app.pages`, `app.currentPage`, `app.switchPage(pageKey)` — управление страницами
+- `page-button` — кнопка переключения страниц (`{ type: "page-button", targetPage: "settings", text: "Настройки" }`). При клике диспатчит `CustomEvent('page-change')` на `window`, `app.js` слушает и вызывает `switchPage`
+- `switchPage` очищает DOM + кэши (`renderer.clear()`) и рендерит блоки целевой страницы заново
+- Поллинг Modbus продолжается без перерыва (кэши перестраиваются при рендере)
+
 ## Отладка
 - `__app.getState()`, `__app.updater.caches`, `__app.restart()`, `__app.stop()` — в консоли браузера.
 
@@ -47,6 +55,5 @@ public/js/           ← ES Modules (import / export)
 - Порт хардкодом 4000 в `server/index.js` (env не читается).
 - `configService` кэширует конфиги в памяти — при ручном изменении `blocksData.json` нужен сброс кэша или перезапуск.
 - Для mmap нужен Linux с `/dev/modbus_rtu`; на Windows и macOS всегда `testBuffer`.
-- `const ports = require('portfinder')` не используется — порт фиксированный.
 - `writeRegister` на клиенте (apiClient.js) парсит `value` в число, для битовых типов принимает только 0/1.
-- `registerUtils.js` НЕ имеет обработчика для чтения/записи битовых регистров через `getRegisterType` — биты обрабатываются отдельно в writeRegister.
+- `registerUtils.js` обрабатывает битовые регистры через `getRegisterType()` → `type === 'bit'` в readRegister/writeRegister.

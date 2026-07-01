@@ -10,26 +10,30 @@ class App {
         this.updateInterval = null;
         this.renderArea = document.getElementById('render-area');
         
-        // Используем импортированные экземпляры
         this.updater = modbusUpdater;
         this.renderer = new BlockRenderer();
         this.renderer.setRenderArea(this.renderArea);
         
         this.isRunning = false;
         this.isInitialized = false;
+        this.pages = null;
+        this.currentPage = null;
     }
 
     async initialize() {
         console.log('🚀 Инициализация приложения...');
 
         try {
-            // Загружаем конфигурацию проекта
             const config = await api.loadConfig(CONFIG.PROJECT);
             this.isEditMode = config?.isEditUIMode || false;
 
+            window.addEventListener('page-change', (event) => {
+                this.switchPage(event.detail.targetPage);
+            });
+
             if (this.isEditMode) {
                 console.log('🛠️ Режим редактирования включен');
-                this._startEditMode();
+                await this._startEditMode();
             } else {
                 console.log('📊 Рабочий режим');
                 await this._startProductionMode();
@@ -42,37 +46,69 @@ class App {
         }
     }
 
-    async _startProductionMode() {
-        // Загружаем блоки
-        const blocks = await api.loadConfig(CONFIG.BLOCKS);
-        if (!Array.isArray(blocks)) {
+    async _loadPages() {
+        const data = await api.loadConfig(CONFIG.BLOCKS);
+
+        if (Array.isArray(data)) {
+            this.pages = { main: data };
+        } else if (data && typeof data === 'object') {
+            this.pages = data;
+        } else {
             throw new Error('Неверный формат blocksData.json');
         }
 
-        // Добавляем id блокам
+        return this.pages;
+    }
+
+    _renderPage(pageKey) {
+        const blocks = this.pages[pageKey];
+        if (!blocks) {
+            console.error(`Страница "${pageKey}" не найдена`);
+            return;
+        }
+
+        this.currentPage = pageKey;
         const blocksWithIds = blocks.map((block, index) => ({
             ...block,
             id: index
         }));
-
-        // Рендерим блоки
         this.renderer.renderBlocks(blocksWithIds);
+    }
 
-        // Запускаем обновление
+    switchPage(pageKey) {
+        if (pageKey === this.currentPage || !this.pages[pageKey]) return;
+        this.renderer.clear();
+        this._renderPage(pageKey);
+    }
+
+    async _startProductionMode() {
+        await this._loadPages();
+        const firstPage = Object.keys(this.pages)[0];
+        if (!firstPage) throw new Error('Нет ни одной страницы');
+
+        this._renderPage(firstPage);
         this._startPolling();
     }
 
-    _startEditMode() {
-        // В режиме редактирования обновляем UI каждые 500ms
+    async _startEditMode() {
+        await this._loadPages();
+        const firstPage = Object.keys(this.pages)[0];
+
+        this._renderPage(firstPage);
+
         this.updateInterval = setInterval(async () => {
             try {
-                const blocks = await api.loadConfig(CONFIG.BLOCKS);
-                if (Array.isArray(blocks)) {
-                    const blocksWithIds = blocks.map((block, index) => ({
-                        ...block,
-                        id: index
-                    }));
-                    this.renderer.renderBlocks(blocksWithIds);
+                const data = await api.loadConfig(CONFIG.BLOCKS);
+                let pages = data;
+                if (Array.isArray(data)) {
+                    pages = { main: data };
+                }
+                this.pages = pages;
+                if (this.currentPage && this.pages[this.currentPage]) {
+                    this._renderPage(this.currentPage);
+                } else {
+                    const fp = Object.keys(this.pages)[0];
+                    if (fp) this._renderPage(fp);
                 }
             } catch (error) {
                 console.error('Ошибка обновления UI в режиме редактирования:', error);

@@ -42,6 +42,8 @@ export class BlockRenderer {
                 return this._createTitleInput(block, blockData);
             case BLOCK_TYPES.SEND_BUTTON:
                 return this._createSendButton(block, blockData);
+            case BLOCK_TYPES.PAGE_BUTTON:
+                return this._createPageButton(block, blockData);
             default:
                 console.warn(`Неизвестный тип блока: ${blockData.type}`);
                 return null;
@@ -152,8 +154,7 @@ export class BlockRenderer {
             regAddress, 
             regType = 'u2', 
             size = 10,
-            showSaveButton = false,
-            autoSave = false
+            showSaveButton = false
         } = data;
         
         const width = size * 12 + 10;
@@ -180,32 +181,40 @@ export class BlockRenderer {
                        data-type="${regType}"
                        style="width: ${width}px;"
                        placeholder="...">
+                <button class="input-reset-btn" data-reg="${regAddress}" title="Сбросить">×</button>
                 <span class="postfix">${postfix}</span>
                 ${saveButtonHtml}
             </div>`;
 
         const input = block.querySelector('.input-value-field');
         
-        // ✅ РЕГИСТРИРУЕМ INPUT В КЭШЕ
         this.updater.addInput(regAddress, input, regType);
         
         this._setupInputHandlers(input, regAddress);
-        this._setupInputSaveOnEnter(input, regAddress, regType);
+        this._setupInputChangeTracking(input, regAddress);
         
         const saveBtn = block.querySelector('.input-save-btn');
         if (saveBtn) {
             this._setupSaveButton(saveBtn, regAddress, regType);
         }
         
-        if (autoSave) {
-            input.addEventListener('blur', async () => {
-                const value = input.value.trim();
-                if (value) {
-                    await this._saveInputValue(input, regAddress, regType);
-                }
-            });
-        }
-        
+        return block;
+    }
+
+    _createPageButton(block, data) {
+        const { text = 'Страница', targetPage } = data;
+
+        block.innerHTML = `
+            <div class="content">
+                <button class="page-button" data-target="${targetPage}">${text}</button>
+            </div>`;
+
+        block.querySelector('.page-button').addEventListener('click', () => {
+            window.dispatchEvent(new CustomEvent('page-change', {
+                detail: { targetPage }
+            }));
+        });
+
         return block;
     }
 
@@ -247,6 +256,9 @@ export class BlockRenderer {
             
             const result = await this.api.writeRegister(regAddress, value, regType);
             
+            this.updater.updateOriginalValue(regAddress, value);
+            this._updateInputDirtyState(input, regAddress);
+            
             input.style.backgroundColor = '#e8f5e9';
             input.style.borderColor = 'green';
             
@@ -284,23 +296,14 @@ export class BlockRenderer {
             this.updater.editingInputs.add(regKey);
             input.style.backgroundColor = '#fff8e1';
             input.style.borderColor = '#ff9800';
-            console.log(`✏️ Редактирование начато для регистра ${regAddress}`);
         });
     
         input.addEventListener('blur', () => {
-            // ✅ Убираем из редактируемых при потере фокуса
             this.updater.editingInputs.delete(regKey);
             input.style.backgroundColor = '';
-            input.style.borderColor = '#ccc';
-            console.log(`✏️ Редактирование завершено для регистра ${regAddress}`);
-            
-            // ✅ Принудительно обновляем значение из Modbus
-            // Небольшая задержка, чтобы сервер успел обработать
-            setTimeout(() => {
-                this.updater.update().catch(error => {
-                    console.error('Ошибка обновления после blur:', error);
-                });
-            }, 100);
+            if (!input.classList.contains('input-changed')) {
+                input.style.borderColor = '#ccc';
+            }
         });
     
         input.addEventListener('keydown', (event) => {
@@ -308,22 +311,44 @@ export class BlockRenderer {
                 input.blur();
                 this.updater.editingInputs.delete(regKey);
                 input.style.backgroundColor = '';
-                input.style.borderColor = '#ccc';
-                // Сразу обновляем
-                this.updater.update().catch(error => {
-                    console.error('Ошибка обновления после Escape:', error);
-                });
+                if (!input.classList.contains('input-changed')) {
+                    input.style.borderColor = '#ccc';
+                }
             }
         });
     }
 
-    _setupInputSaveOnEnter(input, regAddress, regType) {
-        input.addEventListener('keydown', async (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                await this._saveInputValue(input, regAddress, regType);
-            }
+    _updateInputDirtyState(input, regAddress) {
+        const regKey = String(regAddress);
+        const isDirty = this.updater.isDirty(regKey);
+        
+        input.classList.toggle('input-changed', isDirty);
+        
+        window.dispatchEvent(new CustomEvent('input-dirty-change'));
+    }
+
+    _setupInputChangeTracking(input, regAddress) {
+        const regKey = String(regAddress);
+        
+        input.addEventListener('input', () => {
+            this._updateInputDirtyState(input, regAddress);
         });
+        
+        input.addEventListener('change', () => {
+            this._updateInputDirtyState(input, regAddress);
+        });
+        
+        const resetBtn = input.parentElement.querySelector('.input-reset-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const entry = this.updater.caches.inputs.get(regKey);
+                if (entry) {
+                    input.value = entry.originalValue;
+                    this._updateInputDirtyState(input, regAddress);
+                }
+            });
+        }
     }
 
     _setupSaveButton(button, regAddress, regType) {
@@ -393,8 +418,23 @@ export class BlockRenderer {
         });
     }
 
+    _updateSendButtonState(sendButton) {
+        const regAttr = sendButton.dataset.reg;
+        if (!regAttr) return;
+        const regs = regAttr.split(',').map(r => r.trim());
+        const hasDirty = regs.some(reg => this.updater.isDirty(reg));
+        sendButton.disabled = !hasDirty;
+    }
+
     _setupSendButton(sendButton) {
         const originalText = sendButton.textContent;
+
+        this._updateSendButtonState(sendButton);
+
+        window.addEventListener('input-dirty-change', () => {
+            if (!document.body.contains(sendButton)) return;
+            this._updateSendButtonState(sendButton);
+        });
 
         sendButton.addEventListener('click', async (event) => {
             event.preventDefault();
@@ -408,6 +448,15 @@ export class BlockRenderer {
 
             const regs = regAttr.split(',').map(r => r.trim());
 
+            const hasDirty = regs.some(reg => this.updater.isDirty(reg));
+            if (!hasDirty) {
+                sendButton.textContent = 'Нет изменений';
+                setTimeout(() => {
+                    sendButton.textContent = originalText;
+                }, 1500);
+                return;
+            }
+
             sendButton.textContent = '⏳ Отправка...';
             sendButton.disabled = true;
             sendButton.classList.add('sending');
@@ -416,10 +465,8 @@ export class BlockRenderer {
                 for (const reg of regs) {
                     const regKey = String(reg);
                     
-                    // Пытаемся получить из кэша
                     let regInfo = this.updater.caches.inputs.get(regKey);
                     
-                    // Если нет в кэше - ищем в DOM
                     if (!regInfo) {
                         console.warn(`⚠️ Регистр ${reg} не найден в кэше, ищем в DOM...`);
                         const inputElement = document.querySelector(`.input-value-field[data-reg="${reg}"]`);
@@ -444,6 +491,9 @@ export class BlockRenderer {
                     }
 
                     await this.api.writeRegister(reg, value, regInfo.registerType || 'u2');
+                    
+                    this.updater.updateOriginalValue(reg, value);
+                    this._updateInputDirtyState(regInfo.element, reg);
                     
                     this.updater.editingInputs.delete(regKey);
                     

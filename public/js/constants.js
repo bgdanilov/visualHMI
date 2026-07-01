@@ -13,5 +13,6 @@ export const BLOCK_TYPES = {
     TITLE_GROUP_NUMBER: 'title-group-number',
     TOGGLE_BUTTON: 'toggle-button',
     TITLE_INPUT: 'title-input',
-    SEND_BUTTON: 'send-button'
+    SEND_BUTTON: 'send-button',
+    PAGE_BUTTON: 'page-button'
 };

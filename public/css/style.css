@@ -256,3 +256,34 @@ span.number {
     padding: 5px 10px;
     font-family: monospace;
 }
+
+/* Dirty input — жёлтая рамка */
+.input-value-field.input-changed {
+    border-color: #ff9800 !important;
+    background-color: #fff8e1;
+}
+
+/* Кнопка сброса (×) — скрыта по умолчанию */
+.input-reset-btn {
+    display: none;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: #999;
+    font-size: 16px;
+    padding: 0 4px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.input-reset-btn:hover {
+    color: #c00;
+}
+.input-value-field.input-changed + .input-reset-btn {
+    display: inline-block;
+}
+
+/* Send-button disabled */
+.send-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

@@ -28,7 +28,22 @@ export class ModbusUpdater {
 
     addInput(regId, input, registerType) {
         const key = String(regId);
-        this.caches.inputs.set(key, { registerType, element: input });
+        this.caches.inputs.set(key, { registerType, element: input, originalValue: input.value });
+    }
+
+    updateOriginalValue(regId, value) {
+        const key = String(regId);
+        const entry = this.caches.inputs.get(key);
+        if (entry) {
+            entry.originalValue = String(value);
+        }
+    }
+
+    isDirty(regId) {
+        const key = String(regId);
+        const entry = this.caches.inputs.get(key);
+        if (!entry || !entry.element) return false;
+        return entry.element.value !== entry.originalValue;
     }
 
     addToggle(regId, button, registerType) {
@@ -129,7 +144,8 @@ export class ModbusUpdater {
 
                 if (this.sendingRegisters.has(regKey) || 
                     this.editingInputs.has(regKey) ||
-                    document.activeElement === input) {
+                    document.activeElement === input ||
+                    input.value !== regInfo.originalValue) {
                     continue;
                 }
 
@@ -150,6 +166,7 @@ export class ModbusUpdater {
                     
                     if (input.value !== String(displayValue)) {
                         input.value = displayValue;
+                        regInfo.originalValue = String(displayValue);
                     }
                 }
             }
@@ -160,44 +177,43 @@ export class ModbusUpdater {
         }
     }
 
-    // Добавляем метод для принудительного обновления конкретного input
-async updateSingleInput(regId) {
-    try {
-        const regKey = String(regId);
-        const regInfo = this.caches.inputs.get(regKey);
-        
-        if (!regInfo || !regInfo.element) {
-            console.warn(`Input для регистра ${regId} не найден`);
-            return;
-        }
-
-        const dataView = await api.readModbus();
-        const bytesLength = dataView.byteLength;
-        
-        const offset = parseInt(regId) * 2;
-        const byteCount = this.getBytesCount(regInfo.registerType);
-
-        if (offset + byteCount > bytesLength) {
-            console.warn(`Недостаточно данных для регистра ${regId}`);
-            return;
-        }
-
-        const value = this.readValue(dataView, offset, regInfo.registerType);
-
-        if (value !== undefined && !isNaN(value) && regInfo.element) {
-            const displayValue = regInfo.registerType === 'f4' 
-                ? value.toFixed(2) 
-                : value;
+    async updateSingleInput(regId) {
+        try {
+            const regKey = String(regId);
+            const regInfo = this.caches.inputs.get(regKey);
             
-            if (regInfo.element.value !== String(displayValue)) {
-                regInfo.element.value = displayValue;
-                console.log(`🔄 Обновлен input ${regId}: ${displayValue}`);
+            if (!regInfo || !regInfo.element) {
+                console.warn(`Input для регистра ${regId} не найден`);
+                return;
             }
+
+            const dataView = await api.readModbus();
+            const bytesLength = dataView.byteLength;
+            
+            const offset = parseInt(regId) * 2;
+            const byteCount = this.getBytesCount(regInfo.registerType);
+
+            if (offset + byteCount > bytesLength) {
+                console.warn(`Недостаточно данных для регистра ${regId}`);
+                return;
+            }
+
+            const value = this.readValue(dataView, offset, regInfo.registerType);
+
+            if (value !== undefined && !isNaN(value) && regInfo.element) {
+                const displayValue = regInfo.registerType === 'f4' 
+                    ? value.toFixed(2) 
+                    : value;
+                
+                if (regInfo.element.value !== String(displayValue)) {
+                    regInfo.element.value = displayValue;
+                    regInfo.originalValue = String(displayValue);
+                }
+            }
+        } catch (error) {
+            console.error(`Ошибка обновления input ${regId}:`, error);
         }
-    } catch (error) {
-        console.error(`Ошибка обновления input ${regId}:`, error);
     }
-}
 
     markAsSending(regId) {
         this.sendingRegisters.add(String(regId));

@@ -1,176 +1,219 @@
-[
-  { 
-    "regAddress": 16,
-    "regType": "f4",
-    "x": 20,
-    "y": 300,
-    "type": "title-input",
-    "autoSend": false,
-    "minValue": 0,
-    "maxValue": 0,
-    "prefix": "Ток",
-    "postfix": "А",
-    "description": "Ввод значения",
-    "size": 5
-  },
-  { 
-    "regAddress": 18,
-    "regType": "f4",
-    "x": 20,
-    "y": 393,
-    "type": "title-input",
-    "autoSend": false,
-    "minValue": 0,
-    "maxValue": 0,
-    "prefix": "Мощность",
-    "postfix": "W",
-    "description": "Ввод значения",
-    "size": 5
-  },
-  {
-    "regAddress": [0, 2, 4, 16, 18],
-    "x": 20,
-    "y": 486,
-    "type": "send-button",
-    "text": "Сохранить",
-    "description": "Кнопка-отправить"
-  },
-  { 
-    "regAddress": [0, 1, 2, 4, 16, 18, 12],
-    "regType": ["f4", "u2", "f4", "f4", "f4", "f4", "u2"],
-    "type": "title-group-number",
-    "text": "Список",
-    "prefixes": ["Iреак.", "T", "Uном. ", "Rшунт.", "Istat", "P", ""],
-    "postfixes": ["W", "sec", "V", "Om", "mA", "W", ""],
-    "x": 610,
-    "y": 20,
-    "description": "Текст + и массив чисел"
-  },
-
-
-  {
-    "regAddress": 0,
-    "regType": "f4",
-    "regMode": "r",
-    "x": 360 ,
-    "y": 20,
-    "type": "title-number",
-    "text": "Реактивный ток (№0)",
-    "prefix": "Iреак.",
-    "postfix": "A",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 2,
-    "regType": "f4",
-    "regMode": "r",
-    "x": 360 ,
-    "y": 120,
-    "type": "title-number",
-    "text": "Ном. напряжение (№2)",
-    "prefix": "Iреак.",
-    "postfix": "A",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 4,
-    "regType": "f4",
-    "regMode": "r",
-    "x": 360 ,
-    "y": 220,
-    "type": "title-number",
-    "text": "Сопротивление шунта (№4)",
-    "prefix": "Iреак.",
-    "postfix": "A",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 12,
-    "regType": "b12",
-    "regMode": "r",
-    "x": 630,
-    "y": 220,
-    "type": "only-number",
-    "prefix": "12[12]",
-    "postfix": "",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 16,
-    "regType": "f4",
-    "regMode": "r",
-    "x": 360 ,
-    "y": 320,
-    "type": "title-number",
-    "text": "Ток статора (№17)",
-    "prefix": "Iреак.",
-    "postfix": "A",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 18,
-    "regType": "f4",
-    "regMode": "r",
-    "x": 360 ,
-    "y": 405,
-    "type": "title-number",
-    "text": "Активная мощность (№18)",
-    "prefix": "Iреак.",
-    "postfix": "A",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 20,
-    "regType": "u2",
-    "regMode": "r",
-    "x": 630,
-    "y": 280,
-    "type": "only-number",
-    "prefix": "№20",
-    "postfix": "",
-    "description": "Текст + число"
-  },
-  {
-    "regAddress": 20,
-    "regType": "b0",
-    "regMode": "r",
-    "x": 630,
-    "y": 360,
-    "type": "title-input",
-    "prefix": "№20",
-    "postfix": "",
-    "description": "Текст + число",
-    "size": 3
-  },
-
-  {
-    "regAddress": 20,
-    "regType": "b0",
-    "description": "Кнопка форсировки",
-    "type": "toggle-button",
-    "text": "Вкл",
-    "prefix": "20[0]",
-    "x": 360,
-    "y": 490
-  },
-  {
-    "regAddress": 20,
-    "regType": "b1",
-    "description": "Кнопка форсировки",
-    "type": "toggle-button",
-    "text": "Вкл",
-    "prefix": "20[1]",
-    "x": 500,
-    "y": 490
-  },
-  {
-    "regAddress": 20,
-    "regType": "b2",
-    "description": "Кнопка форсировки",
-    "type": "toggle-button",
-    "text": "Вкл",
-    "prefix": "20[2]",
-    "x": 640,
-    "y": 490
-  }
-]
+{
+  "main": [
+    {
+      "type": "page-button",
+      "targetPage": "settings",
+      "text": "Настройки",
+      "x": 10,
+      "y": 10
+    },
+    {
+      "type": "page-button",
+      "targetPage": "graff",
+      "text": "Графики",
+      "x": 130,
+      "y": 10
+    },
+    {
+      "regAddress": [0,1,2,4,16,18,12],
+      "regType": ["f4","u2","f4","f4","f4","f4","u2"],
+      "type": "title-group-number",
+      "text": "Список",
+      "prefixes": ["Iреак.","T","Uном. ","Rшунт.","Istat","P",""],
+      "postfixes": ["W","sec","V","Om","mA","W",""],
+      "x": 610,
+      "y": 20,
+      "description": "Текст + и массив чисел"
+    },
+    {
+      "regAddress": 0,
+      "regType": "f4",
+      "regMode": "r",
+      "x": 360,
+      "y": 20,
+      "type": "title-number",
+      "text": "Реактивный ток (№0)",
+      "prefix": "Iреак.",
+      "postfix": "A",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 2,
+      "regType": "f4",
+      "regMode": "r",
+      "x": 360,
+      "y": 120,
+      "type": "title-number",
+      "text": "Ном. напряжение (№2)",
+      "prefix": "Iреак.",
+      "postfix": "A",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 4,
+      "regType": "f4",
+      "regMode": "r",
+      "x": 360,
+      "y": 220,
+      "type": "title-number",
+      "text": "Сопротивление шунта (№4)",
+      "prefix": "Iреак.",
+      "postfix": "A",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 12,
+      "regType": "b12",
+      "regMode": "r",
+      "x": 630,
+      "y": 220,
+      "type": "only-number",
+      "prefix": "12[12]",
+      "postfix": "",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 16,
+      "regType": "f4",
+      "regMode": "r",
+      "x": 360,
+      "y": 320,
+      "type": "title-number",
+      "text": "Ток статора (№16)",
+      "prefix": "Iреак.",
+      "postfix": "A",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 18,
+      "regType": "f4",
+      "regMode": "r",
+      "x": 360,
+      "y": 405,
+      "type": "title-number",
+      "text": "Активная мощность (№18)",
+      "prefix": "Iреак.",
+      "postfix": "A",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 20,
+      "regType": "u2",
+      "regMode": "r",
+      "x": 630,
+      "y": 280,
+      "type": "only-number",
+      "prefix": "№20",
+      "postfix": "",
+      "description": "Текст + число"
+    },
+    {
+      "regAddress": 20,
+      "regType": "b0",
+      "regMode": "r",
+      "x": 630,
+      "y": 360,
+      "type": "title-input",
+      "prefix": "№20",
+      "postfix": "",
+      "description": "Текст + число",
+      "size": 3
+    },
+    {
+      "regAddress": 20,
+      "regType": "b0",
+      "description": "Кнопка форсировки",
+      "type": "toggle-button",
+      "text": "Вкл",
+      "prefix": "20[0]",
+      "x": 360,
+      "y": 490
+    },
+    {
+      "regAddress": 20,
+      "regType": "b1",
+      "description": "Кнопка форсировки",
+      "type": "toggle-button",
+      "text": "Вкл",
+      "prefix": "20[1]",
+      "x": 500,
+      "y": 490
+    },
+    {
+      "regAddress": 20,
+      "regType": "b2",
+      "description": "Кнопка форсировки",
+      "type": "toggle-button",
+      "text": "Вкл",
+      "prefix": "20[2]",
+      "x": 640,
+      "y": 490
+    }
+  ],
+  "settings": [
+    {
+      "type": "only-title",
+      "text": "Настройки",
+      "x": 300,
+      "y": 10
+    },
+    {
+      "type": "page-button",
+      "targetPage": "main",
+      "text": "На главную",
+      "x": 10,
+      "y": 10
+    },
+     {
+      "regAddress": 16,
+      "regType": "f4",
+      "x": 20,
+      "y": 300,
+      "type": "title-input",
+      "autoSend": false,
+      "minValue": 0,
+      "maxValue": 0,
+      "prefix": "Ток",
+      "postfix": "А",
+      "description": "Ввод значения",
+      "size": 5
+    },
+    {
+      "regAddress": 18,
+      "regType": "f4",
+      "x": 20,
+      "y": 393,
+      "type": "title-input",
+      "autoSend": false,
+      "minValue": 0,
+      "maxValue": 0,
+      "prefix": "Мощность",
+      "postfix": "W",
+      "description": "Ввод значения",
+      "size": 5
+    },
+    {
+      "regAddress": [0,2,4,16,18],
+      "x": 20,
+      "y": 486,
+      "type": "send-button",
+      "text": "Сохранить",
+      "description": "Кнопка-отправить"
+    }
+  ],
+   "graff": [
+    {
+      "type": "only-title",
+      "text": "Графики",
+      "x": 300,
+      "y": 10
+    },
+    {
+      "type": "page-button",
+      "targetPage": "main",
+      "text": "На главную",
+      "x": 10,
+      "y": 10
+    }
+  ]
+}
