@@ -20,8 +20,31 @@ class App {
         this.currentPage = null;
     }
 
+    _setupScaling() {
+        const CANVAS_W = 1280;
+        const CANVAS_H = 760;
+
+        const fit = () => {
+            const scale = Math.min(
+                window.innerWidth / CANVAS_W,
+                window.innerHeight / CANVAS_H
+            );
+            const el = this.renderArea;
+            el.style.position = 'absolute';
+            el.style.transformOrigin = 'top left';
+            el.style.transform = `scale(${scale})`;
+            el.style.left = `${(window.innerWidth - CANVAS_W * scale) / 2}px`;
+            el.style.top = `${(window.innerHeight - CANVAS_H * scale) / 2}px`;
+        };
+
+        fit();
+        window.addEventListener('resize', fit);
+    }
+
     async initialize() {
         console.log('🚀 Инициализация приложения...');
+
+        this._setupScaling();
 
         try {
             const config = await api.loadConfig(CONFIG.PROJECT);
@@ -47,7 +70,7 @@ class App {
     }
 
     async _loadPages() {
-        const data = await api.loadConfig(CONFIG.BLOCKS);
+        const data = await api.loadStaticJSON(CONFIG.BLOCKS);
 
         if (Array.isArray(data)) {
             this.pages = { main: data };
@@ -98,7 +121,7 @@ class App {
 
         this.updateInterval = setInterval(async () => {
             try {
-                const data = await api.loadConfig(CONFIG.BLOCKS);
+                    const data = await api.loadStaticJSON(CONFIG.BLOCKS);
                 let pages = data;
                 if (Array.isArray(data)) {
                     pages = { main: data };

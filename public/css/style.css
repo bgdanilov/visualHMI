@@ -9,22 +9,20 @@
 body {
     font-family: Verdana, Geneva, sans-serif;
     margin: 0;
-    overflow: hidden; /* Чтобы избежать полос прокрутки, если блоки выйдут за пределы */
+    overflow: hidden;
     background-color: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; /* Минимальная высота, чтобы контент был по центру */
+    width: 100vw;
+    height: 100vh;
 }
 
 #render-area {
-    position: relative; /* Важно для абсолютного позиционирования дочерних элементов */
-    width: 800px;
-    height: 600px;
-    border: 2px solid #333;
+    position: absolute;
+    width: 1280px;
+    height: 760px;
+    /*border: 2px solid #333;
     background-color: #fff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    overflow: hidden; /* Чтобы блоки не выходили за пределы области */
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);*/
+    overflow: hidden;
 }
 
 p, span, h2 {

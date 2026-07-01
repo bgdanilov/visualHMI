@@ -39,6 +39,16 @@ class ApiClient {
         return response.json();
     }
 
+    async loadStaticJSON(fileName) {
+        const response = await this._fetchWithTimeout(`/${fileName}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return response.json();
+    }
+
     async readModbus() {
         const response = await this._fetchWithTimeout('/api/modbus');
         
