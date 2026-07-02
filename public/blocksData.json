@@ -1,13 +1,13 @@
 {
   "main": [
     {
-      "regAddress": [0,1,2,20,20],
+      "regAddress": [0,16,2,20,20],
       "regType": ["f4","f4","f4","b0","b1"],
       "type": "title-group-number",
-      "text": "QF3",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 400,
+      "text": "ЧЕРНЕГА",
+      "prefixes": ["A","B","C","20[0]","ErrCMDRst"],
+      "postfixes": ["A","A","A","bit"],
+      "x": 320,
       "y": 10,
       "description": "Текст + и массив чисел"
     },

@@ -80,15 +80,28 @@ span.number {
 .title-group-number .content span.number {
     font-size: 1.1em;
     min-width: 5ch;
+    max-width: 5ch;
+    text-align: right;
+    overflow: hidden;
 }
 
 .content .prefix,
 .content .postfix {
-    justify-content: left; /* Префикс и постфикс выравниваются по левому краю */
+    justify-content: right; /* Префикс и постфикс выравниваются по левому краю */
     white-space: pre;
-    min-width: 3ch;
+    text-align: right;
     flex-shrink: 0;
 }
+
+.content .prefix {
+    text-align: right;
+    min-width: 6ch;
+}
+.content .postfix {
+    text-align: left;
+    min-width: 3ch;
+}
+
 
 /* Стиль для кнопки "Вкл/Откл" */
 .toggle-button button {
