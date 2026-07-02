@@ -1,7 +1,8 @@
 // public/js/blockRenderer.js
 import { BLOCK_TYPES } from './constants.js';
 import { api } from './apiClient.js';
-import { modbusUpdater } from './modbusUpdater.js'; // ✅ теперь импорт работает
+import { modbusUpdater } from './modbusUpdater.js';
+import { numpadManager } from './numpad.js';
 
 export class BlockRenderer {
     constructor() {
@@ -9,7 +10,8 @@ export class BlockRenderer {
         this.blocks = new Map();
         this.blockCounter = 0;
         this.api = api;
-        this.updater = modbusUpdater; // ✅ используем экземпляр
+        this.updater = modbusUpdater;
+        this._numpadOpenReg = null;
     }
 
     setRenderArea(element) {
@@ -291,6 +293,7 @@ export class BlockRenderer {
 
     _setupInputHandlers(input, regAddress) {
         const regKey = String(regAddress);
+        const renderer = this;
     
         input.addEventListener('focus', () => {
             this.updater.editingInputs.add(regKey);
@@ -299,6 +302,7 @@ export class BlockRenderer {
         });
     
         input.addEventListener('blur', () => {
+            if (this._numpadOpenReg === regKey) return;
             this.updater.editingInputs.delete(regKey);
             input.style.backgroundColor = '';
             if (!input.classList.contains('input-changed')) {
@@ -306,8 +310,46 @@ export class BlockRenderer {
             }
         });
     
+        input.addEventListener('click', () => {
+            if (this._numpadOpenReg === regKey) return;
+            this._numpadOpenReg = regKey;
+            input.readOnly = true;
+
+            const curValue = input.value;
+            numpadManager.show(curValue, {
+                onOk(val) {
+                    input.readOnly = false;
+                    input.value = val;
+                    renderer._updateInputDirtyState(input, regAddress);
+                    renderer._numpadOpenReg = null;
+                    renderer.updater.editingInputs.delete(regKey);
+                    input.style.backgroundColor = '';
+                    if (!input.classList.contains('input-changed')) {
+                        input.style.borderColor = '#ccc';
+                    }
+                    input.blur();
+                },
+                onCancel() {
+                    input.readOnly = false;
+                    const entry = renderer.updater.caches.inputs.get(regKey);
+                    if (entry) {
+                        input.value = entry.originalValue;
+                    }
+                    renderer._updateInputDirtyState(input, regAddress);
+                    renderer._numpadOpenReg = null;
+                    renderer.updater.editingInputs.delete(regKey);
+                    input.style.backgroundColor = '';
+                    if (!input.classList.contains('input-changed')) {
+                        input.style.borderColor = '#ccc';
+                    }
+                    input.blur();
+                }
+            });
+        });
+    
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
+                if (this._numpadOpenReg === regKey) return;
                 input.blur();
                 this.updater.editingInputs.delete(regKey);
                 input.style.backgroundColor = '';
