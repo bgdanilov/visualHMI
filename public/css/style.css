@@ -116,6 +116,22 @@ span.number {
     transform: none !important;
 }
 
+.page-button {
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+.page-button button {
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 3px;
+    border: 1px solid #aaa;
+    background-color: #0056b3;
+    color: #d3d3d3;
+    transition: background-color 0.2s ease;
+}
+
 
 /* Состояние ОЖИДАНИЯ (серый фон, текст остается) */
 .toggle-button.waiting {
