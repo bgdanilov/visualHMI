@@ -20,6 +20,7 @@ public/js/        ← ES Modules (import / export)
   modbusUpdater.js   ModbusUpdater (singleton): 3 кэша (spans/inputs/toggles), поллинг 300ms
   constants.js       CONFIG (пути, интервалы) + BLOCK_TYPES
   scalingManager.js  ScalingManager (singleton): масштабирование холста 1280×760
+  numpad.js          NumpadManager (singleton): модальный нумпад для title-input
 ```
 
 ## API
@@ -44,6 +45,15 @@ public/js/        ← ES Modules (import / export)
 - × кнопка сброса восстанавливает `originalValue` из кэша
 - `updateOriginalValue(regId, value)` вызывается после успешного сохранения
 
+### Нумпад (title-input)
+- При клике на `title-input` открывается модальный нумпад (центр экрана, `backdrop-filter: blur`)
+- Цифры 0–9, точка (`.`), ⌫ (backspace), OK, Cancel
+- Значение отображается в `<div class="numpad-display">` внутри нумпада
+- OK: копирует значение в input, обновляет dirty-трекинг
+- Cancel: восстанавливает `originalValue` из кэша
+- На физической клавиатуре: Enter→OK, Escape→Cancel, Backspace→⌫, цифры/точка напрямую
+- Пока нумпад открыт, input становится `readOnly` для предотвращения прямого ввода
+
 ### Send-button
 - Следит за событием `input-dirty-change` — дизейблит кнопку когда ни один reg не изменён
 - `data-reg` может содержать несколько ID через запятую
@@ -52,6 +62,14 @@ public/js/        ← ES Modules (import / export)
 ### Toggle-button
 - Отправляет 0/1 через API → ждёт 400ms → поллинг обновляет состояние
 - `waiting` CSS-класс с пульсацией
+
+### Формат-стринг (printf-стиль)
+- Блоки `only-number`, `title-number`, `title-group-number` поддерживают `format` вместо `regAddress`/`regType`/`prefix`/`postfix`
+- Синтаксис: `["printf-строка", regSpec]` где regSpec — число (регистр) или `"regId:type"` (явный тип)
+- Вывод типа из printf-спецификатора: `%f`/`%e`/`%g` → `f4`, `%d`/`%i` → `s2`, `%u` → `u2`, `%c` → `b0`
+- `_applyFormat(formatSpec, value, regType)` в `modbusUpdater.js` — форматирует значение по спецификатору
+- `_parseBlockFormat(fmtStr, regSpec)` в `blockRenderer.js` — парсит `["prefix %f postfix", 0]` в textBefore/textAfter/regType/formatSpec
+- Пример: `"format": ["Ток=%f А", 16]` для `title-number`, `"format": [["A=%f A", 0], ["20[0]=%c", "20:b0"]]` для `title-group-number`
 
 ### Блоки
 - Типы: `only-number`, `only-title`, `title-number`, `title-group-number`, `toggle-button`, `title-input`, `send-button`, `page-button`

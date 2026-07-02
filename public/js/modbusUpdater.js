@@ -18,10 +18,53 @@ export class ModbusUpdater {
         this.caches.toggles.clear();
     }
 
-    addSpan(regId, span, registerType) {
+    _applyFormat(formatSpec, value, regType) {
+        const specifier = formatSpec.slice(-1);
+        const m = formatSpec.match(/^%([#0\- +])?(\d+)?(\.(\d+))?([diufegGc])$/);
+        const width = m ? parseInt(m[2]) || 0 : 0;
+        const prec = m ? parseInt(m[4]) : -1;
+
+        let s;
+        switch (specifier) {
+            case 'f':
+                s = value.toFixed(prec >= 0 ? prec : 2);
+                break;
+            case 'e':
+                s = value.toExponential(prec >= 0 ? prec : 2);
+                break;
+            case 'E':
+                s = value.toExponential(prec >= 0 ? prec : 2).toUpperCase();
+                break;
+            case 'g':
+                s = prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4);
+                break;
+            case 'G':
+                s = (prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4)).toUpperCase();
+                break;
+            case 'd': case 'i':
+                s = String(Math.round(value));
+                break;
+            case 'u':
+                s = String(Math.max(0, Math.round(value)));
+                break;
+            case 'c':
+                s = String(value);
+                break;
+            default:
+                s = String(value);
+        }
+
+        if (width > s.length) {
+            const flag = m ? m[1] || '' : '';
+            s = flag === '0' ? s.padStart(width, '0') : s.padStart(width);
+        }
+        return s;
+    }
+
+    addSpan(regId, span, registerType, formatSpec) {
         const key = String(regId);
         if (!this.caches.spans.has(key)) {
-            this.caches.spans.set(key, { registerType, spans: [] });
+            this.caches.spans.set(key, { registerType, formatSpec, spans: [] });
         }
         this.caches.spans.get(key).spans.push(span);
     }
@@ -97,9 +140,9 @@ export class ModbusUpdater {
                 const value = this.readValue(dataView, offset, regInfo.registerType);
                 
                 if (value !== undefined && !isNaN(value)) {
-                    const displayValue = regInfo.registerType === 'f4' 
-                        ? value.toFixed(2) 
-                        : value;
+                    const displayValue = regInfo.formatSpec
+                        ? this._applyFormat(regInfo.formatSpec, value, regInfo.registerType)
+                        : String(value);
                     regInfo.spans.forEach(span => {
                         if (span.textContent !== String(displayValue)) {
                             span.textContent = displayValue;

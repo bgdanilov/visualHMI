@@ -1,191 +1,27 @@
 {
   "main": [
     {
-      "regAddress": [0,16,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
       "type": "title-group-number",
       "text": "ЧЕРНЕГА",
-      "prefixes": ["A","B","C","20[0]","ErrCMDRst"],
-      "postfixes": ["A","A","A","bit"],
+      "format": [["A=%f A", 0], ["Сумма=%f A", 16], ["C=%f A", 2], ["20[0]=%c bit", "20:b0"], ["Меркурий=%e", 18]],
       "x": 320,
-      "y": 10,
-      "description": "Текст + и массив чисел"
+      "y": 10
     },
     {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF4",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 570,
-      "y": 10,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF5",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 740,
-      "y": 10,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF6",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 910,
-      "y": 10,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF7",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 1080,
-      "y": 10,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF8",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 400,
-      "y": 210,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF9",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 570,
-      "y": 210,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF10",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 740,
-      "y": 210,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF11",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 910,
-      "y": 210,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF12",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 1080,
-      "y": 210,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF13",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 400,
-      "y": 410,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF14",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 570,
-      "y": 410,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF15",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 740,
-      "y": 410,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF16",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 910,
-      "y": 410,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": [0,1,2,20,20],
-      "regType": ["f4","f4","f4","b0","b1"],
-      "type": "title-group-number",
-      "text": "QF17",
-      "prefixes": ["A","B","C","20[0]","20[1]"],
-      "postfixes": ["A","A","A"],
-      "x": 1080,
-      "y": 410,
-      "description": "Текст + и массив чисел"
-    },
-    {
-      "regAddress": 16,
-      "regType": "f4",
-      "regMode": "r",
-      "x": 850,
-      "y": 580,
       "type": "title-number",
       "text": "Сумма",
-      "postfix": "кВтч",
-      "description": "Текст + число"
+      "format": ["%e кВтч", 16],
+      "regMode": "r",
+      "x": 760,
+      "y": 580
     },
     {
-      "regAddress": 18,
-      "regType": "f4",
-      "regMode": "r",
-      "x": 1020,
-      "y": 580,
       "type": "title-number",
       "text": "Меркурий",
-      "postfix": "кВтч",
-      "description": "Текст + число"
+      "format": ["%e кВтч", 18],
+      "regMode": "r",
+      "x": 1020,
+      "y": 580
     },
     {
       "type": "page-button",
@@ -251,43 +87,27 @@
       "y": 80
     },
     {
-      "regAddress": 16,
-      "regType": "f4",
+      "type": "title-input",
+      "text": "Ввод значения",
+      "format": ["Ток=%f А", 16],
       "x": 400,
       "y": 100,
-      "type": "title-input",
-      "autoSend": false,
-      "minValue": 0,
-      "maxValue": 0,
-      "prefix": "Ток",
-      "postfix": "А",
-      "description": "Ввод значения",
       "size": 5
     },
     {
-      "regAddress": 18,
-      "regType": "f4",
+      "type": "title-input",
+      "text": "Ввод значения",
+      "format": ["Мощность=%f W", 18],
       "x": 400,
       "y": 190,
-      "type": "title-input",
-      "autoSend": false,
-      "minValue": 0,
-      "maxValue": 0,
-      "prefix": "Мощность",
-      "postfix": "W",
-      "description": "Ввод значения",
       "size": 5
     },
     {
-      "regAddress": 20,
-      "regType": "b0",
+      "type": "title-input",
+      "format": ["20[0]=%c", "20:b0"],
       "regMode": "r",
       "x": 400,
       "y": 10,
-      "type": "title-input",
-      "prefix": "20[0]",
-      "postfix": "",
-      "description": "Текст + число",
       "size": 3
     },
     {

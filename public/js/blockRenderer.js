@@ -53,15 +53,24 @@ export class BlockRenderer {
     }
 
     _createOnlyNumber(block, data) {
+        if (data.format) {
+            const p = this._parseBlockFormat(data.format[0], data.format[1]);
+            block.innerHTML = `
+                <div class="content" data-reg="${p.regId}" data-type="${p.regType}">
+                    <span class="prefix">${p.textBefore}</span>
+                    <span class="number">--</span>
+                    <span class="postfix">${p.textAfter}</span>
+                </div>`;
+            this._registerSpan(block, p.regId, p.regType, p.formatSpec);
+            return block;
+        }
         const { prefix = '', postfix = '', regAddress, regType = 'u2', value = '--' } = data;
-        
         block.innerHTML = `
             <div class="content" data-reg="${regAddress}" data-type="${regType}">
                 <span class="prefix">${prefix}</span>
                 <span class="number">${value}</span>
                 <span class="postfix">${postfix}</span>
             </div>`;
-
         this._registerSpan(block, regAddress, regType);
         return block;
     }
@@ -77,9 +86,23 @@ export class BlockRenderer {
         return block;
     }
 
-    _createTitleNumber(block, data) {
-        const { text = '', prefix = '', postfix = '', regAddress, regType = 'u2', value = '--' } = data;
-        
+ /*   _createTitleNumber(block, data) {
+        if (data.format) {
+            const p = this._parseBlockFormat(data.format[0], data.format[1]);
+            const text = (data.text || '').replace(/\n/g, '<br>');
+            block.innerHTML = `
+                <div class="content">
+                    <span class="title">${text}</span>
+                </div>
+                <div class="content" data-reg="${p.regId}" data-type="${p.regType}">
+                    <span class="prefix">${p.textBefore}</span>
+                    <span class="number">--</span>
+                    <span class="postfix">${p.textAfter}</span>
+                </div>`;
+            this._registerSpan(block, p.regId, p.regType, p.formatSpec);
+            return block;
+        }
+        const { text = '', prefix = '', postfix = '', regAddress, regType = '', value = '--' } = data;
         block.innerHTML = `
             <div class="content">
                 <span class="title">${text}</span>
@@ -89,42 +112,71 @@ export class BlockRenderer {
                 <span class="number">${value}</span>
                 <span class="postfix">${postfix}</span>
             </div>`;
-
         this._registerSpan(block, regAddress, regType);
         return block;
+    }*/
+
+    
+
+    _createTitleNumber(block, data) {
+    let config;
+    let p = null;
+    
+    if (data.format) {
+        p = this._parseBlockFormat(data.format[0], data.format[1]);
+        config = {
+            text: (data.text || '').replace(/\n/g, '<br>'),
+            prefix: p.textBefore,
+            postfix: p.textAfter,
+            regAddress: p.regId,
+            regType: p.regType,
+            value: '--'
+        };
+    } else {
+        const { text = '', prefix = '', postfix = '', regAddress, regType = '', value = '--' } = data;
+        config = { text, prefix, postfix, regAddress, regType, value };
     }
+    
+    // Одна сборка HTML
+    block.innerHTML = `
+        <div class="content">
+            <span class="title">${config.text}</span>
+        </div>
+        <div class="content" data-reg="${config.regAddress}">
+            <span class="prefix">${config.prefix}</span>
+            <span class="number">${config.value}</span>
+            <span class="postfix">${config.postfix}</span>
+        </div>`;
+     this._registerSpan(block, p.regId, p.regType, p.formatSpec);
+    return block;
+}
+
+
+
+
+
 
     _createTitleGroupNumber(block, data) {
-        const { text = '', regAddress, prefixes = [], postfixes = [], regType = [], value = [] } = data;
+        const { text = '', format: formatEntries = [] } = data;
         
         block.innerHTML = `
             <div class="content">
                 <span class="title">${text}</span>
             </div>`;
 
-        if (!Array.isArray(regAddress)) {
-            console.warn('regAddress не является массивом');
-            return block;
-        }
-
-        regAddress.forEach((regIdx, i) => {
-            const prefix = prefixes[i] || '';
-            const postfix = postfixes[i] || '';
-            const type = regType[i] || 'u2';
-            const val = Array.isArray(value) ? value[i] : value;
-            
+        formatEntries.forEach(([fmtStr, regSpec]) => {
+            const p = this._parseBlockFormat(fmtStr, regSpec);
             const contentDiv = document.createElement('div');
             contentDiv.className = 'content';
-            contentDiv.dataset.reg = regIdx;
-            contentDiv.dataset.type = type;
+            contentDiv.dataset.reg = p.regId;
+            contentDiv.dataset.type = p.regType;
             contentDiv.innerHTML = `
-                <span class="prefix">${prefix}</span>
-                <span class="number">${val ?? '--'}</span>
-                <span class="postfix">${postfix}</span>
+                <span class="prefix">${p.textBefore}</span>
+                <span class="number">--</span>
+                <span class="postfix">${p.textAfter}</span>
             `;
-            
             block.appendChild(contentDiv);
-            this._registerSpan(contentDiv, regIdx, type);
+            this._registerSpan(contentDiv, p.regId, p.regType, p.formatSpec);
         });
 
         return block;
@@ -149,15 +201,26 @@ export class BlockRenderer {
     }
 
     _createTitleInput(block, data) {
-        const { 
-            text = '', 
-            prefix = '', 
-            postfix = '', 
-            regAddress, 
-            regType = 'u2', 
-            size = 10,
-            showSaveButton = false
-        } = data;
+        let prefix, postfix, regAddress, regType, size = 10, showSaveButton = false, text = '';
+
+        if (data.format) {
+            const p = this._parseBlockFormat(data.format[0], data.format[1]);
+            prefix = p.textBefore;
+            postfix = p.textAfter;
+            regAddress = p.regId;
+            regType = p.regType;
+            text = data.text || '';
+            size = data.size || 10;
+            showSaveButton = data.showSaveButton || false;
+        } else {
+            text = data.text || '';
+            prefix = data.prefix || '';
+            postfix = data.postfix || '';
+            regAddress = data.regAddress;
+            regType = data.regType || 'u2';
+            size = data.size || 10;
+            showSaveButton = data.showSaveButton || false;
+        }
         
         const width = size * 12 + 10;
         const inputId = `input-${regAddress}-${Date.now()}`;
@@ -236,10 +299,43 @@ export class BlockRenderer {
         return block;
     }
 
-    _registerSpan(parentElement, regAddress, regType) {
+    _parseBlockFormat(fmtStr, regSpec) {
+        let i = 0, textBefore = '', formatSpec = null, textAfter = '';
+        while (i < fmtStr.length) {
+            if (fmtStr[i] === '%') {
+                if (i + 1 < fmtStr.length && fmtStr[i + 1] === '%') {
+                    textBefore += '%'; i += 2; continue;
+                }
+                const start = i; i++;
+                while (i < fmtStr.length && /[#0\- +]/.test(fmtStr[i])) i++;
+                while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++;
+                if (i < fmtStr.length && fmtStr[i] === '.') { i++; while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++; }
+                if (i < fmtStr.length && /[diufegGc]/.test(fmtStr[i])) {
+                    formatSpec = fmtStr.slice(start, i + 1); i++;
+                }
+                textAfter = fmtStr.slice(i);
+                break;
+            }
+            textBefore += fmtStr[i]; i++;
+        }
+
+        let regId, regType;
+        if (typeof regSpec === 'string' && regSpec.includes(':')) {
+            const parts = regSpec.split(':');
+            regId = parseInt(parts[0]);
+            regType = parts[1];
+        } else {
+            regId = parseInt(regSpec);
+            const last = formatSpec ? formatSpec.slice(-1) : '';
+            regType = ({ f: 'f4', e: 'f4', E: 'f4', g: 'f4', G: 'f4', c: 'b0', d: 's2', i: 's2', u: 'u2', x: 'u2', X: 'u2', o: 'u2' })[last] || 'u2';
+        }
+        return { regId, regType, textBefore, textAfter, formatSpec };
+    }
+
+    _registerSpan(parentElement, regAddress, regType, formatSpec) {
         const span = parentElement.querySelector('span.number');
         if (span) {
-            this.updater.addSpan(regAddress, span, regType);
+            this.updater.addSpan(regAddress, span, regType, formatSpec);
         }
     }
 
