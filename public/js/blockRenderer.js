@@ -267,37 +267,42 @@ export class BlockRenderer {
     }
 
     _parseBlockFormat(fmtStr, regSpec) {
-        let i = 0, textBefore = '', formatSpec = null, textAfter = '';
-        while (i < fmtStr.length) {
-            if (fmtStr[i] === '%') {
-                if (i + 1 < fmtStr.length && fmtStr[i + 1] === '%') {
-                    textBefore += '%'; i += 2; continue;
-                }
-                const start = i; i++;
-                while (i < fmtStr.length && /[#0\- +]/.test(fmtStr[i])) i++;
-                while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++;
-                if (i < fmtStr.length && fmtStr[i] === '.') { i++; while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++; }
-                if (i < fmtStr.length && /[diufegGc]/.test(fmtStr[i])) {
-                    formatSpec = fmtStr.slice(start, i + 1); i++;
-                }
-                textAfter = fmtStr.slice(i);
-                break;
+    let i = 0, textBefore = '', formatSpec = null, textAfter = '';
+    
+    while (i < fmtStr.length) {
+        if (fmtStr[i] === '%') {
+            if (i + 1 < fmtStr.length && fmtStr[i + 1] === '%') {
+                textBefore += '%'; i += 2; continue;
             }
-            textBefore += fmtStr[i]; i++;
+            const start = i; i++;
+            while (i < fmtStr.length && /[#0\- +]/.test(fmtStr[i])) i++;
+            while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++;
+            if (i < fmtStr.length && fmtStr[i] === '.') { i++; while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++; }
+            if (i < fmtStr.length && /[diufegGcxX]/.test(fmtStr[i])) {
+                formatSpec = fmtStr.slice(start, i + 1); i++;
+            }
+            textAfter = fmtStr.slice(i);
+            break;
         }
-
-        let regId, regType;
-        if (typeof regSpec === 'string' && regSpec.includes(':')) {
-            const parts = regSpec.split(':');
-            regId = parseInt(parts[0]);
-            regType = parts[1];
-        } else {
-            regId = parseInt(regSpec);
-            const last = formatSpec ? formatSpec.slice(-1) : '';
-            regType = ({ f: 'f4', e: 'f4', E: 'f4', g: 'f4', G: 'f4', c: 'b0', d: 's2', i: 's2', u: 'u2', x: 'u2', X: 'u2', o: 'u2' })[last] || 'u2';
-        }
-        return { regId, regType, textBefore, textAfter, formatSpec };
+        textBefore += fmtStr[i]; i++;
     }
+
+    // 🆕 ОБРЕЗАЕМ ПРОБЕЛЫ В НАЧАЛЕ И КОНЦЕ
+    textBefore = textBefore.trimEnd();   // ← убираем пробелы в конце
+    textAfter = textAfter.trimStart();   // ← убираем пробелы в начале
+
+    let regId, regType;
+    if (typeof regSpec === 'string' && regSpec.includes(':')) {
+        const parts = regSpec.split(':');
+        regId = parseInt(parts[0]);
+        regType = parts[1];
+    } else {
+        regId = parseInt(regSpec);
+        const last = formatSpec ? formatSpec.slice(-1) : '';
+        regType = ({ f: 'f4', e: 'f4', E: 'f4', g: 'f4', G: 'f4', c: 'b0', d: 's2', i: 's2', u: 'u2', x: 'u2', X: 'u2', o: 'u2' })[last] || 'u2';
+    }
+    return { regId, regType, textBefore, textAfter, formatSpec };
+}
 
     _registerSpan(parentElement, regAddress, regType, formatSpec) {
         const span = parentElement.querySelector('span.number');

@@ -35,8 +35,7 @@ public/js/        ← ES Modules (import / export)
 - **`blocksData.json`** — напрямую как статика (`fetch('/blocksData.json')`), без серверного кэша
 
 ### Масштабирование
-- `scalingManager.js` — холст 1280×760, `transform: scale()` под размер окна + центрирование
-- `app._setupScaling()` — пересчёт на `resize`
+- `app._setupScaling()` — холст 1280×760, `transform: scale()` под размер окна + центрирование, пересчёт на `resize`
 
 ### Dirty-трекинг (title-input)
 - `modbusUpdater.caches.inputs` хранит `originalValue` для каждого input
@@ -100,6 +99,9 @@ public/js/        ← ES Modules (import / export)
 
 ### Dead code
 - `pageManager.js` существует, но **не импортирован** `app.js` (не используется); навигация по страницам реализована напрямую в `app.js`
+- `scalingManager.js` экспортирует singleton, но **не импортирован** — масштабирование реализовано напрямую в `app._setupScaling()`
+- `copy.md` в `public/js/` — планировочный артефакт (неактуальная документация по `pageManager`), не следовать
+- `readme.md`, `architecture.md`, `architecture_short.md` — устаревшие/черновые документы; за актуальной информацией обращаться в `AGENTS.md`
 
 ## Gotchas
 - Порт 4000 хардкодом в `server/index.js`

@@ -56,7 +56,13 @@ export class ModbusUpdater {
 
         if (width > s.length) {
             const flag = m ? m[1] || '' : '';
-            s = flag === '0' ? s.padStart(width, '0') : s.padStart(width);
+            if (flag === '0' && !['x', 'X'].includes(specifier)) {
+            s = s.padStart(width, '0');      // ← нули слева
+        } else if (flag === '-') {
+            s = s.padEnd(width, ' ');        // ← пробелы справа (влево!)
+        } else {
+            s = s.padStart(width, ' ');      // ← пробелы слева (вправо!)
+        }
         }
         return s;
     }
