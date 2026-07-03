@@ -25,7 +25,8 @@ export class BlockRenderer {
     createBlock(blockData) {
         const block = document.createElement('div');
         block.classList.add('block', blockData.type);
-        block.id = `block-${blockData.id || this.getNextId()}`;
+        // block.id = `block-${blockData.id || this.getNextId()}`;
+        block.id = `block-${this.getNextId()}`;
         block.style.left = `${blockData.x}px`;
         block.style.top = `${blockData.y}px`;
 
@@ -77,88 +78,54 @@ export class BlockRenderer {
 
     _createOnlyTitle(block, data) {
         const text = (data.text || '').replace(/\n/g, '<br>');
-        
+
         block.innerHTML = `
             <div class="content">
                 <span class="title">${text}</span>
             </div>`;
-        
+
         return block;
     }
 
-   _createTitleNumber(block, data) {
-    let config;
-    let p = null;
-    
-    if (data.format) {
-        p = this._parseBlockFormat(data.format[0], data.format[1]);
-        config = {
-            text: (data.text || '').replace(/\n/g, '<br>'),
-            prefix: p.textBefore,
-            postfix: p.textAfter,
-            regAddress: p.regId,
-            regType: p.regType,
-            value: '--'
-        };
-    } else {
-        const { text = '', prefix = '', postfix = '', regAddress, regType = '', value = '--' } = data;
-        config = { text, prefix, postfix, regAddress, regType, value };
-    }
-    
-    // Одна сборка HTML
-    block.innerHTML = `
+    _createTitleNumber(block, data) {
+        let config;
+        let regAddress, regType, formatSpec = null;
+
+        if (data.format) {
+            const p = this._parseBlockFormat(data.format[0], data.format[1]);
+            regAddress = p.regId;
+            regType = p.regType;
+            formatSpec = p.formatSpec;
+            config = {
+                text: (data.text || '').replace(/\n/g, '<br>'),
+                prefix: p.textBefore,
+                postfix: p.textAfter,
+                value: '--'
+            };
+        } else {
+            const { text = '', prefix = '', postfix = '', regAddress: addr, regType: type = '', value = '--' } = data;
+            regAddress = addr;
+            regType = type;
+            config = { text, prefix, postfix, value };
+        }
+
+        // Одна сборка HTML
+        block.innerHTML = `
         <div class="content">
             <span class="title">${config.text}</span>
         </div>
-        <div class="content" data-reg="${config.regAddress}">
+        <div class="content" data-reg="${config.regAddress}" data-type="${config.regType}">
             <span class="prefix">${config.prefix}</span>
             <span class="number">${config.value}</span>
             <span class="postfix">${config.postfix}</span>
         </div>`;
-     this._registerSpan(block, p.regId, p.regType, p.formatSpec);
-    return block;
-}
-
-    
-
-  /*  _createTitleNumber(block, data) {
-    if (data.format) {
-        const p = this._parseBlockFormat(data.format[0], data.format[1]);
-        const text = (data.text || '').replace(/\n/g, '<br>');
-        block.innerHTML = `
-            <div class="content">
-                <span class="title">${text}</span>
-            </div>
-            <div class="content" data-reg="${p.regId}" data-type="${p.regType}">
-                <span class="prefix">${p.textBefore}</span>
-                <span class="number">--</span>
-                <span class="postfix">${p.textAfter}</span>
-            </div>`;
-        this._registerSpan(block, p.regId, p.regType, p.formatSpec);
+        this._registerSpan(block, regAddress, regType, formatSpec);
         return block;
     }
-    const { text = '', prefix = '', postfix = '', regAddress, regType = '', value = '--' } = data;
-    block.innerHTML = `
-        <div class="content">
-            <span class="title">${text}</span>
-        </div>
-        <div class="content" data-reg="${regAddress}" data-type="${regType}">
-            <span class="prefix">${prefix}</span>
-            <span class="number">${value}</span>
-            <span class="postfix">${postfix}</span>
-        </div>`;
-    this._registerSpan(block, regAddress, regType);
-    return block;
-}*/
-
-
-
-
-
 
     _createTitleGroupNumber(block, data) {
         const { text = '', format: formatEntries = [] } = data;
-        
+
         block.innerHTML = `
             <div class="content">
                 <span class="title">${text}</span>
@@ -184,7 +151,7 @@ export class BlockRenderer {
 
     _createToggleButton(block, data) {
         const { regAddress, regType = 'b0', prefix = '', text = 'Вкл' } = data;
-        
+
         block.innerHTML = `
             <div class="content" data-reg="${regAddress}" data-type="${regType}">
                 <span class="prefix btn">${prefix}</span>
@@ -196,7 +163,7 @@ export class BlockRenderer {
         const toggleButton = block.querySelector('.toggle-button');
         this.updater.addToggle(regAddress, toggleButton, regType);
         this._setupToggleButton(toggleButton, regAddress, regType);
-        
+
         return block;
     }
 
@@ -221,10 +188,10 @@ export class BlockRenderer {
             size = data.size || 10;
             showSaveButton = data.showSaveButton || false;
         }
-        
+
         const width = size * 12 + 10;
         const inputId = `input-${regAddress}-${Date.now()}`;
-        
+
         let saveButtonHtml = '';
         if (showSaveButton) {
             saveButtonHtml = `
@@ -233,7 +200,7 @@ export class BlockRenderer {
                 </button>
             `;
         }
-        
+
         block.innerHTML = `
             <div class="content">
                 <span class="title">${text}</span>
@@ -252,17 +219,17 @@ export class BlockRenderer {
             </div>`;
 
         const input = block.querySelector('.input-value-field');
-        
+
         this.updater.addInput(regAddress, input, regType);
-        
+
         this._setupInputHandlers(input, regAddress);
         this._setupInputChangeTracking(input, regAddress);
-        
+
         const saveBtn = block.querySelector('.input-save-btn');
         if (saveBtn) {
             this._setupSaveButton(saveBtn, regAddress, regType);
         }
-        
+
         return block;
     }
 
@@ -285,7 +252,7 @@ export class BlockRenderer {
 
     _createSendButton(block, data) {
         const { regAddress, text = 'Сохранить' } = data;
-        
+
         block.innerHTML = `
             <div class="content">
                 <button class="send-button" data-reg="${regAddress}">
@@ -295,7 +262,7 @@ export class BlockRenderer {
 
         const sendButton = block.querySelector('.send-button');
         this._setupSendButton(sendButton);
-        
+
         return block;
     }
 
@@ -351,35 +318,35 @@ export class BlockRenderer {
 
         try {
             console.log(`📝 Сохранение: регистр=${regAddress}, значение=${value}, тип=${regType}`);
-            
+
             const result = await this.api.writeRegister(regAddress, value, regType);
-            
+
             this.updater.updateOriginalValue(regAddress, value);
             this._updateInputDirtyState(input, regAddress);
-            
+
             input.style.backgroundColor = '#e8f5e9';
             input.style.borderColor = 'green';
-            
+
             console.log(`✅ Значение сохранено:`, result);
-            
+
             setTimeout(() => {
                 input.style.backgroundColor = '';
                 input.style.borderColor = '#ccc';
             }, 1000);
-            
+
             return true;
-            
+
         } catch (error) {
             console.error(`❌ Ошибка сохранения:`, error);
-            
+
             input.style.backgroundColor = '#ffebee';
             input.style.borderColor = 'red';
-            
+
             setTimeout(() => {
                 input.style.backgroundColor = '';
                 input.style.borderColor = '#ccc';
             }, 2000);
-            
+
             return false;
         } finally {
             this.updater.unmarkAsSending(regKey);
@@ -390,13 +357,13 @@ export class BlockRenderer {
     _setupInputHandlers(input, regAddress) {
         const regKey = String(regAddress);
         const renderer = this;
-    
+
         input.addEventListener('focus', () => {
             this.updater.editingInputs.add(regKey);
             input.style.backgroundColor = '#fff8e1';
             input.style.borderColor = '#ff9800';
         });
-    
+
         input.addEventListener('blur', () => {
             if (this._numpadOpenReg === regKey) return;
             this.updater.editingInputs.delete(regKey);
@@ -405,7 +372,7 @@ export class BlockRenderer {
                 input.style.borderColor = '#ccc';
             }
         });
-    
+
         input.addEventListener('click', () => {
             if (this._numpadOpenReg === regKey) return;
             this._numpadOpenReg = regKey;
@@ -442,7 +409,7 @@ export class BlockRenderer {
                 }
             });
         });
-    
+
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 if (this._numpadOpenReg === regKey) return;
@@ -459,23 +426,23 @@ export class BlockRenderer {
     _updateInputDirtyState(input, regAddress) {
         const regKey = String(regAddress);
         const isDirty = this.updater.isDirty(regKey);
-        
+
         input.classList.toggle('input-changed', isDirty);
-        
+
         window.dispatchEvent(new CustomEvent('input-dirty-change'));
     }
 
     _setupInputChangeTracking(input, regAddress) {
         const regKey = String(regAddress);
-        
+
         input.addEventListener('input', () => {
             this._updateInputDirtyState(input, regAddress);
         });
-        
+
         input.addEventListener('change', () => {
             this._updateInputDirtyState(input, regAddress);
         });
-        
+
         const resetBtn = input.parentElement.querySelector('.input-reset-btn');
         if (resetBtn) {
             resetBtn.addEventListener('click', (e) => {
@@ -493,19 +460,19 @@ export class BlockRenderer {
         button.addEventListener('click', async () => {
             const input = button.closest('.content').querySelector('.input-value-field');
             if (!input) return;
-            
+
             const originalText = button.textContent;
             button.textContent = '⏳';
             button.disabled = true;
-            
+
             const success = await this._saveInputValue(input, regAddress, regType);
-            
+
             if (success) {
                 button.textContent = '✅';
             } else {
                 button.textContent = '❌';
             }
-            
+
             setTimeout(() => {
                 button.textContent = originalText;
                 button.disabled = false;
@@ -531,16 +498,16 @@ export class BlockRenderer {
 
             try {
                 await this.api.writeRegister(regAddress, newState, registerType);
-                
+
                 await new Promise(resolve => setTimeout(resolve, 400));
-                
+
                 await this.updater.update();
 
             } catch (error) {
                 console.error('❌ Ошибка:', error);
                 button.textContent = '❌';
                 button.style.borderColor = 'red';
-                
+
                 setTimeout(() => {
                     button.textContent = isOn ? 'Вкл' : 'Выкл';
                     button.style.borderColor = '';
@@ -586,6 +553,7 @@ export class BlockRenderer {
 
             const regs = regAttr.split(',').map(r => r.trim());
 
+            // Проверяем, есть ли изменённые регистры
             const hasDirty = regs.some(reg => this.updater.isDirty(reg));
             if (!hasDirty) {
                 sendButton.textContent = 'Нет изменений';
@@ -600,11 +568,15 @@ export class BlockRenderer {
             sendButton.classList.add('sending');
 
             try {
+                // 🔍 ШАГ 1: Собираем все регистры для отправки
+                const registersToSend = [];
+                const failedRegisters = [];
+
                 for (const reg of regs) {
                     const regKey = String(reg);
-                    
                     let regInfo = this.updater.caches.inputs.get(regKey);
-                    
+
+                    // Если регистр не найден в кэше — ищем в DOM
                     if (!regInfo) {
                         console.warn(`⚠️ Регистр ${reg} не найден в кэше, ищем в DOM...`);
                         const inputElement = document.querySelector(`.input-value-field[data-reg="${reg}"]`);
@@ -616,51 +588,142 @@ export class BlockRenderer {
                             console.log(`✅ Найден и добавлен в кэш регистр ${reg}`);
                         }
                     }
-                    
+
                     if (!regInfo) {
                         console.error(`❌ Регистр ${reg} не найден`);
+                        failedRegisters.push(reg);
                         continue;
                     }
 
                     const value = regInfo.element?.value;
-                    if (!value) {
-                        console.error(`Пустое значение для регистра ${reg}`);
+                    if (!value || value.trim() === '') {
+                        console.error(`❌ Пустое значение для регистра ${reg}`);
+                        failedRegisters.push(reg);
                         continue;
                     }
 
-                    await this.api.writeRegister(reg, value, regInfo.registerType || 'u2');
-                    
-                    this.updater.updateOriginalValue(reg, value);
-                    this._updateInputDirtyState(regInfo.element, reg);
-                    
-                    this.updater.editingInputs.delete(regKey);
-                    
-                    if (regInfo.element) {
-                        regInfo.element.style.backgroundColor = '#e8f5e9';
-                        regInfo.element.style.borderColor = 'green';
-                        setTimeout(() => {
-                            regInfo.element.style.backgroundColor = '';
-                            regInfo.element.style.borderColor = '#ccc';
-                        }, 1000);
-                    }
+                    // Добавляем в массив для отправки
+                    registersToSend.push({
+                        regId: reg,
+                        value: value.trim(),
+                        type: regInfo.registerType || 'u2',
+                        element: regInfo.element,
+                        regKey: regKey
+                    });
                 }
 
-                sendButton.textContent = '✅ Отправлено';
-                sendButton.classList.remove('sending');
-                sendButton.classList.add('success');
-                
-                setTimeout(() => {
-                    sendButton.textContent = originalText;
-                    sendButton.disabled = false;
-                    sendButton.classList.remove('success');
-                }, 2000);
+                // Если нет регистров для отправки — выходим
+                if (registersToSend.length === 0) {
+                    sendButton.textContent = '❌ Нет данных';
+                    setTimeout(() => {
+                        sendButton.textContent = originalText;
+                        sendButton.disabled = false;
+                        sendButton.classList.remove('sending');
+                    }, 1500);
+                    return;
+                }
+
+                // ⚡ ШАГ 2: Отправляем ВСЕ регистры ПАРАЛЛЕЛЬНО
+                console.log(`📤 Отправка ${registersToSend.length} регистров параллельно...`);
+
+                const promises = registersToSend.map(({ regId, value, type }) =>
+                    this.api.writeRegister(regId, value, type)
+                );
+
+                // Используем Promise.allSettled для обработки всех результатов
+                const results = await Promise.allSettled(promises);
+
+                // 📊 ШАГ 3: Обрабатываем результаты
+                let successCount = 0;
+                let errorCount = 0;
+
+                results.forEach((result, index) => {
+                    const regData = registersToSend[index];
+
+                    if (result.status === 'fulfilled') {
+                        // ✅ Успешно
+                        successCount++;
+                        console.log(`✅ Регистр ${regData.regId} сохранён:`, result.value);
+
+                        // Обновляем originalValue
+                        this.updater.updateOriginalValue(regData.regId, regData.value);
+                        this._updateInputDirtyState(regData.element, regData.regId);
+
+                        // Подсветка зелёным
+                        if (regData.element) {
+                            regData.element.style.backgroundColor = '#e8f5e9';
+                            regData.element.style.borderColor = 'green';
+                            setTimeout(() => {
+                                regData.element.style.backgroundColor = '';
+                                regData.element.style.borderColor = '#ccc';
+                            }, 1000);
+                        }
+
+                        this.updater.editingInputs.delete(regData.regKey);
+
+                    } else {
+                        // ❌ Ошибка
+                        errorCount++;
+                        console.error(`❌ Ошибка регистра ${regData.regId}:`, result.reason);
+
+                        // Подсветка красным
+                        if (regData.element) {
+                            regData.element.style.backgroundColor = '#ffebee';
+                            regData.element.style.borderColor = 'red';
+                            setTimeout(() => {
+                                regData.element.style.backgroundColor = '';
+                                regData.element.style.borderColor = '#ccc';
+                            }, 2000);
+                        }
+                    }
+                });
+
+                // 📊 ШАГ 4: Показываем результат пользователю
+                if (errorCount === 0) {
+                    // Все успешно
+                    sendButton.textContent = `✅ Отправлено (${successCount})`;
+                    sendButton.classList.remove('sending');
+                    sendButton.classList.add('success');
+
+                    setTimeout(() => {
+                        sendButton.textContent = originalText;
+                        sendButton.disabled = false;
+                        sendButton.classList.remove('success');
+                    }, 2000);
+
+                } else if (successCount === 0) {
+                    // Все с ошибкой
+                    sendButton.textContent = `❌ Ошибка (${errorCount})`;
+                    sendButton.classList.remove('sending');
+                    sendButton.classList.add('error');
+
+                    setTimeout(() => {
+                        sendButton.textContent = originalText;
+                        sendButton.disabled = false;
+                        sendButton.classList.remove('error');
+                    }, 2500);
+
+                } else {
+                    // Частичный успех
+                    sendButton.textContent = `⚠️ ${successCount}/${successCount + errorCount}`;
+                    sendButton.classList.remove('sending');
+                    sendButton.classList.add('partial');
+
+                    setTimeout(() => {
+                        sendButton.textContent = originalText;
+                        sendButton.disabled = false;
+                        sendButton.classList.remove('partial');
+                    }, 3000);
+                }
 
             } catch (error) {
-                console.error('❌ Ошибка отправки:', error);
-                sendButton.textContent = '❌ Ошибка';
+                // Критическая ошибка (например, сеть)
+                console.error('❌ Критическая ошибка:', error);
+                sendButton.textContent = '❌ Ошибка сети';
                 sendButton.classList.remove('sending');
                 sendButton.classList.add('error');
 
+                // Снимаем dirty-статус со всех регистров
                 for (const reg of regs) {
                     this.updater.editingInputs.delete(String(reg));
                 }
@@ -669,7 +732,7 @@ export class BlockRenderer {
                     sendButton.textContent = originalText;
                     sendButton.disabled = false;
                     sendButton.classList.remove('error');
-                }, 1500);
+                }, 2500);
             }
         });
     }
@@ -691,7 +754,7 @@ export class BlockRenderer {
             }
         });
 
-        console.log(`✅ Отображено ${this.blocks.size} блоков`);
+        console.log(`✅ Отображено ${this.blocks.size} блоков`, this.blocks);
         console.log(`📊 Кэш inputs:`, this.updater.caches.inputs);
     }
 
@@ -701,6 +764,7 @@ export class BlockRenderer {
         }
         this.blocks.clear();
         this.updater.clearCaches();
+        // this.blockCounter = 0; не буду обнулять, пусть растет с каждым переходом по странице. большие числа id не страшны.
     }
 }
 
