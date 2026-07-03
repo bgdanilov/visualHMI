@@ -16,7 +16,7 @@ server/           ← CommonJS (require / module.exports)
 public/js/        ← ES Modules (import / export)
   app.js             App (class): жизненный цикл, __app в window для отладки
   apiClient.js       ApiClient (singleton): fetch + AbortController/timeout
-  blockRenderer.js   BlockRenderer (class): createBlock + _create* для каждого из 9 типов
+  blockRenderer.js   BlockRenderer (class): createBlock + _create* для каждого из 8 типов
   modbusUpdater.js   ModbusUpdater (singleton): 3 кэша (spans/inputs/toggles), поллинг 300ms
   constants.js       CONFIG (пути, интервалы) + BLOCK_TYPES
   scalingManager.js  ScalingManager (singleton): масштабирование холста 1280×760
@@ -64,12 +64,12 @@ public/js/        ← ES Modules (import / export)
 - `waiting` CSS-класс с пульсацией
 
 ### Формат-стринг (printf-стиль)
-- Блоки `only-number`, `title-number`, `title-group-number` поддерживают `format` вместо `regAddress`/`regType`/`prefix`/`postfix`
+- Блоки `only-number`, `title-number`, `title-input`, `title-group-number` поддерживают `format` вместо `regAddress`/`regType`/`prefix`/`postfix`
 - Синтаксис: `["printf-строка", regSpec]` где regSpec — число (регистр) или `"regId:type"` (явный тип)
 - Вывод типа из printf-спецификатора: `%f`/`%e`/`%g` → `f4`, `%d`/`%i` → `s2`, `%u` → `u2`, `%c` → `b0`
 - `_applyFormat(formatSpec, value, regType)` в `modbusUpdater.js` — форматирует значение по спецификатору
 - `_parseBlockFormat(fmtStr, regSpec)` в `blockRenderer.js` — парсит `["prefix %f postfix", 0]` в textBefore/textAfter/regType/formatSpec
-- Пример: `"format": ["Ток=%f А", 16]` для `title-number`, `"format": [["A=%f A", 0], ["20[0]=%c", "20:b0"]]` для `title-group-number`
+- Пример: `"format": ["Ток=%f А", 16]` для `title-number`/`title-input`/`only-number`, `"format": [["A=%f A", 0], ["20[0]=%c", "20:b0"]]` для `title-group-number`
 
 ### Блоки
 - Типы: `only-number`, `only-title`, `title-number`, `title-group-number`, `toggle-button`, `title-input`, `send-button`, `page-button`
@@ -97,6 +97,9 @@ public/js/        ← ES Modules (import / export)
 
 ## Отладка (браузер)
 - `__app.restart()`, `__app.stop()`, `__app.updater.caches`
+
+### Dead code
+- `pageManager.js` существует, но **не импортирован** `app.js` (не используется); навигация по страницам реализована напрямую в `app.js`
 
 ## Gotchas
 - Порт 4000 хардкодом в `server/index.js`

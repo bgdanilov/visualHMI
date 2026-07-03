@@ -86,39 +86,7 @@ export class BlockRenderer {
         return block;
     }
 
- /*   _createTitleNumber(block, data) {
-        if (data.format) {
-            const p = this._parseBlockFormat(data.format[0], data.format[1]);
-            const text = (data.text || '').replace(/\n/g, '<br>');
-            block.innerHTML = `
-                <div class="content">
-                    <span class="title">${text}</span>
-                </div>
-                <div class="content" data-reg="${p.regId}" data-type="${p.regType}">
-                    <span class="prefix">${p.textBefore}</span>
-                    <span class="number">--</span>
-                    <span class="postfix">${p.textAfter}</span>
-                </div>`;
-            this._registerSpan(block, p.regId, p.regType, p.formatSpec);
-            return block;
-        }
-        const { text = '', prefix = '', postfix = '', regAddress, regType = '', value = '--' } = data;
-        block.innerHTML = `
-            <div class="content">
-                <span class="title">${text}</span>
-            </div>
-            <div class="content" data-reg="${regAddress}" data-type="${regType}">
-                <span class="prefix">${prefix}</span>
-                <span class="number">${value}</span>
-                <span class="postfix">${postfix}</span>
-            </div>`;
-        this._registerSpan(block, regAddress, regType);
-        return block;
-    }*/
-
-    
-
-    _createTitleNumber(block, data) {
+   _createTitleNumber(block, data) {
     let config;
     let p = null;
     
@@ -150,6 +118,38 @@ export class BlockRenderer {
      this._registerSpan(block, p.regId, p.regType, p.formatSpec);
     return block;
 }
+
+    
+
+  /*  _createTitleNumber(block, data) {
+    if (data.format) {
+        const p = this._parseBlockFormat(data.format[0], data.format[1]);
+        const text = (data.text || '').replace(/\n/g, '<br>');
+        block.innerHTML = `
+            <div class="content">
+                <span class="title">${text}</span>
+            </div>
+            <div class="content" data-reg="${p.regId}" data-type="${p.regType}">
+                <span class="prefix">${p.textBefore}</span>
+                <span class="number">--</span>
+                <span class="postfix">${p.textAfter}</span>
+            </div>`;
+        this._registerSpan(block, p.regId, p.regType, p.formatSpec);
+        return block;
+    }
+    const { text = '', prefix = '', postfix = '', regAddress, regType = '', value = '--' } = data;
+    block.innerHTML = `
+        <div class="content">
+            <span class="title">${text}</span>
+        </div>
+        <div class="content" data-reg="${regAddress}" data-type="${regType}">
+            <span class="prefix">${prefix}</span>
+            <span class="number">${value}</span>
+            <span class="postfix">${postfix}</span>
+        </div>`;
+    this._registerSpan(block, regAddress, regType);
+    return block;
+}*/
 
 
 

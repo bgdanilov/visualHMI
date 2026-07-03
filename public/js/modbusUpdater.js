@@ -64,9 +64,9 @@ export class ModbusUpdater {
     addSpan(regId, span, registerType, formatSpec) {
         const key = String(regId);
         if (!this.caches.spans.has(key)) {
-            this.caches.spans.set(key, { registerType, formatSpec, spans: [] });
+            this.caches.spans.set(key, { registerType, spans: [] });
         }
-        this.caches.spans.get(key).spans.push(span);
+        this.caches.spans.get(key).spans.push({ element: span, formatSpec });
     }
 
     addInput(regId, input, registerType) {
@@ -140,12 +140,12 @@ export class ModbusUpdater {
                 const value = this.readValue(dataView, offset, regInfo.registerType);
                 
                 if (value !== undefined && !isNaN(value)) {
-                    const displayValue = regInfo.formatSpec
-                        ? this._applyFormat(regInfo.formatSpec, value, regInfo.registerType)
-                        : String(value);
-                    regInfo.spans.forEach(span => {
-                        if (span.textContent !== String(displayValue)) {
-                            span.textContent = displayValue;
+                    regInfo.spans.forEach(({ element, formatSpec }) => {
+                        const displayValue = formatSpec
+                            ? this._applyFormat(formatSpec, value, regInfo.registerType)
+                            : String(value);
+                        if (element.textContent !== displayValue) {
+                            element.textContent = displayValue;
                         }
                     });
                 }
