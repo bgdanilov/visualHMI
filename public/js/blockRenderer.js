@@ -57,12 +57,12 @@ export class BlockRenderer {
         if (data.format) {
             const p = this._parseBlockFormat(data.format[0], data.format[1]);
             block.innerHTML = `
-                <div class="content" data-reg="${p.regId}" data-type="${p.regType}">
-                    <span class="prefix">${p.textBefore}</span>
+                <div class="content" data-reg="${p.regAddress}" data-type="${p.regType}">
+                    <span class="prefix">${p.formatPrefix}</span>
                     <span class="number">--</span>
-                    <span class="postfix">${p.textAfter}</span>
+                    <span class="postfix">${p.formatPostfix}</span>
                 </div>`;
-            this._registerSpan(block, p.regId, p.regType, p.formatSpec);
+            this._registerSpan(block, p.regAddress, p.regType, p.formatSpec);
             return block;
         }
         const { prefix = '', postfix = '', regAddress, regType = 'u2', value = '--' } = data;
@@ -88,37 +88,34 @@ export class BlockRenderer {
     }
 
     _createTitleNumber(block, data) {
-        let config;
-        let regAddress, regType, formatSpec = null;
+        let regAddress, regType, text, prefix, postfix, formatSpec = '--';
+        let value = '--';
 
+        // Если указано форматирование в стиле Си например: B = %8.2f A
         if (data.format) {
-            const p = this._parseBlockFormat(data.format[0], data.format[1]);
-            regAddress = p.regId;
-            regType = p.regType;
-            formatSpec = p.formatSpec;
-            config = {
-                text: (data.text || '').replace(/\n/g, '<br>'),
-                prefix: p.textBefore,
-                postfix: p.textAfter,
-                value: '--'
-            };
+            // парсим элементы массива поля format из json
+            const parsed = this._parseBlockFormat(data.format[0], data.format[1]);
+            regAddress = parsed.regAddress;
+            regType = parsed.regType;
+            text = (data.text || '').replace(/\n/g, '<br>');
+            prefix = parsed.formatPrefix;
+            postfix = parsed.formatPostfix;
+            formatSpec = parsed.formatSpec;
         } else {
-            const { text = '', prefix = '', postfix = '', regAddress: addr, regType: type = '', value = '--' } = data;
-            regAddress = addr;
-            regType = type;
-            config = { text, prefix, postfix, value };
+          // TODO: Нужно придумать некое сообщене об ошибке.
+          return;
         }
-
-        // Одна сборка HTML
+        // Собираем HTML
         block.innerHTML = `
         <div class="content">
-            <span class="title">${config.text}</span>
+            <span class="title">${text}</span>
         </div>
-        <div class="content" data-reg="${config.regAddress}" data-type="${config.regType}">
-            <span class="prefix">${config.prefix}</span>
-            <span class="number">${config.value}</span>
-            <span class="postfix">${config.postfix}</span>
+        <div class="content" data-reg="${regAddress}" data-type="${regType}">
+            <span class="prefix">${prefix}</span>
+            <span class="number">${value}</span>
+            <span class="postfix">${postfix}</span>
         </div>`;
+        // Генерируем span
         this._registerSpan(block, regAddress, regType, formatSpec);
         return block;
     }
@@ -131,19 +128,19 @@ export class BlockRenderer {
                 <span class="title">${text}</span>
             </div>`;
 
-        formatEntries.forEach(([fmtStr, regSpec]) => {
-            const p = this._parseBlockFormat(fmtStr, regSpec);
+        formatEntries.forEach(([formatString, regSpec]) => {
+            const p = this._parseBlockFormat(formatString, regSpec);
             const contentDiv = document.createElement('div');
             contentDiv.className = 'content';
-            contentDiv.dataset.reg = p.regId;
+            contentDiv.dataset.reg = p.regAddress;
             contentDiv.dataset.type = p.regType;
             contentDiv.innerHTML = `
-                <span class="prefix">${p.textBefore}</span>
+                <span class="prefix">${p.formatPrefix}</span>
                 <span class="number">--</span>
-                <span class="postfix">${p.textAfter}</span>
+                <span class="postfix">${p.formatPostfix}</span>
             `;
             block.appendChild(contentDiv);
-            this._registerSpan(contentDiv, p.regId, p.regType, p.formatSpec);
+            this._registerSpan(contentDiv, p.regAddress, p.regType, p.formatSpec);
         });
 
         return block;
@@ -172,9 +169,9 @@ export class BlockRenderer {
 
         if (data.format) {
             const p = this._parseBlockFormat(data.format[0], data.format[1]);
-            prefix = p.textBefore;
-            postfix = p.textAfter;
-            regAddress = p.regId;
+            prefix = p.formatPrefix;
+            postfix = p.formatPostfix;
+            regAddress = p.regAddress;
             regType = p.regType;
             text = data.text || '';
             size = data.size || 10;
@@ -266,42 +263,42 @@ export class BlockRenderer {
         return block;
     }
 
-    _parseBlockFormat(fmtStr, regSpec) {
-    let i = 0, textBefore = '', formatSpec = null, textAfter = '';
+    _parseBlockFormat(formatString, regSpec) {
+    let i = 0, formatPrefix = '', formatSpec = null, formatPostfix = '';
     
-    while (i < fmtStr.length) {
-        if (fmtStr[i] === '%') {
-            if (i + 1 < fmtStr.length && fmtStr[i + 1] === '%') {
-                textBefore += '%'; i += 2; continue;
+    while (i < formatString.length) {
+        if (formatString[i] === '%') {
+            if (i + 1 < formatString.length && formatString[i + 1] === '%') {
+                formatPrefix += '%'; i += 2; continue;
             }
             const start = i; i++;
-            while (i < fmtStr.length && /[#0\- +]/.test(fmtStr[i])) i++;
-            while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++;
-            if (i < fmtStr.length && fmtStr[i] === '.') { i++; while (i < fmtStr.length && /\d/.test(fmtStr[i])) i++; }
-            if (i < fmtStr.length && /[diufegGcxX]/.test(fmtStr[i])) {
-                formatSpec = fmtStr.slice(start, i + 1); i++;
+            while (i < formatString.length && /[#0\- +]/.test(formatString[i])) i++;
+            while (i < formatString.length && /\d/.test(formatString[i])) i++;
+            if (i < formatString.length && formatString[i] === '.') { i++; while (i < formatString.length && /\d/.test(formatString[i])) i++; }
+            if (i < formatString.length && /[diufegGcxX]/.test(formatString[i])) {
+                formatSpec = formatString.slice(start, i + 1); i++;
             }
-            textAfter = fmtStr.slice(i);
+            formatPostfix = formatString.slice(i);
             break;
         }
-        textBefore += fmtStr[i]; i++;
+        formatPrefix += formatString[i]; i++;
     }
 
-    // 🆕 ОБРЕЗАЕМ ПРОБЕЛЫ В НАЧАЛЕ И КОНЦЕ
-    textBefore = textBefore.trimEnd();   // ← убираем пробелы в конце
-    textAfter = textAfter.trimStart();   // ← убираем пробелы в начале
+    // ОБРЕЗАЕМ ПРОБЕЛЫ В НАЧАЛЕ И КОНЦЕ
+    formatPrefix = formatPrefix.trimEnd();   // ← убираем пробелы в конце
+    formatPostfix = formatPostfix.trimStart();   // ← убираем пробелы в начале
 
-    let regId, regType;
+    let regAddress, regType;
     if (typeof regSpec === 'string' && regSpec.includes(':')) {
         const parts = regSpec.split(':');
-        regId = parseInt(parts[0]);
+        regAddress = parseInt(parts[0]);
         regType = parts[1];
     } else {
-        regId = parseInt(regSpec);
+        regAddress = parseInt(regSpec);
         const last = formatSpec ? formatSpec.slice(-1) : '';
         regType = ({ f: 'f4', e: 'f4', E: 'f4', g: 'f4', G: 'f4', c: 'b0', d: 's2', i: 's2', u: 'u2', x: 'u2', X: 'u2', o: 'u2' })[last] || 'u2';
     }
-    return { regId, regType, textBefore, textAfter, formatSpec };
+    return { regAddress, regType, formatPrefix, formatPostfix, formatSpec };
 }
 
     _registerSpan(parentElement, regAddress, regType, formatSpec) {
@@ -609,7 +606,7 @@ export class BlockRenderer {
 
                     // Добавляем в массив для отправки
                     registersToSend.push({
-                        regId: reg,
+                        regAddress: reg,
                         value: value.trim(),
                         type: regInfo.registerType || 'u2',
                         element: regInfo.element,
@@ -631,8 +628,8 @@ export class BlockRenderer {
                 // ⚡ ШАГ 2: Отправляем ВСЕ регистры ПАРАЛЛЕЛЬНО
                 console.log(`📤 Отправка ${registersToSend.length} регистров параллельно...`);
 
-                const promises = registersToSend.map(({ regId, value, type }) =>
-                    this.api.writeRegister(regId, value, type)
+                const promises = registersToSend.map(({ regAddress, value, type }) =>
+                    this.api.writeRegister(regAddress, value, type)
                 );
 
                 // Используем Promise.allSettled для обработки всех результатов
@@ -648,11 +645,11 @@ export class BlockRenderer {
                     if (result.status === 'fulfilled') {
                         // ✅ Успешно
                         successCount++;
-                        console.log(`✅ Регистр ${regData.regId} сохранён:`, result.value);
+                        console.log(`✅ Регистр ${regData.regAddress} сохранён:`, result.value);
 
                         // Обновляем originalValue
-                        this.updater.updateOriginalValue(regData.regId, regData.value);
-                        this._updateInputDirtyState(regData.element, regData.regId);
+                        this.updater.updateOriginalValue(regData.regAddress, regData.value);
+                        this._updateInputDirtyState(regData.element, regData.regAddress);
 
                         // Подсветка зелёным
                         if (regData.element) {
@@ -669,7 +666,7 @@ export class BlockRenderer {
                     } else {
                         // ❌ Ошибка
                         errorCount++;
-                        console.error(`❌ Ошибка регистра ${regData.regId}:`, result.reason);
+                        console.error(`❌ Ошибка регистра ${regData.regAddress}:`, result.reason);
 
                         // Подсветка красным
                         if (regData.element) {
