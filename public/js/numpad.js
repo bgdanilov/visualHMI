@@ -1,3 +1,5 @@
+// public/js/numpad.js
+
 class NumpadManager {
     constructor() {
         this.overlay = null;
@@ -5,12 +7,14 @@ class NumpadManager {
         this.value = '';
         this.callbacks = { onOk: null, onCancel: null };
         this.isOpen = false;
+        this.maxDecimalPlaces = 2; // Максимум 2 знака после запятой
     }
 
     show(initialValue, { onOk, onCancel }) {
         if (this.isOpen) return;
 
-        this.value = String(initialValue ?? '');
+        // Нормализуем начальное значение
+        this.value = this._normalizeValue(String(initialValue ?? ''));
         this.callbacks.onOk = onOk || null;
         this.callbacks.onCancel = onCancel || null;
 
@@ -44,7 +48,7 @@ class NumpadManager {
         const grid = document.createElement('div');
         grid.className = 'numpad-grid';
 
-        const digits = ['7','8','9','4','5','6','1','2','3','.', '0','⌫'];
+        const digits = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫', '+/-'];
         digits.forEach(d => {
             const btn = document.createElement('button');
             btn.className = 'numpad-btn';
@@ -101,14 +105,53 @@ class NumpadManager {
     }
 
     _handleClick(d) {
-        if (d === '⌫') this._handleBackspace();
-        else this._handleDigit(d);
+        if (d === '⌫') {
+            this._handleBackspace();
+        } else if (d === '+/-') {
+            this._handleToggleSign();
+        } else {
+            this._handleDigit(d);
+        }
     }
 
     _handleDigit(d) {
+        // Запрещаем больше одной точки
         if (d === '.' && this.value.includes('.')) return;
+
+        // Проверка для цифр: если уже 2 знака после запятой
+        if (d !== '.') {
+            const parts = this.value.split('.');
+            if (parts.length === 2 && parts[1].length >= this.maxDecimalPlaces) {
+                return; // Не даём вводить цифры
+            }
+        }
+
         this.value += d;
         this._display.textContent = this.value;
+    }
+
+    _handleToggleSign() {
+        const num = parseFloat(this.value);
+
+        // Игнорируем NaN, пустую строку и нулевые значения
+        if (isNaN(num) || this.value === '' || num === 0) {
+            return;
+        }
+
+        this.value = this.value.startsWith('-')
+            ? this.value.slice(1)
+            : '-' + this.value;
+
+        this._display.textContent = this.value;
+    }
+
+    _normalizeValue(value) {
+        const num = parseFloat(value);
+        // Если это -0 или 0 в любом виде
+        if (num === 0 || Object.is(num, -0)) {
+            return '0';
+        }
+        return String(value);
     }
 
     _handleBackspace() {
@@ -117,9 +160,14 @@ class NumpadManager {
     }
 
     _handleOk() {
+        // Нормализуем значение перед отправкой
+        const finalValue = this._normalizeValue(this.value);
+        this.value = finalValue;
+        this._display.textContent = finalValue;
+
         this.isOpen = false;
         if (this.callbacks.onOk) {
-            this.callbacks.onOk(this.value);
+            this.callbacks.onOk(finalValue);
         }
         this._cleanup();
     }

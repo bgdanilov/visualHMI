@@ -209,7 +209,7 @@ export class ModbusUpdater {
                 const value = this.readValue(dataView, offset, regInfo.registerType);
 
                 if (value !== undefined && !isNaN(value) && input) {
-                    const displayValue = regInfo.registerType === 'f4' 
+                const displayValue = regInfo.registerType === 'f4' 
                         ? value.toFixed(2) 
                         : value;
                     
@@ -251,8 +251,8 @@ export class ModbusUpdater {
 
             if (value !== undefined && !isNaN(value) && regInfo.element) {
                 const displayValue = regInfo.registerType === 'f4' 
-                    ? value.toFixed(2) 
-                    : value;
+                   ? value.toFixed(2) 
+                : value;
                 
                 if (regInfo.element.value !== String(displayValue)) {
                     regInfo.element.value = displayValue;
