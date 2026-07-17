@@ -3,6 +3,11 @@ import { BLOCK_TYPES } from './constants.js';
 import { api } from './apiClient.js';
 import { modbusUpdater } from './modbusUpdater.js';
 import { numpadManager } from './numpad.js';
+import { validator } from './validator.js';
+import { notification } from './notification.js';
+
+// 🔥 Глобальная настройка количества знаков после запятой
+const DEFAULT_DECIMAL_PLACES = 3;
 
 export class BlockRenderer {
     constructor() {
@@ -12,6 +17,9 @@ export class BlockRenderer {
         this.api = api;
         this.updater = modbusUpdater;
         this._numpadOpenReg = null;
+        this.validator = validator;
+        this.notification = notification;
+        this._decimalWarningShown = false;
     }
 
     setRenderArea(element) {
@@ -25,7 +33,6 @@ export class BlockRenderer {
     createBlock(blockData) {
         const block = document.createElement('div');
         block.classList.add('block', blockData.type);
-        // block.id = `block-${blockData.id || this.getNextId()}`;
         block.id = `block-${this.getNextId()}`;
         block.style.left = `${blockData.x}px`;
         block.style.top = `${blockData.y}px`;
@@ -91,9 +98,7 @@ export class BlockRenderer {
         let regAddress, regType, text, prefix, postfix, formatSpec = '--';
         let value = '--';
 
-        // Если указано форматирование в стиле Си например: B = %8.2f A
         if (data.format) {
-            // парсим элементы массива поля format из json
             const parsed = this._parseBlockFormat(data.format[0], data.format[1]);
             regAddress = parsed.regAddress;
             regType = parsed.regType;
@@ -102,10 +107,9 @@ export class BlockRenderer {
             postfix = parsed.formatPostfix;
             formatSpec = parsed.formatSpec;
         } else {
-          // TODO: Нужно придумать некое сообщене об ошибке.
-          return;
+            return;
         }
-        // Собираем HTML
+
         block.innerHTML = `
         <div class="content">
             <span class="title">${text}</span>
@@ -115,7 +119,6 @@ export class BlockRenderer {
             <span class="number">${value}</span>
             <span class="postfix">${postfix}</span>
         </div>`;
-        // Генерируем span
         this._registerSpan(block, regAddress, regType, formatSpec);
         return block;
     }
@@ -166,6 +169,7 @@ export class BlockRenderer {
 
     _createTitleInput(block, data) {
         let prefix, postfix, regAddress, regType, size = 10, showSaveButton = false, text = '';
+        let min = null, max = null, decimalPlaces = DEFAULT_DECIMAL_PLACES;
 
         if (data.format) {
             const p = this._parseBlockFormat(data.format[0], data.format[1]);
@@ -176,6 +180,9 @@ export class BlockRenderer {
             text = data.text || '';
             size = data.size || 10;
             showSaveButton = data.showSaveButton || false;
+            min = data.min !== undefined ? data.min : null;
+            max = data.max !== undefined ? data.max : null;
+            decimalPlaces = data.decimalPlaces !== undefined ? data.decimalPlaces : DEFAULT_DECIMAL_PLACES;
         } else {
             text = data.text || '';
             prefix = data.prefix || '';
@@ -184,6 +191,9 @@ export class BlockRenderer {
             regType = data.regType || 'u2';
             size = data.size || 10;
             showSaveButton = data.showSaveButton || false;
+            min = data.min !== undefined ? data.min : null;
+            max = data.max !== undefined ? data.max : null;
+            decimalPlaces = data.decimalPlaces !== undefined ? data.decimalPlaces : DEFAULT_DECIMAL_PLACES;
         }
 
         const width = size * 12 + 10;
@@ -208,6 +218,9 @@ export class BlockRenderer {
                        id="${inputId}"
                        data-reg="${regAddress}"
                        data-type="${regType}"
+                       data-min="${min !== null ? min : ''}"
+                       data-max="${max !== null ? max : ''}"
+                       data-decimal-places="${decimalPlaces}"
                        style="width: ${width}px;"
                        placeholder="...">
                 <button class="input-reset-btn" data-reg="${regAddress}" title="Сбросить">×</button>
@@ -264,42 +277,41 @@ export class BlockRenderer {
     }
 
     _parseBlockFormat(formatString, regSpec) {
-    let i = 0, formatPrefix = '', formatSpec = null, formatPostfix = '';
-    
-    while (i < formatString.length) {
-        if (formatString[i] === '%') {
-            if (i + 1 < formatString.length && formatString[i + 1] === '%') {
-                formatPrefix += '%'; i += 2; continue;
+        let i = 0, formatPrefix = '', formatSpec = null, formatPostfix = '';
+
+        while (i < formatString.length) {
+            if (formatString[i] === '%') {
+                if (i + 1 < formatString.length && formatString[i + 1] === '%') {
+                    formatPrefix += '%'; i += 2; continue;
+                }
+                const start = i; i++;
+                while (i < formatString.length && /[#0\- +]/.test(formatString[i])) i++;
+                while (i < formatString.length && /\d/.test(formatString[i])) i++;
+                if (i < formatString.length && formatString[i] === '.') { i++; while (i < formatString.length && /\d/.test(formatString[i])) i++; }
+                if (i < formatString.length && /[diufegGcxX]/.test(formatString[i])) {
+                    formatSpec = formatString.slice(start, i + 1); i++;
+                }
+                formatPostfix = formatString.slice(i);
+                break;
             }
-            const start = i; i++;
-            while (i < formatString.length && /[#0\- +]/.test(formatString[i])) i++;
-            while (i < formatString.length && /\d/.test(formatString[i])) i++;
-            if (i < formatString.length && formatString[i] === '.') { i++; while (i < formatString.length && /\d/.test(formatString[i])) i++; }
-            if (i < formatString.length && /[diufegGcxX]/.test(formatString[i])) {
-                formatSpec = formatString.slice(start, i + 1); i++;
-            }
-            formatPostfix = formatString.slice(i);
-            break;
+            formatPrefix += formatString[i]; i++;
         }
-        formatPrefix += formatString[i]; i++;
-    }
 
-    // ОБРЕЗАЕМ ПРОБЕЛЫ В НАЧАЛЕ И КОНЦЕ
-    formatPrefix = formatPrefix.trimEnd();   // ← убираем пробелы в конце
-    formatPostfix = formatPostfix.trimStart();   // ← убираем пробелы в начале
+        formatPrefix = formatPrefix.trimEnd();
+        formatPostfix = formatPostfix.trimStart();
 
-    let regAddress, regType;
-    if (typeof regSpec === 'string' && regSpec.includes(':')) {
-        const parts = regSpec.split(':');
-        regAddress = parseInt(parts[0]);
-        regType = parts[1];
-    } else {
-        regAddress = parseInt(regSpec);
-        const last = formatSpec ? formatSpec.slice(-1) : '';
-        regType = ({ f: 'f4', e: 'f4', E: 'f4', g: 'f4', G: 'f4', c: 'b0', d: 's2', i: 's2', u: 'u2', x: 'u2', X: 'u2', o: 'u2' })[last] || 'u2';
+        let regAddress, regType;
+        if (typeof regSpec === 'string' && regSpec.includes(':')) {
+            const parts = regSpec.split(':');
+            regAddress = parseInt(parts[0]);
+            regType = parts[1];
+        } else {
+            regAddress = parseInt(regSpec);
+            const last = formatSpec ? formatSpec.slice(-1) : '';
+            regType = ({ f: 'f4', e: 'f4', E: 'f4', g: 'f4', G: 'f4', c: 'b0', d: 's2', i: 's2', u: 'u2', x: 'u2', X: 'u2', o: 'u2' })[last] || 'u2';
+        }
+        return { regAddress, regType, formatPrefix, formatPostfix, formatSpec };
     }
-    return { regAddress, regType, formatPrefix, formatPostfix, formatSpec };
-}
 
     _registerSpan(parentElement, regAddress, regType, formatSpec) {
         const span = parentElement.querySelector('span.number');
@@ -311,25 +323,74 @@ export class BlockRenderer {
     async _saveInputValue(input, regAddress, regType) {
         const value = input.value.trim();
         if (!value) {
-            console.warn(`Пустое значение для регистра ${regAddress}`);
+            this.notification.warning('Пустое значение', { title: 'Предупреждение' });
             return false;
+        }
+    
+        const min = input.dataset.min !== '' ? parseFloat(input.dataset.min) : null;
+        const max = input.dataset.max !== '' ? parseFloat(input.dataset.max) : null;
+        const decimalPlaces = input.dataset.decimalPlaces !== undefined 
+            ? parseInt(input.dataset.decimalPlaces) 
+            : DEFAULT_DECIMAL_PLACES;
+    
+        // 🔥 Передаем registerType в валидатор
+        const result = this.validator.validateWithCorrection(value, {
+            min,
+            max,
+            decimalPlaces: decimalPlaces,
+            registerType: regType  // 🔥 Добавляем
+        });
+
+        if (!result.valid) {
+            this.notification.error(result.error, {
+                title: 'Ошибка валидации',
+                duration: 4000
+            });
+            input.style.backgroundColor = '#ffebee';
+            input.style.borderColor = 'red';
+            setTimeout(() => {
+                input.style.backgroundColor = '';
+                input.style.borderColor = '#ccc';
+            }, 3000);
+            return false;
+        }
+
+        const finalValue = result.normalized;
+
+        if (result.corrected || result.wasRounded) {
+            let message = '';
+            if (result.corrected) {
+                message = `Значение скорректировано до ${finalValue}`;
+            } else if (result.wasRounded) {
+                message = `Значение округлено до ${finalValue}`;
+            }
+            
+            this.notification.warning(message, {
+                title: 'Коррекция',
+                duration: 2000
+            });
+        }
+
+        if (finalValue !== input.value) {
+            input.value = finalValue;
         }
 
         const regKey = String(regAddress);
         this.updater.markAsSending(regKey);
 
         try {
-            console.log(`📝 Сохранение: регистр=${regAddress}, значение=${value}, тип=${regType}`);
+            await this.api.writeRegister(regAddress, finalValue, regType);
 
-            const result = await this.api.writeRegister(regAddress, value, regType);
-
-            this.updater.updateOriginalValue(regAddress, value);
+            this.updater.updateOriginalValue(regAddress, finalValue);
             this._updateInputDirtyState(input, regAddress);
 
             input.style.backgroundColor = '#e8f5e9';
             input.style.borderColor = 'green';
 
-            console.log(`✅ Значение сохранено:`, result);
+            this.notification.success(`Значение ${finalValue} сохранено`, {
+                title: 'Успешно',
+                duration: 2000
+            });
 
             setTimeout(() => {
                 input.style.backgroundColor = '';
@@ -343,6 +404,11 @@ export class BlockRenderer {
 
             input.style.backgroundColor = '#ffebee';
             input.style.borderColor = 'red';
+
+            this.notification.error(error.message || 'Ошибка сохранения', {
+                title: 'Ошибка',
+                duration: 4000
+            });
 
             setTimeout(() => {
                 input.style.backgroundColor = '';
@@ -359,39 +425,212 @@ export class BlockRenderer {
     _setupInputHandlers(input, regAddress) {
         const regKey = String(regAddress);
         const renderer = this;
-
+    
+        const min = input.dataset.min !== '' ? parseFloat(input.dataset.min) : null;
+        const max = input.dataset.max !== '' ? parseFloat(input.dataset.max) : null;
+        const decimalPlaces = input.dataset.decimalPlaces !== undefined 
+            ? parseInt(input.dataset.decimalPlaces) 
+            : DEFAULT_DECIMAL_PLACES;
+        const registerType = input.dataset.type || 'u2';  // 🔥 Тип регистра
+        
+        // 🔥 Проверка, является ли тип float
+        const isFloatType = registerType === 'f4';
+    
+        const validateAndCorrectInput = (value) => {
+            if (!value || value.trim() === '') {
+                return { valid: true, value: value, normalized: value };
+            }
+            
+            const result = renderer.validator.validateWithCorrection(value, {
+                min: min,
+                max: max,
+                decimalPlaces: decimalPlaces,
+                registerType: registerType
+            });
+            
+            return result;
+        };
+    
+        const applyValidationResult = (result, input, regAddress) => {
+            if (result.valid) {
+                if (result.corrected || result.wasRounded) {
+                    let message = '';
+                    if (result.corrected) {
+                        message = `Значение скорректировано до ${result.normalized}`;
+                    } else if (result.wasRounded) {
+                        message = `Значение округлено до ${result.normalized}`;
+                    }
+                    
+                    if (message) {
+                        renderer.notification.warning(message, {
+                            title: 'Коррекция',
+                            duration: 2000
+                        });
+                    }
+                    
+                    input.value = result.normalized;
+                    renderer._updateInputDirtyState(input, regAddress);
+                }
+                return true;
+            } else {
+                renderer.notification.error(result.error, {
+                    title: 'Ошибка ввода',
+                    duration: 3000
+                });
+                input.style.backgroundColor = '#ffebee';
+                input.style.borderColor = 'red';
+                setTimeout(() => {
+                    input.style.backgroundColor = '';
+                    input.style.borderColor = '#ccc';
+                }, 2000);
+                return false;
+            }
+        };
+    
         input.addEventListener('focus', () => {
             this.updater.editingInputs.add(regKey);
             input.style.backgroundColor = '#fff8e1';
             input.style.borderColor = '#ff9800';
         });
-
+    
+        // 🔥 Валидация при потере фокуса
         input.addEventListener('blur', () => {
             if (this._numpadOpenReg === regKey) return;
+            
+            const currentValue = input.value;
+            if (currentValue && currentValue.trim() !== '') {
+                const result = validateAndCorrectInput(currentValue);
+                applyValidationResult(result, input, regAddress);
+            }
+            
             this.updater.editingInputs.delete(regKey);
             input.style.backgroundColor = '';
             if (!input.classList.contains('input-changed')) {
                 input.style.borderColor = '#ccc';
             }
         });
-
+    
+        // 🔥 Ввод с клавиатуры с проверкой типа
+        input.addEventListener('input', () => {
+            const value = input.value;
+            
+            // 🔥 Если не float - запрещаем ввод точки
+            if (!isFloatType && value.includes('.')) {
+                // Удаляем точку
+                input.value = value.replace(/\./g, '');
+                
+                if (!this._decimalWarningShown) {
+                    this._decimalWarningShown = true;
+                    this.notification.warning(
+                        'Для этого регистра допустимы только целые числа',
+                        { title: 'Предупреждение', duration: 2000 }
+                    );
+                    setTimeout(() => {
+                        this._decimalWarningShown = false;
+                    }, 2000);
+                }
+                this._updateInputDirtyState(input, regAddress);
+                return;
+            }
+            
+            // 🔥 Если float - проверяем количество знаков после запятой
+            if (isFloatType && value.includes('.')) {
+                const parts = value.split('.');
+                if (parts.length === 2 && parts[1].length > decimalPlaces) {
+                    const corrected = parts[0] + '.' + parts[1].slice(0, decimalPlaces);
+                    input.value = corrected;
+                    
+                    if (!this._decimalWarningShown) {
+                        this._decimalWarningShown = true;
+                        this.notification.warning(
+                            `Максимум ${decimalPlaces} знаков после запятой`,
+                            { title: 'Предупреждение', duration: 2000 }
+                        );
+                        setTimeout(() => {
+                            this._decimalWarningShown = false;
+                        }, 2000);
+                    }
+                }
+            }
+            
+            this._updateInputDirtyState(input, regAddress);
+        });
+    
+        input.addEventListener('keydown', (event) => {
+            // 🔥 Блокируем ввод точки для целых типов
+            if (!isFloatType && event.key === '.') {
+                event.preventDefault();
+                this.notification.warning(
+                    'Для этого регистра допустимы только целые числа',
+                    { title: 'Предупреждение', duration: 2000 }
+                );
+                return;
+            }
+            
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                input.blur();
+            }
+            
+            if (event.key === 'Escape') {
+                if (this._numpadOpenReg === regKey) return;
+                input.blur();
+                this.updater.editingInputs.delete(regKey);
+                input.style.backgroundColor = '';
+                if (!input.classList.contains('input-changed')) {
+                    input.style.borderColor = '#ccc';
+                }
+            }
+        });
+    
+        input.addEventListener('change', () => {
+            this._updateInputDirtyState(input, regAddress);
+        });
+    
+        // 🔥 Открытие numpad с учетом типа
         input.addEventListener('click', () => {
             if (this._numpadOpenReg === regKey) return;
             this._numpadOpenReg = regKey;
             input.readOnly = true;
-
+        
             const curValue = input.value;
+        
             numpadManager.show(curValue, {
+                min: min,
+                max: max,
+                maxDecimalPlaces: isFloatType ? decimalPlaces : 0,
+                decimalPlaces: isFloatType ? decimalPlaces : 0,
+                allowFloat: isFloatType,
                 onOk(val) {
                     input.readOnly = false;
+                    
+                    console.log('📥 Значение из numpad:', val);
+                    console.log('📥 Текущее originalValue:', renderer.updater.caches.inputs.get(regKey)?.originalValue);
+                    
+                    // 🔥 Устанавливаем значение в input
                     input.value = val;
+                    
+                    // 🔥 Сразу обновляем dirty-статус
                     renderer._updateInputDirtyState(input, regAddress);
+                    
+                    // 🔥 Применяем валидацию
+                    const result = validateAndCorrectInput(val);
+                    applyValidationResult(result, input, regAddress);
+                    
                     renderer._numpadOpenReg = null;
                     renderer.updater.editingInputs.delete(regKey);
                     input.style.backgroundColor = '';
                     if (!input.classList.contains('input-changed')) {
                         input.style.borderColor = '#ccc';
                     }
+                    
+                    // 🔥 ПРИНУДИТЕЛЬНО обновляем кнопку сохранения
+                    setTimeout(() => {
+                        renderer._updateInputDirtyState(input, regAddress);
+                        window.dispatchEvent(new CustomEvent('input-dirty-change'));
+                        console.log('🔄 Принудительное обновление dirty-статуса');
+                    }, 50);
+                    
                     input.blur();
                 },
                 onCancel() {
@@ -407,30 +646,31 @@ export class BlockRenderer {
                     if (!input.classList.contains('input-changed')) {
                         input.style.borderColor = '#ccc';
                     }
+                    
+                    // 🔥 Обновляем кнопку сохранения при отмене
+                    setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('input-dirty-change'));
+                    }, 50);
+                    
                     input.blur();
                 }
             });
-        });
-
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                if (this._numpadOpenReg === regKey) return;
-                input.blur();
-                this.updater.editingInputs.delete(regKey);
-                input.style.backgroundColor = '';
-                if (!input.classList.contains('input-changed')) {
-                    input.style.borderColor = '#ccc';
-                }
-            }
         });
     }
 
     _updateInputDirtyState(input, regAddress) {
         const regKey = String(regAddress);
         const isDirty = this.updater.isDirty(regKey);
-
+        
+        console.log(`🔄 Dirty-статус для ${regKey}:`, {
+            current: input.value,
+            original: this.updater.caches.inputs.get(regKey)?.originalValue,
+            isDirty: isDirty
+        });
+    
         input.classList.toggle('input-changed', isDirty);
-
+    
+        // 🔥 Обновляем состояние кнопки сохранения
         window.dispatchEvent(new CustomEvent('input-dirty-change'));
     }
 
@@ -530,16 +770,21 @@ export class BlockRenderer {
         if (!regAttr) return;
         const regs = regAttr.split(',').map(r => r.trim());
         const hasDirty = regs.some(reg => this.updater.isDirty(reg));
+        
+        console.log(`🔘 Кнопка сохранения для ${regAttr}: dirty=${hasDirty}`);
+        
         sendButton.disabled = !hasDirty;
     }
 
     _setupSendButton(sendButton) {
         const originalText = sendButton.textContent;
-
+    
         this._updateSendButtonState(sendButton);
-
+    
+        // 🔥 Подписываемся на событие изменения dirty-статуса
         window.addEventListener('input-dirty-change', () => {
             if (!document.body.contains(sendButton)) return;
+            console.log('🔄 Событие input-dirty-change');
             this._updateSendButtonState(sendButton);
         });
 
@@ -555,7 +800,6 @@ export class BlockRenderer {
 
             const regs = regAttr.split(',').map(r => r.trim());
 
-            // Проверяем, есть ли изменённые регистры
             const hasDirty = regs.some(reg => this.updater.isDirty(reg));
             if (!hasDirty) {
                 sendButton.textContent = 'Нет изменений';
@@ -570,7 +814,6 @@ export class BlockRenderer {
             sendButton.classList.add('sending');
 
             try {
-                // 🔍 ШАГ 1: Собираем все регистры для отправки
                 const registersToSend = [];
                 const failedRegisters = [];
 
@@ -578,7 +821,6 @@ export class BlockRenderer {
                     const regKey = String(reg);
                     let regInfo = this.updater.caches.inputs.get(regKey);
 
-                    // Если регистр не найден в кэше — ищем в DOM
                     if (!regInfo) {
                         console.warn(`⚠️ Регистр ${reg} не найден в кэше, ищем в DOM...`);
                         const inputElement = document.querySelector(`.input-value-field[data-reg="${reg}"]`);
@@ -604,7 +846,6 @@ export class BlockRenderer {
                         continue;
                     }
 
-                    // Добавляем в массив для отправки
                     registersToSend.push({
                         regAddress: reg,
                         value: value.trim(),
@@ -614,7 +855,6 @@ export class BlockRenderer {
                     });
                 }
 
-                // Если нет регистров для отправки — выходим
                 if (registersToSend.length === 0) {
                     sendButton.textContent = '❌ Нет данных';
                     setTimeout(() => {
@@ -625,17 +865,14 @@ export class BlockRenderer {
                     return;
                 }
 
-                // ⚡ ШАГ 2: Отправляем ВСЕ регистры ПАРАЛЛЕЛЬНО
                 console.log(`📤 Отправка ${registersToSend.length} регистров параллельно...`);
 
                 const promises = registersToSend.map(({ regAddress, value, type }) =>
                     this.api.writeRegister(regAddress, value, type)
                 );
 
-                // Используем Promise.allSettled для обработки всех результатов
                 const results = await Promise.allSettled(promises);
 
-                // 📊 ШАГ 3: Обрабатываем результаты
                 let successCount = 0;
                 let errorCount = 0;
 
@@ -643,15 +880,12 @@ export class BlockRenderer {
                     const regData = registersToSend[index];
 
                     if (result.status === 'fulfilled') {
-                        // ✅ Успешно
                         successCount++;
                         console.log(`✅ Регистр ${regData.regAddress} сохранён:`, result.value);
 
-                        // Обновляем originalValue
                         this.updater.updateOriginalValue(regData.regAddress, regData.value);
                         this._updateInputDirtyState(regData.element, regData.regAddress);
 
-                        // Подсветка зелёным
                         if (regData.element) {
                             regData.element.style.backgroundColor = '#e8f5e9';
                             regData.element.style.borderColor = 'green';
@@ -664,11 +898,9 @@ export class BlockRenderer {
                         this.updater.editingInputs.delete(regData.regKey);
 
                     } else {
-                        // ❌ Ошибка
                         errorCount++;
                         console.error(`❌ Ошибка регистра ${regData.regAddress}:`, result.reason);
 
-                        // Подсветка красным
                         if (regData.element) {
                             regData.element.style.backgroundColor = '#ffebee';
                             regData.element.style.borderColor = 'red';
@@ -680,9 +912,7 @@ export class BlockRenderer {
                     }
                 });
 
-                // 📊 ШАГ 4: Показываем результат пользователю
                 if (errorCount === 0) {
-                    // Все успешно
                     sendButton.textContent = `✅ Отправлено (${successCount})`;
                     sendButton.classList.remove('sending');
                     sendButton.classList.add('success');
@@ -694,7 +924,6 @@ export class BlockRenderer {
                     }, 2000);
 
                 } else if (successCount === 0) {
-                    // Все с ошибкой
                     sendButton.textContent = `❌ Ошибка (${errorCount})`;
                     sendButton.classList.remove('sending');
                     sendButton.classList.add('error');
@@ -706,7 +935,6 @@ export class BlockRenderer {
                     }, 2500);
 
                 } else {
-                    // Частичный успех
                     sendButton.textContent = `⚠️ ${successCount}/${successCount + errorCount}`;
                     sendButton.classList.remove('sending');
                     sendButton.classList.add('partial');
@@ -719,13 +947,11 @@ export class BlockRenderer {
                 }
 
             } catch (error) {
-                // Критическая ошибка (например, сеть)
                 console.error('❌ Критическая ошибка:', error);
                 sendButton.textContent = '❌ Ошибка сети';
                 sendButton.classList.remove('sending');
                 sendButton.classList.add('error');
 
-                // Снимаем dirty-статус со всех регистров
                 for (const reg of regs) {
                     this.updater.editingInputs.delete(String(reg));
                 }
@@ -766,7 +992,6 @@ export class BlockRenderer {
         }
         this.blocks.clear();
         this.updater.clearCaches();
-        // this.blockCounter = 0; не буду обнулять, пусть растет с каждым переходом по странице. большие числа id не страшны.
     }
 }
 

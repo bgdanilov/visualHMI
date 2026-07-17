@@ -60,45 +60,47 @@ class ApiClient {
         return new DataView(bytes.buffer);
     }
 
-    // public/js/apiClient.js
-
-async writeRegister(regId, value, registerType = 'u2') {
-    // Преобразуем значение в число, если это возможно
-    let numericValue;
-    if (registerType === 'f4' || registerType === 'u2' || registerType === 's2') {
-        numericValue = parseFloat(value);
-        if (isNaN(numericValue)) {
-            throw new Error(`Некорректное значение: ${value}. Ожидается число.`);
+    // 🔥 БЕЗ ОКРУГЛЕНИЯ - просто отправляем то, что пришло
+    async writeRegister(regId, value, registerType = 'u2') {
+        // Преобразуем в число, если нужно
+        let numericValue;
+        if (registerType === 'f4' || registerType === 'u2' || registerType === 's2') {
+            numericValue = parseFloat(value);
+            if (isNaN(numericValue)) {
+                throw new Error(`Некорректное значение: ${value}. Ожидается число.`);
+            }
+        } else if (registerType.startsWith('b')) {
+            numericValue = parseInt(value);
+            if (![0, 1].includes(numericValue)) {
+                throw new Error(`Для битового регистра допустимы только 0 или 1`);
+            }
+        } else {
+            numericValue = value;
         }
-    } else if (registerType.startsWith('b')) {
-        // Для битовых регистров
-        numericValue = parseInt(value);
-        if (![0, 1].includes(numericValue)) {
-            throw new Error(`Для битового регистра допустимы только 0 или 1`);
+
+        console.log(`📤 Отправка регистра ${regId}:`, { 
+            значение: numericValue, 
+            тип: registerType 
+        });
+
+        const response = await this._fetchWithTimeout(`/api/registers/${regId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                state: numericValue, 
+                registerType 
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error || `HTTP ${response.status}`);
         }
-    } else {
-        numericValue = value;
+
+        return response.json();
     }
-
-    const response = await this._fetchWithTimeout(`/api/registers/${regId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            state: numericValue, 
-            registerType 
-        })
-    });
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-}
 
     async writeMultipleRegisters(registers) {
-        // Для массовой отправки
         const promises = registers.map(({ regId, value, type }) => 
             this.writeRegister(regId, value, type)
         );
