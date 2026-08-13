@@ -14,5 +14,6 @@ export const BLOCK_TYPES = {
     TOGGLE_BUTTON: 'toggle-button',
     TITLE_INPUT: 'title-input',
     SEND_BUTTON: 'send-button',
-    PAGE_BUTTON: 'page-button'
+    PAGE_BUTTON: 'page-button',
+    EMPTY_BOX: 'empty-box'  // 🔥 Новый тип
 };

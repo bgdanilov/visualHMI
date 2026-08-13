@@ -54,6 +54,8 @@ export class BlockRenderer {
                 return this._createSendButton(block, blockData);
             case BLOCK_TYPES.PAGE_BUTTON:
                 return this._createPageButton(block, blockData);
+            case BLOCK_TYPES.EMPTY_BOX:  // 🔥 Новый случай
+                return this._createEmptyBox(block, blockData);
             default:
                 console.warn(`Неизвестный тип блока: ${blockData.type}`);
                 return null;
@@ -273,6 +275,39 @@ export class BlockRenderer {
         const sendButton = block.querySelector('.send-button');
         this._setupSendButton(sendButton);
 
+        return block;
+    }
+
+    _createEmptyBox(block, data) {
+        // 🔥 Получаем ширину и высоту из данных, с значениями по умолчанию
+        const width = data.width || 100;
+        const height = data.height || 100;
+        
+        // 🔥 Опциональные стили рамки
+        const borderColor = data.borderColor || '#cccccc';
+        const borderWidth = data.borderWidth || 2;
+        const borderStyle = data.borderStyle || 'solid';
+        const borderRadius = data.borderRadius || 0;
+        
+        // 🔥 Цвет фона (только цвет)
+        const backgroundColor = data.backgroundColor || 'transparent';
+        
+        // 🔥 Устанавливаем размеры блоку
+        block.style.width = `${width}px`;
+        block.style.height = `${height}px`;
+        
+        // 🔥 Применяем стили рамки
+        block.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
+        block.style.borderRadius = `${borderRadius}px`;
+        
+        // 🔥 Применяем цвет фона
+        block.style.backgroundColor = backgroundColor;
+        
+        // 🔥 Если есть дополнительные CSS классы
+        if (data.className) {
+            block.classList.add(data.className);
+        }
+        
         return block;
     }
 
