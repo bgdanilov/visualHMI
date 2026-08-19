@@ -56,6 +56,8 @@ export class BlockRenderer {
                 return this._createPageButton(block, blockData);
             case BLOCK_TYPES.EMPTY_BOX:  // 🔥 Новый случай
                 return this._createEmptyBox(block, blockData);
+            case BLOCK_TYPES.IMAGE:  // 🔥 Новый случай
+                return this._createImage(block, blockData);
             default:
                 console.warn(`Неизвестный тип блока: ${blockData.type}`);
                 return null;
@@ -308,6 +310,138 @@ export class BlockRenderer {
             block.classList.add(data.className);
         }
         
+        return block;
+    }
+
+    _createImage(block, data) {
+        const { 
+            src, 
+            width, 
+            height, 
+            alt = '', 
+            title = '',
+            objectFit = 'contain',
+            borderRadius = 0,
+            border = 'none',
+            opacity = 1,
+            backgroundColor = 'transparent',
+            spin = false,        // 🔥 Включить вращение
+            spinSpeed = 'normal' // 🔥 Скорость: 'slow', 'normal', 'fast'
+        } = data;
+    
+        // Стили
+        if (width) {
+            block.style.width = `${width}px`;
+            block.style.minWidth = `${width}px`;
+        }
+        
+        if (height) {
+            block.style.height = `${height}px`;
+            block.style.minHeight = `${height}px`;
+        }
+    
+        block.style.borderRadius = `${borderRadius}px`;
+        block.style.opacity = opacity;
+        block.style.border = border;
+        block.style.backgroundColor = backgroundColor;
+        block.style.padding = '0';
+        block.style.margin = '0';
+    
+        if (!src) {
+            block.innerHTML = `
+                <div class="content image-placeholder">
+                    <span>📷 Нет изображения</span>
+                </div>
+            `;
+            return block;
+        }
+    
+        // 🔥 Определяем класс вращения
+        let spinClass = '';
+        if (spin) {
+            if (spinSpeed === 'slow') {
+                spinClass = 'spin-slow';
+            } else if (spinSpeed === 'fast') {
+                spinClass = 'spin-fast';
+            } else if (spinSpeed === 'pause') {
+                spinClass = 'spin-pause';
+            } else if (spinSpeed === 'reverse') {
+                spinClass = 'spin-reverse';
+            } else {
+                spinClass = 'spinning'; // normal
+            }
+        }
+    
+        block.innerHTML = `
+            <div class="content image-wrapper" style="padding: 0; margin: 0;">
+                <img 
+                    src="${src}" 
+                    alt="${alt}" 
+                    title="${title}"
+                    class="image-block ${spinClass}"
+                    style="object-fit: ${objectFit}; padding: 0; margin: 0; display: block;"
+                    loading="lazy"
+                >
+            </div>
+        `;
+    
+        const img = block.querySelector('img');
+        if (img) {
+            img.onerror = function() {
+                this.style.display = 'none';
+                this.parentElement.innerHTML = `
+                    <div class="image-error">
+                        <span>❌</span>
+                        <span>Ошибка загрузки</span>
+                    </div>
+                `;
+            };
+    
+            img.onload = function() {
+                if (!width) {
+                    block.style.width = `${this.naturalWidth}px`;
+                    block.style.minWidth = `${this.naturalWidth}px`;
+                }
+                if (!height) {
+                    block.style.height = `${this.naturalHeight}px`;
+                    block.style.minHeight = `${this.naturalHeight}px`;
+                }
+            };
+        }
+    
+        // 🔥 Управление вращением через клик (опционально)
+        if (data.toggleSpinOnClick) {
+            const imgEl = block.querySelector('img');
+            if (imgEl) {
+                imgEl.style.cursor = 'pointer';
+                imgEl.addEventListener('click', () => {
+                    imgEl.classList.toggle('spinning');
+                    imgEl.classList.toggle('spin-slow');
+                    imgEl.classList.toggle('spin-fast');
+                    imgEl.classList.toggle('spin-pause');
+                    imgEl.classList.toggle('spin-reverse');
+                });
+            }
+        }
+    
+        if (data.onClick) {
+            const imgEl = block.querySelector('img');
+            if (imgEl) {
+                imgEl.style.cursor = 'pointer';
+                imgEl.addEventListener('click', () => {
+                    if (typeof data.onClick === 'function') {
+                        data.onClick(data);
+                    } else if (typeof data.onClick === 'string') {
+                        try {
+                            new Function(data.onClick)();
+                        } catch (e) {
+                            console.warn('Ошибка выполнения onClick:', e);
+                        }
+                    }
+                });
+            }
+        }
+    
         return block;
     }
 

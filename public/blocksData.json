@@ -1,48 +1,23 @@
 {
   "main": [
-    {
-      "type": "title-group-number",
-      "text": "КОМНАТА 1",
-      "format": [["A = %8.2fA",0], ["B = %8.2f A", 2], ["Сумма = %8i A", 16], ["Меркурий = %8.3f", 18], ["20[0] = %8c bit", "20:b0"], ["Венера = %8d", 21]],
-      "x": 350,
-      "y": 10
-    },
-    {
-      "type": "title-group-number",
-      "text": "ЧЕРНЕГА",
-      "format": [["A = %8.2fA",0], ["B = %8.2f A", 2], ["Сумма = %8.2f A", 16], ["Меркурий = %8f", 18], ["20[0] = %8c bit", "20:b0"], ["Венера = %8i", 21]],
-      "x": 350,
-      "y": 190
-    },
-    {
-      "type": "title-group-number",
-      "text": "ЧЕРНЕГА",
-      "format": [["A = %8.2fA",0], ["B = %8.2f A", 2], ["Сумма = %8.2f A", 16], ["Меркурий = %8f", 18], ["20[0] = %8c bit", "20:b0"], ["Венера = %8i", 21]],
-      "x": 350,
-      "y": 370
-    },
-    {
+     {
       "type": "title-group-number",
       "text": "КОМНАТА 1",
       "format": [["A = %8.2fA",0], ["B = %8.2f A", 2], ["Сумма = %9.1e A", 16], ["Меркурий = %8f", 18], ["20[0] = %8c bit", "20:b0"], ["Венера = %8i", 21]],
-      "x": 605,
-      "y": 10
-    },
-
-    {
-      "regAddress": 2,
-      "type": "title-number",
-      "text": "Фаза B",
-      "format": ["B = %-8.2f A", 2],
       "x": 10,
-      "y": 200
+      "y": 500
     },
     {
       "type": "title-number",
-      "text": "Сумма",
-      "format": ["%e кВтч", 16],
+      "format": ["Температура на улице_ %5.2f С__", 2],
       "x": 10,
-      "y": 290
+      "y": 90
+    },
+    {
+      "type": "title-number",
+      "format": ["Потребление установки %5.2f КВт", 4],
+      "x": 10,
+      "y": 150
     },
     {
       "type": "title-number",
@@ -52,57 +27,91 @@
       "y": 390
     },
     {
-      "type": "title-number",
-      "text": "Венера",
-      "format": ["%e кВтч", 21],
-      "x": 615,
-      "y": 310
-    },
-    {
       "type": "page-button",
       "targetPage": "settings",
       "text": "Настройки",
       "x": 10,
-      "y": 80
+      "y": 10
     },
     {
       "type": "page-button",
       "targetPage": "graff",
       "text": "Графики",
-      "x": 110,
-      "y": 80
+      "x": 193,
+      "y": 10
+    },
+    {
+      "type": "title-number",
+      "text": "Скорость",
+      "format": ["%i шаг/сек", 16],
+      "x": 622,
+      "y": 200
     },
     {
       "regAddress": 20,
       "regType": "b0",
-      "description": "Источник",
+      "description": "Рекуператор",
       "type": "toggle-button",
-      "text": "Сеть",
-      "prefix": "Сеть",
-      "x": 615,
-      "y": 255
+      "text": "ааа",
+      "x": 637,
+      "y": 280
     },
     {
-      "regAddress": 20,
-      "regType": "b1",
-      "description": "Кнопка форсировки",
-      "type": "toggle-button",
-      "text": "Вкл",
-      "prefix": "Генератор",
-      "x": 615,
-      "y": 200
+      "type": "image",
+      "x": 635,
+      "y": 335,
+      "src": "/images/fan.jpg",
+      "border": "none",
+      "width": 90,
+      "height": 90,
+      "alt": "Логотип",
+      "objectFit": "contain",
+      "spin": true,
+      "spinSpeed": "fast",
+      "toggleSpinOnClick": true,
+      "title": "Кликни чтобы остановить/запустить",
+      "borderRadius": 10
+    },
+    {
+      "type": "image",
+      "x": 200,
+      "y": 280,
+      "src": "/images/scarlett.jpg",
+      "border": "none",
+      "width": 350,
+      "height": 200,
+      "alt": "Логотип",
+      "title": "Наш логотип",
+      "spin": false,
+      "spinSpeed": "fast",
+      "objectFit": "contain",
+      "borderRadius": 10
+    },
+    {
+      "type": "title-number",
+      "text": "Время",
+      "format": ["%2i сек", 1],
+      "x": 636,
+      "y": 430
+    },
+    {
+      "type": "title-number",
+      "text": "Влажность",
+      "format": ["%i %", 16],
+      "x": 630,
+      "y": 505
     },
     {
       "type": "empty-box",
       "x": 605,
       "y": 190,
-      "width": 245,
-      "height": 320,
-      "borderColor": "#2196F3",
-      "borderWidth": 2,
+      "width": 150,
+      "height": 400,
+      "borderColor": "#d3dbe3",
+      "borderWidth": 3,
       "borderStyle": "solid",
       "borderRadius": 10,
-      "backgroundColor": "#E3F2FD",
+      "backgroundColor": "#ffffff",
       "text": "",
       "className": "custom-box"
     }

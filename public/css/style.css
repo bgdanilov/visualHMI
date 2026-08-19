@@ -13,14 +13,14 @@ body {
     background-color: #f0f0f0;
     width: 100vw;
     height: 100vh;
+    /*cursor:none;*/
 }
 
 #render-area {
     position: absolute;
     width: 1280px;
-    height: 760px;
-    /*border: 2px solid #333;*/
-    background-color: #fff;
+    height: 800px;
+    background-color: #eef2f6;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     overflow: hidden;
 }
@@ -138,8 +138,9 @@ span.number {
 
 .page-button button {
     cursor: pointer;
-    padding: 10px 15px;
-    border-radius: 3px;
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 1.5em;
     border: 1px solid #aaa;
     background-color: #0056b3;
     color: #d3d3d3;
@@ -419,7 +420,7 @@ span.number {
     z-index: -1;
 }
 
-.block.empty-box .empty-box-wrapper {
+/*.block.empty-box .empty-box-wrapper {
     width: 100%;
     height: 100%;
     display: flex;
@@ -442,4 +443,143 @@ span.number {
     overflow: hidden;
     padding: 5px;
     box-sizing: border-box;
+}*/
+
+
+
+/* ============================================
+   IMAGE
+   ============================================ */
+
+   .block.image {
+    position: absolute;
+    overflow: hidden;
+    box-sizing: border-box;
+    user-select: none;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-block {
+    width: 100%;
+    height: 100%;
+    display: block;
+    padding: 0;
+    margin: 0;
+    transition: transform 0.3s ease;
+}
+
+/* 🔥 Анимация вращения */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Класс для вращения */
+.block.image .image-block.spinning {
+    animation: spin 3s linear infinite;
+}
+
+/* 🔥 Медленное вращение */
+.block.image .image-block.spin-slow {
+    animation: spin 10s linear infinite;
+}
+
+/* 🔥 Быстрое вращение */
+.block.image .image-block.spin-fast {
+    animation: spin 1s linear infinite;
+}
+
+/* 🔥 Вращение с остановкой */
+@keyframes spin-pause {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(180deg); }
+    50% { transform: rotate(180deg); }
+    75% { transform: rotate(360deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.block.image .image-block.spin-pause {
+    animation: spin-pause 4s ease-in-out infinite;
+}
+
+/* 🔥 Вращение в обратную сторону */
+@keyframes spin-reverse {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+.block.image .image-block.spin-reverse {
+    animation: spin-reverse 3s linear infinite;
+}
+
+/* Ховер эффект */
+.block.image:hover .image-block {
+    transform: scale(1.02);
+}
+
+/* 🔥 При ховере - останавливаем вращение */
+.block.image:hover .image-block.spinning {
+    animation-play-state: paused;
+}
+
+/* Заглушка и ошибки */
+.block.image .image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    color: #999;
+    font-size: 14px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: #ffebee;
+    color: #c62828;
+    font-size: 14px;
+    border: 2px solid #ef9a9a;
+    border-radius: 4px;
+    gap: 5px;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-error span:first-child {
+    font-size: 32px;
+}
+
+/* Шахматный фон для PNG */
+.block.image .image-block[src*=".png"] {
+    background: repeating-conic-gradient(#f0f0f0 0% 25%, #ffffff 0% 50%) 0 0 / 20px 20px;
 }
