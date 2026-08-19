@@ -45,7 +45,8 @@
       "text": "Скорость",
       "format": ["%i шаг/сек", 16],
       "x": 622,
-      "y": 200
+      "y": 200,
+      "plain": true
     },
     {
       "regAddress": 20,
@@ -54,7 +55,8 @@
       "type": "toggle-button",
       "text": "ааа",
       "x": 637,
-      "y": 280
+      "y": 280,
+      "plain": true
     },
     {
       "type": "image",
@@ -70,36 +72,31 @@
       "spinSpeed": "fast",
       "toggleSpinOnClick": true,
       "title": "Кликни чтобы остановить/запустить",
-      "borderRadius": 10
-    },
-    {
-      "type": "image",
-      "x": 200,
-      "y": 280,
-      "src": "/images/scarlett.jpg",
-      "border": "none",
-      "width": 350,
-      "height": 200,
-      "alt": "Логотип",
-      "title": "Наш логотип",
-      "spin": false,
-      "spinSpeed": "fast",
-      "objectFit": "contain",
-      "borderRadius": 10
+      "borderRadius": 10,
+      "plain": true
     },
     {
       "type": "title-number",
       "text": "Время",
       "format": ["%2i сек", 1],
       "x": 636,
-      "y": 430
+      "y": 430,
+      "plain": true
     },
     {
       "type": "title-number",
       "text": "Влажность",
       "format": ["%i %", 16],
       "x": 630,
-      "y": 505
+      "y": 505,
+      "plain": true
+    },
+    {
+      "type": "only-title",
+      "text": "Рекуператор",
+      "x": 600,
+      "y": 150,
+      "plain": true
     },
     {
       "type": "empty-box",

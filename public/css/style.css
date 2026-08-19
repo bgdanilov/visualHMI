@@ -40,6 +40,13 @@ p, span, h2 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
 }
+/* 🔥 Класс для отмены стандартных стилей */
+.block.plain {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
 
 .content {
     display: flex;

@@ -37,6 +37,11 @@ export class BlockRenderer {
         block.style.left = `${blockData.x}px`;
         block.style.top = `${blockData.y}px`;
 
+        // 🔥 Если установлен флаг plain - добавляем класс
+        if (blockData.plain) {
+            block.classList.add('plain');
+        }
+
         switch (blockData.type) {
             case BLOCK_TYPES.ONLY_NUMBER:
                 return this._createOnlyNumber(block, blockData);
@@ -284,41 +289,41 @@ export class BlockRenderer {
         // 🔥 Получаем ширину и высоту из данных, с значениями по умолчанию
         const width = data.width || 100;
         const height = data.height || 100;
-        
+
         // 🔥 Опциональные стили рамки
         const borderColor = data.borderColor || '#cccccc';
         const borderWidth = data.borderWidth || 2;
         const borderStyle = data.borderStyle || 'solid';
         const borderRadius = data.borderRadius || 0;
-        
+
         // 🔥 Цвет фона (только цвет)
         const backgroundColor = data.backgroundColor || 'transparent';
-        
+
         // 🔥 Устанавливаем размеры блоку
         block.style.width = `${width}px`;
         block.style.height = `${height}px`;
-        
+
         // 🔥 Применяем стили рамки
         block.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
         block.style.borderRadius = `${borderRadius}px`;
-        
+
         // 🔥 Применяем цвет фона
         block.style.backgroundColor = backgroundColor;
-        
+
         // 🔥 Если есть дополнительные CSS классы
         if (data.className) {
             block.classList.add(data.className);
         }
-        
+
         return block;
     }
 
     _createImage(block, data) {
-        const { 
-            src, 
-            width, 
-            height, 
-            alt = '', 
+        const {
+            src,
+            width,
+            height,
+            alt = '',
             title = '',
             objectFit = 'contain',
             borderRadius = 0,
@@ -328,25 +333,25 @@ export class BlockRenderer {
             spin = false,        // 🔥 Включить вращение
             spinSpeed = 'normal' // 🔥 Скорость: 'slow', 'normal', 'fast'
         } = data;
-    
+
         // Стили
         if (width) {
             block.style.width = `${width}px`;
             block.style.minWidth = `${width}px`;
         }
-        
+
         if (height) {
             block.style.height = `${height}px`;
             block.style.minHeight = `${height}px`;
         }
-    
+
         block.style.borderRadius = `${borderRadius}px`;
         block.style.opacity = opacity;
         block.style.border = border;
         block.style.backgroundColor = backgroundColor;
         block.style.padding = '0';
         block.style.margin = '0';
-    
+
         if (!src) {
             block.innerHTML = `
                 <div class="content image-placeholder">
@@ -355,7 +360,7 @@ export class BlockRenderer {
             `;
             return block;
         }
-    
+
         // 🔥 Определяем класс вращения
         let spinClass = '';
         if (spin) {
@@ -371,7 +376,7 @@ export class BlockRenderer {
                 spinClass = 'spinning'; // normal
             }
         }
-    
+
         block.innerHTML = `
             <div class="content image-wrapper" style="padding: 0; margin: 0;">
                 <img 
@@ -384,10 +389,10 @@ export class BlockRenderer {
                 >
             </div>
         `;
-    
+
         const img = block.querySelector('img');
         if (img) {
-            img.onerror = function() {
+            img.onerror = function () {
                 this.style.display = 'none';
                 this.parentElement.innerHTML = `
                     <div class="image-error">
@@ -396,8 +401,8 @@ export class BlockRenderer {
                     </div>
                 `;
             };
-    
-            img.onload = function() {
+
+            img.onload = function () {
                 if (!width) {
                     block.style.width = `${this.naturalWidth}px`;
                     block.style.minWidth = `${this.naturalWidth}px`;
@@ -408,7 +413,7 @@ export class BlockRenderer {
                 }
             };
         }
-    
+
         // 🔥 Управление вращением через клик (опционально)
         if (data.toggleSpinOnClick) {
             const imgEl = block.querySelector('img');
@@ -423,7 +428,7 @@ export class BlockRenderer {
                 });
             }
         }
-    
+
         if (data.onClick) {
             const imgEl = block.querySelector('img');
             if (imgEl) {
@@ -433,7 +438,7 @@ export class BlockRenderer {
                         data.onClick(data);
                     } else if (typeof data.onClick === 'string') {
                         try {
-                            new Function(data.onClick)();
+                            new Function(data.onClick)(); пше
                         } catch (e) {
                             console.warn('Ошибка выполнения onClick:', e);
                         }
@@ -441,7 +446,7 @@ export class BlockRenderer {
                 });
             }
         }
-    
+
         return block;
     }
 
@@ -495,13 +500,13 @@ export class BlockRenderer {
             this.notification.warning('Пустое значение', { title: 'Предупреждение' });
             return false;
         }
-    
+
         const min = input.dataset.min !== '' ? parseFloat(input.dataset.min) : null;
         const max = input.dataset.max !== '' ? parseFloat(input.dataset.max) : null;
-        const decimalPlaces = input.dataset.decimalPlaces !== undefined 
-            ? parseInt(input.dataset.decimalPlaces) 
+        const decimalPlaces = input.dataset.decimalPlaces !== undefined
+            ? parseInt(input.dataset.decimalPlaces)
             : DEFAULT_DECIMAL_PLACES;
-    
+
         // 🔥 Передаем registerType в валидатор
         const result = this.validator.validateWithCorrection(value, {
             min,
@@ -533,7 +538,7 @@ export class BlockRenderer {
             } else if (result.wasRounded) {
                 message = `Значение округлено до ${finalValue}`;
             }
-            
+
             this.notification.warning(message, {
                 title: 'Коррекция',
                 duration: 2000
@@ -594,32 +599,32 @@ export class BlockRenderer {
     _setupInputHandlers(input, regAddress) {
         const regKey = String(regAddress);
         const renderer = this;
-    
+
         const min = input.dataset.min !== '' ? parseFloat(input.dataset.min) : null;
         const max = input.dataset.max !== '' ? parseFloat(input.dataset.max) : null;
-        const decimalPlaces = input.dataset.decimalPlaces !== undefined 
-            ? parseInt(input.dataset.decimalPlaces) 
+        const decimalPlaces = input.dataset.decimalPlaces !== undefined
+            ? parseInt(input.dataset.decimalPlaces)
             : DEFAULT_DECIMAL_PLACES;
         const registerType = input.dataset.type || 'u2';  // 🔥 Тип регистра
-        
+
         // 🔥 Проверка, является ли тип float
         const isFloatType = registerType === 'f4';
-    
+
         const validateAndCorrectInput = (value) => {
             if (!value || value.trim() === '') {
                 return { valid: true, value: value, normalized: value };
             }
-            
+
             const result = renderer.validator.validateWithCorrection(value, {
                 min: min,
                 max: max,
                 decimalPlaces: decimalPlaces,
                 registerType: registerType
             });
-            
+
             return result;
         };
-    
+
         const applyValidationResult = (result, input, regAddress) => {
             if (result.valid) {
                 if (result.corrected || result.wasRounded) {
@@ -629,14 +634,14 @@ export class BlockRenderer {
                     } else if (result.wasRounded) {
                         message = `Значение округлено до ${result.normalized}`;
                     }
-                    
+
                     if (message) {
                         renderer.notification.warning(message, {
                             title: 'Коррекция',
                             duration: 2000
                         });
                     }
-                    
+
                     input.value = result.normalized;
                     renderer._updateInputDirtyState(input, regAddress);
                 }
@@ -655,39 +660,39 @@ export class BlockRenderer {
                 return false;
             }
         };
-    
+
         input.addEventListener('focus', () => {
             this.updater.editingInputs.add(regKey);
             input.style.backgroundColor = '#fff8e1';
             input.style.borderColor = '#ff9800';
         });
-    
+
         // 🔥 Валидация при потере фокуса
         input.addEventListener('blur', () => {
             if (this._numpadOpenReg === regKey) return;
-            
+
             const currentValue = input.value;
             if (currentValue && currentValue.trim() !== '') {
                 const result = validateAndCorrectInput(currentValue);
                 applyValidationResult(result, input, regAddress);
             }
-            
+
             this.updater.editingInputs.delete(regKey);
             input.style.backgroundColor = '';
             if (!input.classList.contains('input-changed')) {
                 input.style.borderColor = '#ccc';
             }
         });
-    
+
         // 🔥 Ввод с клавиатуры с проверкой типа
         input.addEventListener('input', () => {
             const value = input.value;
-            
+
             // 🔥 Если не float - запрещаем ввод точки
             if (!isFloatType && value.includes('.')) {
                 // Удаляем точку
                 input.value = value.replace(/\./g, '');
-                
+
                 if (!this._decimalWarningShown) {
                     this._decimalWarningShown = true;
                     this.notification.warning(
@@ -701,14 +706,14 @@ export class BlockRenderer {
                 this._updateInputDirtyState(input, regAddress);
                 return;
             }
-            
+
             // 🔥 Если float - проверяем количество знаков после запятой
             if (isFloatType && value.includes('.')) {
                 const parts = value.split('.');
                 if (parts.length === 2 && parts[1].length > decimalPlaces) {
                     const corrected = parts[0] + '.' + parts[1].slice(0, decimalPlaces);
                     input.value = corrected;
-                    
+
                     if (!this._decimalWarningShown) {
                         this._decimalWarningShown = true;
                         this.notification.warning(
@@ -721,10 +726,10 @@ export class BlockRenderer {
                     }
                 }
             }
-            
+
             this._updateInputDirtyState(input, regAddress);
         });
-    
+
         input.addEventListener('keydown', (event) => {
             // 🔥 Блокируем ввод точки для целых типов
             if (!isFloatType && event.key === '.') {
@@ -735,12 +740,12 @@ export class BlockRenderer {
                 );
                 return;
             }
-            
+
             if (event.key === 'Enter') {
                 event.preventDefault();
                 input.blur();
             }
-            
+
             if (event.key === 'Escape') {
                 if (this._numpadOpenReg === regKey) return;
                 input.blur();
@@ -751,19 +756,19 @@ export class BlockRenderer {
                 }
             }
         });
-    
+
         input.addEventListener('change', () => {
             this._updateInputDirtyState(input, regAddress);
         });
-    
+
         // 🔥 Открытие numpad с учетом типа
         input.addEventListener('click', () => {
             if (this._numpadOpenReg === regKey) return;
             this._numpadOpenReg = regKey;
             input.readOnly = true;
-        
+
             const curValue = input.value;
-        
+
             numpadManager.show(curValue, {
                 min: min,
                 max: max,
@@ -772,34 +777,34 @@ export class BlockRenderer {
                 allowFloat: isFloatType,
                 onOk(val) {
                     input.readOnly = false;
-                    
+
                     console.log('📥 Значение из numpad:', val);
                     console.log('📥 Текущее originalValue:', renderer.updater.caches.inputs.get(regKey)?.originalValue);
-                    
+
                     // 🔥 Устанавливаем значение в input
                     input.value = val;
-                    
+
                     // 🔥 Сразу обновляем dirty-статус
                     renderer._updateInputDirtyState(input, regAddress);
-                    
+
                     // 🔥 Применяем валидацию
                     const result = validateAndCorrectInput(val);
                     applyValidationResult(result, input, regAddress);
-                    
+
                     renderer._numpadOpenReg = null;
                     renderer.updater.editingInputs.delete(regKey);
                     input.style.backgroundColor = '';
                     if (!input.classList.contains('input-changed')) {
                         input.style.borderColor = '#ccc';
                     }
-                    
+
                     // 🔥 ПРИНУДИТЕЛЬНО обновляем кнопку сохранения
                     setTimeout(() => {
                         renderer._updateInputDirtyState(input, regAddress);
                         window.dispatchEvent(new CustomEvent('input-dirty-change'));
                         console.log('🔄 Принудительное обновление dirty-статуса');
                     }, 50);
-                    
+
                     input.blur();
                 },
                 onCancel() {
@@ -815,12 +820,12 @@ export class BlockRenderer {
                     if (!input.classList.contains('input-changed')) {
                         input.style.borderColor = '#ccc';
                     }
-                    
+
                     // 🔥 Обновляем кнопку сохранения при отмене
                     setTimeout(() => {
                         window.dispatchEvent(new CustomEvent('input-dirty-change'));
                     }, 50);
-                    
+
                     input.blur();
                 }
             });
@@ -830,15 +835,15 @@ export class BlockRenderer {
     _updateInputDirtyState(input, regAddress) {
         const regKey = String(regAddress);
         const isDirty = this.updater.isDirty(regKey);
-        
+
         console.log(`🔄 Dirty-статус для ${regKey}:`, {
             current: input.value,
             original: this.updater.caches.inputs.get(regKey)?.originalValue,
             isDirty: isDirty
         });
-    
+
         input.classList.toggle('input-changed', isDirty);
-    
+
         // 🔥 Обновляем состояние кнопки сохранения
         window.dispatchEvent(new CustomEvent('input-dirty-change'));
     }
@@ -939,17 +944,17 @@ export class BlockRenderer {
         if (!regAttr) return;
         const regs = regAttr.split(',').map(r => r.trim());
         const hasDirty = regs.some(reg => this.updater.isDirty(reg));
-        
+
         console.log(`🔘 Кнопка сохранения для ${regAttr}: dirty=${hasDirty}`);
-        
+
         sendButton.disabled = !hasDirty;
     }
 
     _setupSendButton(sendButton) {
         const originalText = sendButton.textContent;
-    
+
         this._updateSendButtonState(sendButton);
-    
+
         // 🔥 Подписываемся на событие изменения dirty-статуса
         window.addEventListener('input-dirty-change', () => {
             if (!document.body.contains(sendButton)) return;
