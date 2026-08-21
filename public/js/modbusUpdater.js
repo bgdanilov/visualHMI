@@ -151,6 +151,14 @@ export class ModbusUpdater {
             this.caches.toggles.set(key, { registerType, toggles: [] });
         }
         this.caches.toggles.get(key).toggles.push(button);
+        
+        // 🔥 Сохраняем тексты при добавлении
+        if (!button.dataset.textOn) {
+            button.dataset.textOn = 'Вкл';
+        }
+        if (!button.dataset.textOff) {
+            button.dataset.textOff = 'Выкл';
+        }
     }
 
     getBytesCount(registerType) {
@@ -208,33 +216,35 @@ export class ModbusUpdater {
             }
 
             // --- ОБНОВЛЕНИЕ TOGGLE КНОПОК ---
-            for (const [regId, regInfo] of this.caches.toggles) {
-                const offset = parseInt(regId) * 2;
+for (const [regId, regInfo] of this.caches.toggles) {
+    const offset = parseInt(regId) * 2;
+    
+    if (offset + 2 > bytesLength) {
+        console.warn(`Недостаточно данных для регистра ${regId}`);
+        continue;
+    }
+
+    const rawValue = dataView.getUint16(offset, true);
+
+    regInfo.toggles.forEach(button => {
+        if (button.disabled) return;
+
+        const parentContent = button.closest('.content');
+        const buttonRegType = parentContent?.dataset?.type || 'b0';
+
+        if (buttonRegType?.startsWith('b')) {
+            const bitIndex = parseInt(buttonRegType.substring(1));
+            if (bitIndex >= 0 && bitIndex <= 15) {
+                const isOn = ((rawValue >> bitIndex) & 1) === 1;
+                button.classList.toggle('on', isOn);
+                button.classList.toggle('off', !isOn);
                 
-                if (offset + 2 > bytesLength) {
-                    console.warn(`Недостаточно данных для регистра ${regId}`);
-                    continue;
-                }
-
-                const rawValue = dataView.getUint16(offset, true);
-
-                regInfo.toggles.forEach(button => {
-                    if (button.disabled) return;
-
-                    const parentContent = button.closest('.content');
-                    const buttonRegType = parentContent?.dataset?.type || 'b0';
-
-                    if (buttonRegType?.startsWith('b')) {
-                        const bitIndex = parseInt(buttonRegType.substring(1));
-                        if (bitIndex >= 0 && bitIndex <= 15) {
-                            const isOn = ((rawValue >> bitIndex) & 1) === 1;
-                            button.classList.toggle('on', isOn);
-                            button.classList.toggle('off', !isOn);
-                            button.textContent = isOn ? 'Вкл' : 'Выкл';
-                        }
-                    }
-                });
+                // 🔥 Используем кастомные тексты
+                button.textContent = isOn ? button.dataset.textOn : button.dataset.textOff;
             }
+        }
+    });
+}
 
             // --- ОБНОВЛЕНИЕ INPUTS ---
             for (const [regId, regInfo] of this.caches.inputs) {

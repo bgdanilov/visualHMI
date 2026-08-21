@@ -21,8 +21,8 @@ class App {
     }
 
     _setupScaling() {
-        const CANVAS_W = 1280;
-        const CANVAS_H = 800;
+        const CANVAS_W = 1600;
+        const CANVAS_H = 1000;
 
         const fit = () => {
             const scale = Math.min(

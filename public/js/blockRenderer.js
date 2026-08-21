@@ -159,20 +159,34 @@ export class BlockRenderer {
     }
 
     _createToggleButton(block, data) {
-        const { regAddress, regType = 'b0', prefix = '', text = 'Вкл' } = data;
-
+        const { 
+            regAddress, 
+            regType = 'b0', 
+            prefix = '', 
+            textOn = 'Вкл',     // 🔥 Текст для состояния ВКЛ
+            textOff = 'Выкл'    // 🔥 Текст для состояния ВЫКЛ
+        } = data;
+    
+        // Для обратной совместимости, если указан старый параметр 'text'
+        const defaultText = data.text || textOn;
+    
         block.innerHTML = `
             <div class="content" data-reg="${regAddress}" data-type="${regType}">
                 <span class="prefix btn">${prefix}</span>
                 <button class="toggle-button off" data-reg="${regAddress}">
-                    ${text}
+                    ${defaultText}
                 </button>
             </div>`;
-
+    
         const toggleButton = block.querySelector('.toggle-button');
+        
+        // 🔥 Сохраняем тексты в data-атрибуты для использования в обновлении
+        toggleButton.dataset.textOn = textOn;
+        toggleButton.dataset.textOff = textOff;
+        
         this.updater.addToggle(regAddress, toggleButton, regType);
         this._setupToggleButton(toggleButton, regAddress, regType);
-
+    
         return block;
     }
 
@@ -286,35 +300,76 @@ export class BlockRenderer {
     }
 
     _createEmptyBox(block, data) {
-        // 🔥 Получаем ширину и высоту из данных, с значениями по умолчанию
-        const width = data.width || 100;
-        const height = data.height || 100;
-
+        // 🔥 Получаем ширину и высоту из данных
+        const width = data.width || 300;
+        const height = data.height || 200;
+    
         // 🔥 Опциональные стили рамки
         const borderColor = data.borderColor || '#cccccc';
         const borderWidth = data.borderWidth || 2;
         const borderStyle = data.borderStyle || 'solid';
         const borderRadius = data.borderRadius || 0;
-
-        // 🔥 Цвет фона (только цвет)
         const backgroundColor = data.backgroundColor || 'transparent';
-
+    
         // 🔥 Устанавливаем размеры блоку
         block.style.width = `${width}px`;
         block.style.height = `${height}px`;
-
-        // 🔥 Применяем стили рамки
+        block.style.minWidth = `${width}px`;
+        block.style.minHeight = `${height}px`;
         block.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
         block.style.borderRadius = `${borderRadius}px`;
-
-        // 🔥 Применяем цвет фона
         block.style.backgroundColor = backgroundColor;
-
+        block.style.overflow = 'hidden';
+        block.style.position = 'absolute';
+        block.style.zIndex = '1';
+    
+        // 🔥 Создаем внутренний контейнер для дочерних блоков
+        const container = document.createElement('div');
+        container.className = 'empty-box-container';
+        container.style.cssText = `
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+        `;
+    
+        // 🔥 Заголовок если есть
+        let titleHtml = '';
+        if (data.title) {
+            titleHtml = `<div class="empty-box-title">${data.title}</div>`;
+        }
+    
+        // 🔥 Строим HTML
+        block.innerHTML = titleHtml;
+        block.appendChild(container);
+    
+        // 🔥 Если есть дочерние блоки - рендерим их
+        if (data.children && Array.isArray(data.children) && data.children.length > 0) {
+            data.children.forEach(childData => {
+                const childBlock = this.createBlock(childData);
+                if (childBlock) {
+                    childBlock.style.position = 'absolute';
+                    childBlock.style.left = `${childData.x || 0}px`;
+                    childBlock.style.top = `${childData.y || 0}px`;
+                    childBlock.style.margin = '0';
+                    
+                    if (data.plain) {
+                        childBlock.classList.add('plain');
+                    }
+                    
+                    container.appendChild(childBlock);
+                    this.blocks.set(childBlock.id, childBlock);
+                }
+            });
+        }
+    
         // 🔥 Если есть дополнительные CSS классы
         if (data.className) {
             block.classList.add(data.className);
         }
-
+    
         return block;
     }
 
@@ -898,34 +953,36 @@ export class BlockRenderer {
 
     _setupToggleButton(button, regAddress, registerType) {
         let isProcessing = false;
-
+    
         button.addEventListener('click', async () => {
             if (isProcessing || button.disabled) return;
-
+    
             const isOn = button.classList.contains('on');
             const newState = isOn ? 0 : 1;
             const regKey = String(regAddress);
-
-            console.log(`🔄 Кнопка ${regAddress}: ${isOn ? 'Выкл' : 'Вкл'}`);
-
+    
+            // 🔥 Получаем кастомные тексты из data-атрибутов
+            const textOn = button.dataset.textOn || 'Вкл';
+            const textOff = button.dataset.textOff || 'Выкл';
+    
+            console.log(`🔄 Кнопка ${regAddress}: ${isOn ? textOff : textOn}`);
+    
             isProcessing = true;
             button.disabled = true;
             button.classList.add('waiting');
-
+    
             try {
                 await this.api.writeRegister(regAddress, newState, registerType);
-
                 await new Promise(resolve => setTimeout(resolve, 400));
-
                 await this.updater.update();
-
+    
             } catch (error) {
                 console.error('❌ Ошибка:', error);
                 button.textContent = '❌';
                 button.style.borderColor = 'red';
-
+    
                 setTimeout(() => {
-                    button.textContent = isOn ? 'Вкл' : 'Выкл';
+                    button.textContent = isOn ? textOn : textOff;
                     button.style.borderColor = '';
                     button.classList.remove('waiting');
                 }, 1500);
