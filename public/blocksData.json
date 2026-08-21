@@ -1,10 +1,205 @@
 {
   "main": [
-     {
+    {
+      "type": "page-button",
+      "targetPage": "settings",
+      "text": "Настройки",
+      "x": 10,
+      "y": 10
+    },
+    {
+      "type": "page-button",
+      "targetPage": "graff",
+      "text": "Графики",
+      "x": 193,
+      "y": 10
+    },
+    {
+      "type": "page-button",
+      "targetPage": "shit",
+      "text": "Треш",
+      "x": 390,
+      "y": 10
+    },
+    {
+      "type": "title-group-number",
+      "text": "ВХОД",
+      "format": [["Температура = %2.2f С", 0], ["Влажность = %4i %", 2]],
+      "x": 10,
+      "y": 300
+    },
+    {
+      "regAddress": 20,
+      "regType": "b0",
+      "prefix": "Заслонка",
+      "description": "Заслонка",
+      "type": "toggle-button",
+      "x": 10,
+      "y": 390
+    },
+    {
+      "type": "title-group-number",
+      "text": "Приточка",
+      "format": [["Скорость = %2.2f м/с", 0], ["Загрузка = %4i %", 2], ["Фильтр: %4c", "20:b0"]],
+      "x": 260,
+      "y": 300
+    },
+    {
+      "regAddress": 20,
+      "regType": "b1",
+      "prefix": "Вентилятор",
+      "description": "Вентилятор",
+      "type": "toggle-button",
+      "x": 260,
+      "y": 410
+    },
+    {
+      "type": "title-group-number",
+      "text": "Электронагреватель",
+      "format": [["Температура = %2.2f C", 0], ["Шаг = %4i", 2], ["Мощность: %4i кВт", 4], ["Влажность: %4i %", 6]],
+      "x": 500,
+      "y": 300
+    },
+    {
+      "regAddress": 20,
+      "regType": "b2",
+      "prefix": "Нагреватель",
+      "description": "Нагреватель",
+      "type": "toggle-button",
+      "x": 500,
+      "y": 430
+    },
+    {
+      "type": "title-group-number",
+      "text": "Вода",
+      "format": [["Т воды = %2.2f C", 0], ["P воды = %4i кВт", 4], ["Положение крана = %4i", 2], ["Т воздуха = %2.2f C", 0], ["Влажность воздуха: %4i %", 6]],
+      "x": 743,
+      "y": 300
+    },
+    {
+      "regAddress": 20,
+      "regType": "b2",
+      "prefix": "Насос воды",
+      "description": "Насос",
+      "type": "toggle-button",
+      "x": 743,
+      "y": 450
+    },
+    {
+      "regAddress": 20,
+      "regType": "b2",
+      "prefix": "3-ходовый кран",
+      "description": "3-ходовый кран",
+      "type": "toggle-button",
+      "x": 743,
+      "y": 505
+    },
+    {
+      "type": "title-group-number",
+      "text": "ВЫХОД",
+      "format": [["Температура = %2.2f С", 0], ["Влажность = %4i %", 2]],
+      "x": 743,
+      "y": 600
+    },
+    {
+      "regAddress": 20,
+      "regType": "b0",
+      "prefix": "Увлажнитель",
+      "description": "Увлажнитель",
+      "type": "toggle-button",
+      "x": 743,
+      "y": 690
+    },
+    {
+      "type": "title-group-number",
+      "text": "ВЫХОД",
+      "format": [["Температура = %2.2f С", 0], ["Влажность = %4i %", 2]],
+      "x": 10,
+      "y": 100
+    },
+    {
+      "type": "title-group-number",
+      "text": "Вытяжка",
+      "format": [["Скорость = %2.2f м/с", 0], ["Загрузка = %4i %", 2], ["Фильтр: %4c", "20:b0"]],
+      "x": 260,
+      "y": 100
+    },
+    {
+      "regAddress": 20,
+      "regType": "b1",
+      "prefix": "Вентилятор",
+      "description": "Вентилятор",
+      "type": "toggle-button",
+      "x": 260,
+      "y": 210
+    },
+    {
+      "type": "title-group-number",
+      "text": "Рекуператор",
+      "format": [["Скорость = %4i шаг/сек", 0], ["Температура = %2.2f C", 0], ["Влажность: %4i %", 6]],
+      "x": 500,
+      "y": 100
+    },
+    {
+      "regAddress": 20,
+      "regType": "b2",
+      "type": "toggle-button",
+      "x": 500,
+      "y": 210
+    },
+    {
+      "type": "title-group-number",
+      "text": "Фильтр",
+      "format": [["Температура = %2.2f C", 0], ["Влажность: %4i %", 6], ["Фильтр ОК: %4c", "20:b0"]],
+      "x": 743,
+      "y": 100
+    },
+    {
+      "type": "empty-box",
+      "x": 1040,
+      "y": 100,
+      "width": 230,
+      "height": 650,
+      "borderColor": "#d3dbe3",
+      "borderWidth": 3,
+      "borderStyle": "solid",
+      "borderRadius": 10,
+      "backgroundColor": "#ffffff",
+      "text": "",
+      "className": "custom-box"
+    }
+    
+  ],
+  "shit": [
+    {
+      "type": "page-button",
+      "targetPage": "main",
+      "text": "На главную",
+      "x": 10,
+      "y": 10
+    },
+    {
+      "type": "title-group-number",
+      "text": "ВХОД",
+      "format": [["Температура = %2.2f С", 0], ["Влажность = %4i %", 2]],
+      "x": 10,
+      "y": 500
+    },
+    {
+      "regAddress": 20,
+      "regType": "b0",
+      "prefix": "Заслонка",
+      "description": "Заслонка",
+      "type": "toggle-button",
+      "text": "ааа",
+      "x": 10,
+      "y": 590
+    },
+    {
       "type": "title-group-number",
       "text": "КОМНАТА 1",
       "format": [["A = %8.2fA",0], ["B = %8.2f A", 2], ["Сумма = %9.1e A", 16], ["Меркурий = %8f", 18], ["20[0] = %8c bit", "20:b0"], ["Венера = %8i", 21]],
-      "x": 10,
+      "x": 800,
       "y": 500
     },
     {
@@ -25,20 +220,6 @@
       "format": ["%e кВтч", 18],
       "x": 10,
       "y": 390
-    },
-    {
-      "type": "page-button",
-      "targetPage": "settings",
-      "text": "Настройки",
-      "x": 10,
-      "y": 10
-    },
-    {
-      "type": "page-button",
-      "targetPage": "graff",
-      "text": "Графики",
-      "x": 193,
-      "y": 10
     },
     {
       "type": "title-number",
@@ -111,6 +292,52 @@
       "backgroundColor": "#ffffff",
       "text": "",
       "className": "custom-box"
+    },
+    {
+      "type": "only-title",
+      "text": "Вход. заслонка",
+      "x": 365,
+      "y": 345,
+      "plain": true
+    },
+    {
+      "type": "empty-box",
+      "x": 350,
+      "y": 390,
+      "width": 250,
+      "height": 200,
+      "borderColor": "#d3dbe3",
+      "borderWidth": 3,
+      "borderStyle": "solid",
+      "borderRadius": 10,
+      "backgroundColor": "#ffffff",
+      "text": "",
+      "className": "custom-box"
+    },
+    {
+      "type": "title-number",
+      "text": "Температура",
+      "format": ["%2.1f С", 16],
+      "x": 370,
+      "y": 390,
+      "plain": true
+    },
+    {
+      "type": "title-number",
+      "text": "Влажность",
+      "format": ["%2i %", 16],
+      "x": 370,
+      "y": 465,
+      "plain": true
+    },
+    {
+      "regAddress": 20,
+      "regType": "b1",
+      "description": "Вх. заслонка",
+      "type": "toggle-button",
+      "x": 400,
+      "y": 525,
+      "plain": true
     }
   ],
   "settings": [
