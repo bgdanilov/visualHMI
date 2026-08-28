@@ -93,7 +93,7 @@ export class ModbusUpdater {
         if (!this._isFloatType(registerType)) {
             return String(value);
         }
-        
+
         const decimalPlaces = this._getDecimalPlaces(element);
         if (decimalPlaces === null || isNaN(decimalPlaces) || decimalPlaces < 0) {
             return String(value);
@@ -113,10 +113,10 @@ export class ModbusUpdater {
         const key = String(regId);
         // 🔥 Форматируем начальное значение для отображения (только для float)
         const formattedValue = this._formatValue(input.value, input, registerType);
-        this.caches.inputs.set(key, { 
-            registerType, 
-            element: input, 
-            originalValue: formattedValue 
+        this.caches.inputs.set(key, {
+            registerType,
+            element: input,
+            originalValue: formattedValue
         });
         input.value = formattedValue;
     }
@@ -138,10 +138,10 @@ export class ModbusUpdater {
         const key = String(regId);
         const entry = this.caches.inputs.get(key);
         if (!entry || !entry.element) return false;
-        
+
         const currentValue = entry.element.value;
         const originalValue = entry.originalValue;
-        
+
         return currentValue !== originalValue;
     }
 
@@ -151,7 +151,7 @@ export class ModbusUpdater {
             this.caches.toggles.set(key, { registerType, toggles: [] });
         }
         this.caches.toggles.get(key).toggles.push(button);
-        
+
         // 🔥 Сохраняем тексты при добавлении
         if (!button.dataset.textOn) {
             button.dataset.textOn = 'Вкл';
@@ -202,7 +202,7 @@ export class ModbusUpdater {
                 }
 
                 const value = this.readValue(dataView, offset, regInfo.registerType);
-                
+
                 if (value !== undefined && !isNaN(value)) {
                     regInfo.spans.forEach(({ element, formatSpec }) => {
                         const displayValue = formatSpec
@@ -216,35 +216,35 @@ export class ModbusUpdater {
             }
 
             // --- ОБНОВЛЕНИЕ TOGGLE КНОПОК ---
-for (const [regId, regInfo] of this.caches.toggles) {
-    const offset = parseInt(regId) * 2;
-    
-    if (offset + 2 > bytesLength) {
-        console.warn(`Недостаточно данных для регистра ${regId}`);
-        continue;
-    }
+            for (const [regId, regInfo] of this.caches.toggles) {
+                const offset = parseInt(regId) * 2;
 
-    const rawValue = dataView.getUint16(offset, true);
+                if (offset + 2 > bytesLength) {
+                    console.warn(`Недостаточно данных для регистра ${regId}`);
+                    continue;
+                }
 
-    regInfo.toggles.forEach(button => {
-        if (button.disabled) return;
+                const rawValue = dataView.getUint16(offset, true);
 
-        const parentContent = button.closest('.content');
-        const buttonRegType = parentContent?.dataset?.type || 'b0';
+                regInfo.toggles.forEach(button => {
+                    if (button.disabled) return;
 
-        if (buttonRegType?.startsWith('b')) {
-            const bitIndex = parseInt(buttonRegType.substring(1));
-            if (bitIndex >= 0 && bitIndex <= 15) {
-                const isOn = ((rawValue >> bitIndex) & 1) === 1;
-                button.classList.toggle('on', isOn);
-                button.classList.toggle('off', !isOn);
-                
-                // 🔥 Используем кастомные тексты
-                button.textContent = isOn ? button.dataset.textOn : button.dataset.textOff;
+                    const parentContent = button.closest('.content');
+                    const buttonRegType = parentContent?.dataset?.type || 'b0';
+
+                    if (buttonRegType?.startsWith('b')) {
+                        const bitIndex = parseInt(buttonRegType.substring(1));
+                        if (bitIndex >= 0 && bitIndex <= 15) {
+                            const isOn = ((rawValue >> bitIndex) & 1) === 1;
+                            button.classList.toggle('on', isOn);
+                            button.classList.toggle('off', !isOn);
+
+                            // 🔥 Используем кастомные тексты
+                            button.textContent = isOn ? button.dataset.textOn : button.dataset.textOff;
+                        }
+                    }
+                });
             }
-        }
-    });
-}
 
             // --- ОБНОВЛЕНИЕ INPUTS ---
             for (const [regId, regInfo] of this.caches.inputs) {
@@ -256,7 +256,7 @@ for (const [regId, regInfo] of this.caches.toggles) {
                 // - пользователь редактирует
                 // - инпут в фокусе
                 // - значение уже изменено пользователем
-                if (this.sendingRegisters.has(regKey) || 
+                if (this.sendingRegisters.has(regKey) ||
                     this.editingInputs.has(regKey) ||
                     document.activeElement === input ||
                     input.value !== regInfo.originalValue) {
@@ -276,7 +276,7 @@ for (const [regId, regInfo] of this.caches.toggles) {
                 if (value !== undefined && !isNaN(value) && input) {
                     // 🔥 Форматируем значение для отображения (только для float)
                     const displayValue = this._formatValue(value, input, regInfo.registerType);
-                    
+
                     if (input.value !== displayValue) {
                         input.value = displayValue;
                         regInfo.originalValue = displayValue;
@@ -294,7 +294,7 @@ for (const [regId, regInfo] of this.caches.toggles) {
         try {
             const regKey = String(regId);
             const regInfo = this.caches.inputs.get(regKey);
-            
+
             if (!regInfo || !regInfo.element) {
                 console.warn(`Input для регистра ${regId} не найден`);
                 return;
@@ -302,7 +302,7 @@ for (const [regId, regInfo] of this.caches.toggles) {
 
             const dataView = await api.readModbus();
             const bytesLength = dataView.byteLength;
-            
+
             const offset = parseInt(regId) * 2;
             const byteCount = this.getBytesCount(regInfo.registerType);
 
@@ -316,7 +316,7 @@ for (const [regId, regInfo] of this.caches.toggles) {
             if (value !== undefined && !isNaN(value) && regInfo.element) {
                 // 🔥 Форматируем значение для отображения (только для float)
                 const displayValue = this._formatValue(value, regInfo.element, regInfo.registerType);
-                
+
                 if (regInfo.element.value !== displayValue) {
                     regInfo.element.value = displayValue;
                     regInfo.originalValue = displayValue;

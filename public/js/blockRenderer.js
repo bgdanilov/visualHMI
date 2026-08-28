@@ -193,7 +193,62 @@ export class BlockRenderer {
                 content.style.padding = '0';
                 content.style.gap = '0';
             }
-        } 
+        }
+        if (width) {
+            toggleButton.style.width = `${width}px`;
+            toggleButton.style.minWidth = `${width}px`;
+        }
+        if (height) {
+            toggleButton.style.height = `${height}px`;
+            toggleButton.style.minHeight = `${height}px`;
+        }
+
+        // 🔥 Сохраняем тексты в data-атрибуты для использования в обновлении
+        toggleButton.dataset.textOn = textOn;
+        toggleButton.dataset.textOff = textOff;
+
+        this.updater.addToggle(regAddress, toggleButton, regType);
+        this._setupToggleButton(toggleButton, regAddress, regType);
+
+        return block;
+    }
+
+    _createToggleButton(block, data) {
+        const {
+            regAddress,
+            regType = 'b0',
+            prefix = '',
+            textOn = 'Вкл',     // 🔥 Текст для состояния ВКЛ
+            textOff = 'Выкл',    // 🔥 Текст для состояния ВЫКЛ
+            width,
+            height
+        } = data;
+
+        // Для обратной совместимости, если указан старый параметр 'text'
+        const defaultText = data.text || textOn;
+
+        block.innerHTML = `
+            <div class="content" data-reg="${regAddress}" data-type="${regType}">
+                <span class="prefix btn">${prefix}</span>
+                <button class="toggle-button off" data-reg="${regAddress}">
+                    ${defaultText}
+                </button>
+            </div>`;
+
+        const toggleButton = block.querySelector('.toggle-button');
+
+        // 🔥 Если заданы размеры, передаем их кнопке
+        // Стили
+
+        if (width || height) {
+            //toggleButton.style.padding = '0';
+            // 🔥 Убираем отступы у content
+            const content = block.querySelector('.content');
+            if (content) {
+                content.style.padding = '0';
+                content.style.gap = '0';
+            }
+        }
         if (width) {
             toggleButton.style.width = `${width}px`;
             toggleButton.style.minWidth = `${width}px`;
@@ -346,6 +401,14 @@ export class BlockRenderer {
         block.style.position = 'absolute';
         block.style.zIndex = '1';
 
+        const {
+            regAddress,
+            regType = 'b0',
+            prefix = '',
+            textOn = 'Вкл',     // 🔥 Текст для состояния ВКЛ
+            textOff = 'Выкл'    // 🔥 Текст для состояния ВЫКЛ
+        } = data;
+
         // 🔥 Создаем внутренний контейнер для дочерних блоков
         const container = document.createElement('div');
         container.className = 'empty-box-container';
@@ -391,6 +454,59 @@ export class BlockRenderer {
         // 🔥 Если есть дополнительные CSS классы
         if (data.className) {
             block.classList.add(data.className);
+        }
+
+        // 🔥 Если контейнер должен работать как toggle-button
+        if (data.toggle && data.regAddress !== undefined) {
+            // 🔥 Регистрируем блок в updater как toggle-элемент
+           // this.updater.addToggle(data.regAddress, block, data.regType || 'b0');
+
+            // 🔥 Добавляем классы и стили для toggle-блока
+            block.classList.add('toggle-block');
+            block.style.cursor = 'pointer';
+            block.style.transition = 'all 0.3s ease';
+
+            // 🔥 Сохраняем исходные цвета для возврата при выключении
+            block._borderColor = borderColor;
+            block._backgroundColor = backgroundColor;
+
+            // 🔥 Обработчик клика
+            block.addEventListener('click', async (event) => {
+                // 🔥 Если клик по интерактивному элементу - игнорируем
+                if (event.target.closest('button') ||
+                    event.target.closest('input') ||
+                    event.target.closest('.toggle-button') ||
+                    event.target.closest('.page-button') ||
+                    event.target.closest('.send-button') ||
+                    event.target.closest('.input-value-field') ||
+                    event.target.closest('.input-reset-btn') ||
+                    event.target.closest('.input-save-btn')) {
+                    return;
+                }
+
+                if (block._isProcessing) return;
+
+                const isOn = block.classList.contains('on');
+                const newState = isOn ? 0 : 1;
+
+                block._isProcessing = true;
+                block.style.opacity = '0.7';
+
+                try {
+                    await this.api.writeRegister(data.regAddress, newState, data.regType || 'b0');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                    await this.updater.update();
+                } catch (error) {
+                    console.error('❌ Ошибка:', error);
+                    block.style.borderColor = 'red';
+                    setTimeout(() => {
+                        block.style.borderColor = block._borderColor;
+                    }, 2000);
+                } finally {
+                    block._isProcessing = false;
+                    block.style.opacity = '1';
+                }
+            });
         }
 
         return block;
@@ -972,6 +1088,100 @@ export class BlockRenderer {
                 button.disabled = false;
             }, 1500);
         });
+    }
+
+
+    _setupToggleBlock(block, data) {
+        const { regAddress, regType = 'b0' } = data;
+        let isProcessing = false;
+
+        // 🔥 Сохраняем исходные цвета
+        const borderColor = block.style.borderColor || '#cccccc';
+        const backgroundColor = block.style.backgroundColor || 'transparent';
+
+        block.classList.add('toggle-block');
+        block.style.cursor = 'pointer';
+        block.style.transition = 'all 0.3s ease';
+
+        // 🔥 Функция обновления состояния блока
+        const updateBlockState = (isOn) => {
+            block.classList.toggle('on', isOn);
+            block.classList.toggle('off', !isOn);
+
+            if (isOn) {
+                block.style.borderColor = '#4CAF50';
+                block.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+            } else {
+                block.style.borderColor = borderColor;
+                block.style.backgroundColor = backgroundColor;
+            }
+        };
+
+        // 🔥 Получаем текущее состояние
+        const getCurrentState = () => {
+            const regKey = String(regAddress);
+            const toggleData = this.updater.caches.toggles.get(regKey);
+            if (toggleData && toggleData.toggles.length > 0) {
+                return toggleData.toggles[0].classList.contains('on');
+            }
+            return false;
+        };
+
+        block.addEventListener('click', async (event) => {
+            // 🔥 Если клик по интерактивному элементу - игнорируем
+            if (event.target.closest('button') ||
+                event.target.closest('input') ||
+                event.target.closest('.toggle-button') ||
+                event.target.closest('.page-button') ||
+                event.target.closest('.send-button') ||
+                event.target.closest('.input-value-field') ||
+                event.target.closest('.input-reset-btn') ||
+                event.target.closest('.input-save-btn')) {
+                return;
+            }
+
+            if (isProcessing) return;
+
+            const isOn = getCurrentState();
+            const newState = isOn ? 0 : 1;
+            const regKey = String(regAddress);
+
+            console.log(`🔄 Блок ${regAddress}: ${isOn ? 'Выкл' : 'Вкл'}`);
+
+            isProcessing = true;
+            block.style.opacity = '0.7';
+            block.style.cursor = 'wait';
+
+            try {
+                await this.api.writeRegister(regAddress, newState, regType);
+                await new Promise(resolve => setTimeout(resolve, 400));
+                await this.updater.update();
+
+                const newIsOn = getCurrentState();
+                updateBlockState(newIsOn);
+
+            } catch (error) {
+                console.error('❌ Ошибка:', error);
+                block.style.borderColor = 'red';
+
+                setTimeout(() => {
+                    block.style.borderColor = borderColor;
+                    block.style.backgroundColor = backgroundColor;
+                }, 1500);
+            } finally {
+                setTimeout(() => {
+                    isProcessing = false;
+                    block.style.opacity = '1';
+                    block.style.cursor = 'pointer';
+                }, 150);
+            }
+        });
+
+        // 🔥 Инициализация
+        setTimeout(() => {
+            const isOn = getCurrentState();
+            updateBlockState(isOn);
+        }, 200);
     }
 
     _setupToggleButton(button, regAddress, registerType) {

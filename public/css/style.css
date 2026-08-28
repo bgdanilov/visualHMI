@@ -425,6 +425,7 @@ span.number {
     overflow: hidden;
     box-sizing: border-box;
     z-index: 1;
+    cursor: pointer;
 }
 
 .block.empty-box .empty-box-container {
