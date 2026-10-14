@@ -12,6 +12,7 @@ import { ImageBlock } from './imageBlock.js';
 import { SendButtonBlock } from './sendButtonBlock.js';
 import { TitleInputBlock } from './titleInputBlock.js';
 import { EmptyBoxBlock } from './emptyBoxBlock.js';
+import { NodeCardBlock } from './nodeCardBlock.js';
 
 blockRegistry.register(BLOCK_TYPES.ONLY_TITLE, OnlyTitleBlock);
 blockRegistry.register(BLOCK_TYPES.ONLY_NUMBER, OnlyNumberBlock);
@@ -23,3 +24,4 @@ blockRegistry.register(BLOCK_TYPES.IMAGE, ImageBlock);
 blockRegistry.register(BLOCK_TYPES.SEND_BUTTON, SendButtonBlock);
 blockRegistry.register(BLOCK_TYPES.TITLE_INPUT, TitleInputBlock);
 blockRegistry.register(BLOCK_TYPES.EMPTY_BOX, EmptyBoxBlock);
+blockRegistry.register(BLOCK_TYPES.NODE_CARD, NodeCardBlock);

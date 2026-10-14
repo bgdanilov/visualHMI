@@ -619,3 +619,821 @@ p, span, h2 {
     padding: 5px 10px;
     font-family: monospace;
 }
+
+/* ============================================
+   POPUP SERVICE
+   ============================================ */
+
+.popup {
+    position: fixed;
+    z-index: 200;
+    background: #ffffff;
+    border: 1px solid #cfd8dc;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    padding: 14px 16px 12px;
+    opacity: 0;
+    transform: translateY(6px) scale(.98);
+    transition: opacity .15s ease, transform .15s ease;
+    pointer-events: none;
+}
+
+.popup.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.popup .popup-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.popup .popup-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #263238;
+}
+
+.popup .popup-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    color: #90a4ae;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, color .15s ease;
+}
+
+.popup .popup-close:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* --- trend popup --- */
+.popup.trend-popup {
+    width: 380px;
+}
+
+.popup.trend-popup .chart {
+    width: 100%;
+    height: 140px;
+    display: block;
+    background: #fafbfc;
+    border-radius: 8px;
+}
+
+.popup.trend-popup .chart .grid-line { stroke: #e8edf1; stroke-width: 1; }
+.popup.trend-popup .chart .axis { fill: #b0bec5; font: 500 9px system-ui, sans-serif; }
+.popup.trend-popup .chart .line {
+    fill: none;
+    stroke: #43a047;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.popup.trend-popup .chart .area { fill: rgba(67,160,71,.15); }
+.popup.trend-popup .chart .last-dot { fill: #43a047; stroke: #fff; stroke-width: 2; }
+
+.popup.trend-popup .popup-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.popup.trend-popup .stat {
+    background: #f5f8fa;
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.popup.trend-popup .stat .lbl {
+    font-size: 9px;
+    color: #90a4ae;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.popup.trend-popup .stat .v {
+    font-size: 13px;
+    font-weight: 700;
+    color: #263238;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- menu popup --- */
+.popup.ctx-popup {
+    width: 320px;
+}
+
+.popup.ctx-popup .ctx-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.popup.ctx-popup .ctx-slider-block {
+    background: #f5f8fa;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.popup.ctx-popup .ctx-slider-block .lbl {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.popup.ctx-popup .ctx-slider-block .val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e2936;
+    font-variant-numeric: tabular-nums;
+}
+
+.popup.ctx-popup .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.popup.ctx-popup .slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+}
+
+.popup.ctx-popup .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    margin-top: -8px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #0b5ed7;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    cursor: pointer;
+}
+
+.popup.ctx-popup .slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+}
+
+.popup.ctx-popup .slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #0b5ed7;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    cursor: pointer;
+}
+
+.popup.ctx-popup .slider-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #b0bec5;
+    margin-top: 4px;
+}
+
+.popup.ctx-popup .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e2936;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    transition: background .12s ease;
+}
+
+.popup.ctx-popup .ctx-item:hover {
+    background: #f1f5f9;
+}
+
+.popup.ctx-popup .ctx-item .ico {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #64748b;
+}
+
+.popup.ctx-popup .ctx-item .ico svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.popup.ctx-popup .ctx-item.danger {
+    color: #dc2626;
+}
+
+.popup.ctx-popup .ctx-item.danger .ico {
+    color: #dc2626;
+}
+
+.popup.ctx-popup .ctx-item.danger:hover {
+    background: #fef2f2;
+}
+
+/* --- backdrop --- */
+.popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .18);
+    z-index: 190;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+}
+
+.popup-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ============================================
+   POPUP SERVICE
+   ============================================ */
+
+   .popup {
+    position: fixed;
+    z-index: 200;
+    background: #ffffff;
+    border: 1px solid #cfd8dc;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    padding: 14px 16px 12px;
+    opacity: 0;
+    transform: translateY(6px) scale(.98);
+    transition: opacity .15s ease, transform .15s ease;
+    pointer-events: none;
+}
+
+.popup.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.popup .popup-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.popup .popup-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #263238;
+}
+
+.popup .popup-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    color: #90a4ae;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, color .15s ease;
+}
+
+.popup .popup-close:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* --- trend popup --- */
+.popup.trend-popup {
+    width: 380px;
+}
+
+.popup.trend-popup .chart {
+    width: 100%;
+    height: 140px;
+    display: block;
+    background: #fafbfc;
+    border-radius: 8px;
+}
+
+.popup.trend-popup .chart .grid-line { stroke: #e8edf1; stroke-width: 1; }
+.popup.trend-popup .chart .axis { fill: #b0bec5; font: 500 9px system-ui, sans-serif; }
+.popup.trend-popup .chart .line {
+    fill: none;
+    stroke: #43a047;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.popup.trend-popup .chart .area { fill: rgba(67,160,71,.15); }
+.popup.trend-popup .chart .last-dot { fill: #43a047; stroke: #fff; stroke-width: 2; }
+
+.popup.trend-popup .popup-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.popup.trend-popup .stat {
+    background: #f5f8fa;
+    border-radius: 6px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.popup.trend-popup .stat .lbl {
+    font-size: 9px;
+    color: #90a4ae;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.popup.trend-popup .stat .v {
+    font-size: 13px;
+    font-weight: 700;
+    color: #263238;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- menu popup --- */
+.popup.ctx-popup {
+    width: 320px;
+}
+
+.popup.ctx-popup .ctx-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.popup.ctx-popup .ctx-slider-block {
+    background: #f5f8fa;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.popup.ctx-popup .ctx-slider-block .lbl {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 10px;
+}
+
+.popup.ctx-popup .ctx-slider-block .val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e2936;
+    font-variant-numeric: tabular-nums;
+}
+
+.popup.ctx-popup .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.popup.ctx-popup .slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+}
+
+.popup.ctx-popup .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    margin-top: -8px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #0b5ed7;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    cursor: pointer;
+}
+
+.popup.ctx-popup .slider::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+}
+
+.popup.ctx-popup .slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #0b5ed7;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    cursor: pointer;
+}
+
+.popup.ctx-popup .slider-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #b0bec5;
+    margin-top: 4px;
+}
+
+.popup.ctx-popup .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e2936;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    transition: background .12s ease;
+}
+
+.popup.ctx-popup .ctx-item:hover {
+    background: #f1f5f9;
+}
+
+.popup.ctx-popup .ctx-item .ico {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #64748b;
+}
+
+.popup.ctx-popup .ctx-item .ico svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.popup.ctx-popup .ctx-item.danger {
+    color: #dc2626;
+}
+
+.popup.ctx-popup .ctx-item.danger .ico {
+    color: #dc2626;
+}
+
+.popup.ctx-popup .ctx-item.danger:hover {
+    background: #fef2f2;
+}
+
+/* --- backdrop --- */
+.popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .18);
+    z-index: 190;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+}
+
+.popup-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ============================================
+   CONFIRM SERVICE
+   ============================================ */
+
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    padding: 24px;
+}
+
+.confirm-overlay.open {
+    display: flex;
+}
+
+.confirm {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(15,23,42,.35);
+    width: 100%;
+    max-width: 420px;
+    padding: 24px 24px 20px;
+    animation: confirmIn .18s cubic-bezier(.2, 0, .2, 1);
+}
+
+@keyframes confirmIn {
+    from { transform: scale(.94); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.confirm .icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    color: #2563eb;
+    transition: background .2s ease, color .2s ease;
+}
+
+.confirm .icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.confirm .icon.danger {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.confirm h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e2936;
+    text-align: center;
+}
+
+.confirm p {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #64748b;
+    text-align: center;
+}
+
+.confirm p b {
+    color: #1e2936;
+}
+
+.confirm .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.confirm .actions button {
+    height: 48px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    transition: transform .08s ease, background .15s ease;
+}
+
+.confirm .actions button:active {
+    transform: scale(.97);
+}
+
+.confirm .btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.confirm .btn-cancel:hover {
+    background: #e8edf3;
+}
+
+.confirm .btn-confirm {
+    background: #16a34a;
+    color: #ffffff;
+}
+
+.confirm .btn-confirm:hover {
+    background: #15803d;
+}
+
+.confirm .btn-confirm.danger {
+    background: #dc2626;
+}
+
+.confirm .btn-confirm.danger:hover {
+    background: #b91c1c;
+}
+
+/* ============================================
+   NODE CARD
+   ============================================ */
+
+   .block.node-card {
+    position: absolute;
+    background: #ffffff;
+    border: 2px solid #cfd8dc;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: border-color .18s ease, background .18s ease,
+                box-shadow .18s ease, transform .08s ease;
+}
+
+.block.node-card:hover {
+    box-shadow: 0 4px 10px rgba(0,0,0,.12);
+}
+
+.block.node-card:active {
+    transform: scale(.98);
+}
+
+.block.node-card.on {
+    border-color: #43a047;
+    background: #f1f8f2;
+}
+
+/* Иконка элемента — левый верхний угол */
+.block.node-card .elem-icon {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 26px;
+    height: 26px;
+    color: #90a4ae;
+    transition: color .2s ease;
+    pointer-events: none;
+}
+
+.block.node-card .elem-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.block.node-card.on .elem-icon {
+    color: #43a047;
+}
+
+/* State dot — правый верхний угол */
+.block.node-card .state-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #cfd8dc;
+    transition: background .2s ease, box-shadow .2s ease;
+}
+
+.block.node-card.on .state-dot {
+    background: #43a047;
+    box-shadow: 0 0 6px rgba(67,160,71,.6);
+}
+
+/* Hint icon — рядом с state dot */
+.block.node-card .hint-icon {
+    position: absolute;
+    top: 8px;
+    right: 26px;
+    width: 16px;
+    height: 16px;
+    color: #b0bec5;
+    opacity: .7;
+    pointer-events: none;
+    transition: color .2s ease, opacity .2s ease;
+}
+
+.block.node-card .hint-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.block.node-card:hover .hint-icon {
+    color: #0b5ed7;
+    opacity: 1;
+}
+
+.block.node-card.on .hint-icon {
+    color: #66bb6a;
+    opacity: .9;
+}
+
+/* Заголовок — по центру сверху */
+.block.node-card > .title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #546e7a;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    margin-top: 30px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Полоса удержания — снизу */
+.block.node-card .hold-indicator {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 0%;
+    background: #0b5ed7;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    pointer-events: none;
+    transition: width .05s linear, background .15s ease, opacity .3s ease;
+}
+
+.block.node-card.holding .hold-indicator {
+    width: 100%;
+    transition: width var(--hold-ms, 500ms) linear;
+}
+
+.block.node-card.triggered .hold-indicator {
+    width: 100%;
+    background: #43a047;
+    opacity: 0;
+    transition: opacity .35s ease, background .15s ease;
+}
+
+/* Дочерние .node внутри node-card — абсолютно позиционированы */
+.block.node-card > .node {
+    position: absolute;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+.block.node-card > .node.plain {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}

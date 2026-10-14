@@ -6,6 +6,8 @@ import { numpadManager } from './core/numpad.js';
 import { validator } from './core/validator.js';
 import { notification } from './core/notification.js';
 import { BlockRenderer } from './renderer/blockRenderer.js';
+import { popupService } from './core/popupService.js';
+import { confirmService } from './core/confirmService.js';
 
 // Регистрация всех блоков (побочный эффект импорта)
 import './blocks/index.js';
@@ -25,7 +27,9 @@ class App {
             api,
             numpad: numpadManager,
             validator,
-            notification
+            notification,
+            popup: popupService,       // ← новое
+            confirm: confirmService   // ← новое
         };
 
         this.renderer = new BlockRenderer(this.ctx);

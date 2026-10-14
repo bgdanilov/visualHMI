@@ -9,7 +9,8 @@ export class ModbusUpdater {
         this.caches = {
             spans: new Map(),
             inputs: new Map(),
-            toggles: new Map()
+            toggles: new Map(),
+            nodeCards: new Map()      // ← новое
         };
         this.sendingRegisters = new Set();
         this.editingInputs = new Set();
@@ -19,6 +20,7 @@ export class ModbusUpdater {
         this.caches.spans.clear();
         this.caches.inputs.clear();
         this.caches.toggles.clear();
+        this.caches.nodeCards.clear();   // ← новое
     }
 
     _applyFormat(formatSpec, value, regType) {
@@ -161,6 +163,14 @@ export class ModbusUpdater {
         }
     }
 
+    addNodeCard(regId, card, registerType) {
+        const key = String(regId);
+        if (!this.caches.nodeCards.has(key)) {
+            this.caches.nodeCards.set(key, { registerType, cards: [] });
+        }
+        this.caches.nodeCards.get(key).cards.push(card);
+    }
+
     getBytesCount(registerType) {
         return registerType === 'f4' ? 4 : 2;
     }
@@ -215,26 +225,22 @@ export class ModbusUpdater {
                 }
             }
 
-            /// --- ОБНОВЛЕНИЕ TOGGLE КНОПОК (совместимо со старой и новой разметкой) ---
+            // --- ОБНОВЛЕНИЕ TOGGLE КНОПОК ---
             for (const [regId, regInfo] of this.caches.toggles) {
                 const offset = parseInt(regId) * 2;
-
-                if (offset + 2 > bytesLength) {
-                    console.warn(`Недостаточно данных для регистра ${regId}`);
-                    continue;
-                }
+                if (offset + 2 > bytesLength) continue;
 
                 const rawValue = dataView.getUint16(offset, true);
 
                 regInfo.toggles.forEach(button => {
                     if (button.disabled) return;
-
+                
                     const buttonRegType =
                         button.dataset.type
                         || button.closest('.content')?.dataset?.type
                         || regInfo.registerType
                         || 'b0';
-
+                
                     if (buttonRegType?.startsWith('b')) {
                         const bitIndex = parseInt(buttonRegType.substring(1));
                         if (bitIndex >= 0 && bitIndex <= 15) {
@@ -242,10 +248,42 @@ export class ModbusUpdater {
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
                             button.classList.add('toggle-button');
+                
+                            // Перетирать текст — ТОЛЬКО для настоящих toggle-button
+                            // (у кого заданы data-text-on / data-text-off)
+                            if (button.dataset.textOn || button.dataset.textOff) {
+                                const textOn = button.dataset.textOn || 'Вкл';
+                                const textOff = button.dataset.textOff || 'Выкл';
+                                button.textContent = isOn ? textOn : textOff;
+                            }
+                        }
+                    }
+                });
+            }
 
-                            const textOn = button.dataset.textOn || 'Вкл';
-                            const textOff = button.dataset.textOff || 'Выкл';
-                            button.textContent = isOn ? textOn : textOff;
+            // --- ОБНОВЛЕНИЕ NODE-CARD (не перетирает содержимое) ---
+            for (const [regId, regInfo] of this.caches.nodeCards) {
+                const offset = parseInt(regId) * 2;
+                if (offset + 2 > bytesLength) {
+                    console.warn(`Недостаточно данных для регистра ${regId}`);
+                    continue;
+                }
+
+                const rawValue = dataView.getUint16(offset, true);
+
+                regInfo.cards.forEach(card => {
+                    // Пропускаем карточки в процессе обработки (см. nodeCardBlock)
+                    if (card._isProcessing) return;
+
+                    const cardRegType = card.dataset.type || regInfo.registerType || 'b0';
+
+                    if (cardRegType.startsWith('b')) {
+                        const bitIndex = parseInt(cardRegType.substring(1));
+                        if (bitIndex >= 0 && bitIndex <= 15) {
+                            const isOn = ((rawValue >> bitIndex) & 1) === 1;
+                            card.classList.toggle('on', isOn);
+                            card.classList.toggle('off', !isOn);
+                            // НИКАКОГО textContent!
                         }
                     }
                 });

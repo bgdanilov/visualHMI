@@ -15,6 +15,7 @@ export const BLOCK_TYPES = {
     TITLE_INPUT: 'title-input',
     SEND_BUTTON: 'send-button',
     PAGE_BUTTON: 'page-button',
-    EMPTY_BOX: 'empty-box',  // 🔥 Новый тип
-    IMAGE: 'image'  // 🔥 Новый тип
+    EMPTY_BOX: 'empty-box',
+    IMAGE: 'image',
+    NODE_CARD: 'node-card'    // ← новое
 };
