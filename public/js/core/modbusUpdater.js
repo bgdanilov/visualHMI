@@ -215,7 +215,7 @@ export class ModbusUpdater {
                 }
             }
 
-            // --- ОБНОВЛЕНИЕ TOGGLE КНОПОК ---
+            /// --- ОБНОВЛЕНИЕ TOGGLE КНОПОК (совместимо со старой и новой разметкой) ---
             for (const [regId, regInfo] of this.caches.toggles) {
                 const offset = parseInt(regId) * 2;
 
@@ -229,8 +229,11 @@ export class ModbusUpdater {
                 regInfo.toggles.forEach(button => {
                     if (button.disabled) return;
 
-                    const parentContent = button.closest('.content');
-                    const buttonRegType = parentContent?.dataset?.type || 'b0';
+                    const buttonRegType =
+                        button.dataset.type
+                        || button.closest('.content')?.dataset?.type
+                        || regInfo.registerType
+                        || 'b0';
 
                     if (buttonRegType?.startsWith('b')) {
                         const bitIndex = parseInt(buttonRegType.substring(1));
@@ -238,9 +241,11 @@ export class ModbusUpdater {
                             const isOn = ((rawValue >> bitIndex) & 1) === 1;
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
+                            button.classList.add('toggle-button');
 
-                            // 🔥 Используем кастомные тексты
-                            button.textContent = isOn ? button.dataset.textOn : button.dataset.textOff;
+                            const textOn = button.dataset.textOn || 'Вкл';
+                            const textOff = button.dataset.textOff || 'Выкл';
+                            button.textContent = isOn ? textOn : textOff;
                         }
                     }
                 });

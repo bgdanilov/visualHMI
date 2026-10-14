@@ -25,7 +25,7 @@ export class OnlyNumberBlock extends BaseBlock {
         }
 
         root.innerHTML = `
-            <div class="content">
+            <div class="value">
                 <span class="prefix">${prefix}</span>
                 <span class="number" data-reg="${regAddress}" data-type="${regType}">${value}</span>
                 <span class="postfix">${postfix}</span>
@@ -33,7 +33,6 @@ export class OnlyNumberBlock extends BaseBlock {
 
         this.el = root;
 
-        // Регистрация в updater — аргументы те же, что и в старом blockRenderer._registerSpan
         const span = root.querySelector('span.number');
         if (span && regAddress !== undefined) {
             this.ctx.updater.addSpan(regAddress, span, regType, formatSpec);

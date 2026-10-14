@@ -15,22 +15,28 @@ export class ToggleButtonBlock extends BaseBlock {
             height
         } = this.data;
 
-        // Для обратной совместимости со старым параметром 'text'
         const defaultText = this.data.text || textOn;
 
+        const prefixHtml = prefix
+            ? `<span class="prefix btn">${prefix}</span>`
+            : '';
+
         root.innerHTML = `
-            <div class="content" data-reg="${regAddress}" data-type="${regType}">
-                <span class="prefix btn">${prefix}</span>
-                <button class="toggle-button off" data-reg="${regAddress}">
-                    ${defaultText}
-                </button>
+            <div class="value">
+                ${prefixHtml}
+                <button
+                    class="toggle off"
+                    data-reg="${regAddress}"
+                    data-type="${regType}"
+                    data-text-on="${textOn}"
+                    data-text-off="${textOff}"
+                >${defaultText}</button>
             </div>`;
 
-        const button = root.querySelector('.toggle-button');
+        const button = root.querySelector('.toggle');
 
-        // Размеры, если заданы
         if (width || height) {
-            const content = root.querySelector('.content');
+            const content = root.querySelector('.value');
             if (content) {
                 content.style.padding = '0';
                 content.style.gap = '0';
@@ -45,11 +51,6 @@ export class ToggleButtonBlock extends BaseBlock {
             button.style.minHeight = `${height}px`;
         }
 
-        // Тексты для updater
-        button.dataset.textOn = textOn;
-        button.dataset.textOff = textOff;
-
-        // Регистрация в updater + клик
         this.ctx.updater.addToggle(regAddress, button, regType);
         this._setupClick(button, regAddress, regType);
 
@@ -68,8 +69,6 @@ export class ToggleButtonBlock extends BaseBlock {
 
             const textOn = button.dataset.textOn || 'Вкл';
             const textOff = button.dataset.textOff || 'Выкл';
-
-            console.log(`🔄 Кнопка ${regAddress}: ${isOn ? textOff : textOn}`);
 
             isProcessing = true;
             button.disabled = true;
