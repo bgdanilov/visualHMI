@@ -1,4 +1,4 @@
-// public/js/numpad.js
+// public/js/core/numpad.js
 import { validator } from './validator.js';
 import { notification } from './notification.js';
 

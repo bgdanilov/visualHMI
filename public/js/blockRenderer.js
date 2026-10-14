@@ -1,10 +1,10 @@
 // public/js/blockRenderer.js
 import { BLOCK_TYPES } from './constants.js';
-import { api } from './apiClient.js';
-import { modbusUpdater } from './modbusUpdater.js';
-import { numpadManager } from './numpad.js';
-import { validator } from './validator.js';
-import { notification } from './notification.js';
+import { api } from './api/apiClient.js';
+import { modbusUpdater } from './core/modbusUpdater.js';
+import { numpadManager } from './core/numpad.js';
+import { validator } from './core/validator.js';
+import { notification } from './core/notification.js';
 
 // 🔥 Глобальная настройка количества знаков после запятой
 const DEFAULT_DECIMAL_PLACES = 3;

@@ -1,5 +1,5 @@
-// public/js/modbusUpdater.js
-import { api } from './apiClient.js';
+// public/js/core/modbusUpdater.js
+import { api } from '../api/apiClient.js';
 
 // 🔥 Глобальная настройка количества знаков после запятой
 const DEFAULT_DECIMAL_PLACES = 3;

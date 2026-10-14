@@ -1,8 +1,8 @@
 // public/js/app.js
 import { CONFIG } from './constants.js';
-import { api } from './apiClient.js';
-import { modbusUpdater } from './modbusUpdater.js';
-import { BlockRenderer } from './blockRenderer.js';
+import { api } from './api/apiClient.js';
+import { modbusUpdater } from './core/modbusUpdater.js';
+import { BlockRenderer } from './blockRenderer.js';   // ← старый, пока не трогаем
 
 class App {
     constructor() {
