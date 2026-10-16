@@ -1,5 +1,5 @@
-// public/js/apiClient.js
-import { CONFIG } from './constants.js';
+// public/js/api/apiClient.js
+import { CONFIG } from '../constants.js';
 
 class ApiClient {
     constructor() {

@@ -1,19 +1,39 @@
 // public/js/app.js
 import { CONFIG } from './constants.js';
-import { api } from './apiClient.js';
-import { modbusUpdater } from './modbusUpdater.js';
-import { BlockRenderer } from './blockRenderer.js';
+import { api } from './api/apiClient.js';
+import { modbusUpdater } from './core/modbusUpdater.js';
+import { numpadManager } from './core/numpad.js';
+import { validator } from './core/validator.js';
+import { notification } from './core/notification.js';
+import { BlockRenderer } from './renderer/blockRenderer.js';
+import { popupService } from './core/popupService.js';
+import { confirmService } from './core/confirmService.js';
+
+// Регистрация всех блоков (побочный эффект импорта)
+import './blocks/index.js';
 
 class App {
     constructor() {
         this.isEditMode = false;
         this.updateInterval = null;
         this.renderArea = document.getElementById('render-area');
-        
+
         this.updater = modbusUpdater;
-        this.renderer = new BlockRenderer();
-        this.renderer.setRenderArea(this.renderArea);
-        
+
+        // Контекст для блоков — единая точка доступа ко всем сервисам
+        this.ctx = {
+            renderArea: this.renderArea,
+            updater: this.updater,
+            api,
+            numpad: numpadManager,
+            validator,
+            notification,
+            popup: popupService,       // ← новое
+            confirm: confirmService   // ← новое
+        };
+
+        this.renderer = new BlockRenderer(this.ctx);
+
         this.isRunning = false;
         this.isInitialized = false;
         this.pages = null;
@@ -91,16 +111,14 @@ class App {
         }
 
         this.currentPage = pageKey;
-        const blocksWithIds = blocks.map((block, index) => ({
-            ...block,
-            id: index
-        }));
-        this.renderer.renderBlocks(blocksWithIds);
+
+        // Сначала чистим кэши updater, потом рендерим (порядок важен)
+        this.updater.clearCaches();
+        this.renderer.renderBlocks(blocks);
     }
 
     switchPage(pageKey) {
         if (pageKey === this.currentPage || !this.pages[pageKey]) return;
-        this.renderer.clear();
         this._renderPage(pageKey);
     }
 
@@ -121,7 +139,7 @@ class App {
 
         this.updateInterval = setInterval(async () => {
             try {
-                    const data = await api.loadStaticJSON(CONFIG.BLOCKS);
+                const data = await api.loadStaticJSON(CONFIG.BLOCKS);
                 let pages = data;
                 if (Array.isArray(data)) {
                     pages = { main: data };
@@ -153,7 +171,6 @@ class App {
             }
         }, CONFIG.UPDATE_INTERVAL_MS);
 
-        // Первое обновление сразу
         this.updater.update().catch(error => {
             console.error('Ошибка первого опроса:', error);
         });
@@ -207,10 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     app.initialize();
 });
 
-// Обработка ошибок
 window.addEventListener('unhandledrejection', (event) => {
     console.error('Необработанная ошибка:', event.reason);
 });
 
-// Экспортируем для использования в консоли
 window.__app = app;
