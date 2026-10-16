@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1024, initial-scale=1">
+<title>Вентиляция — мнемосхема</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    width: 1024px; height: 768px;
+    background: #eef1f4;
+    font: 14px system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .screen {
+    display: flex; flex-direction: column;
+    width: 1024px; height: 768px;
+  }
+
+  /* ===== ВЕРХНЕЕ МЕНЮ ===== */
+  .topbar {
+    height: 56px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 16px;
+    background: #ffffff;
+    border-bottom: 2px solid #d0d6da;
+  }
+  .topbar button {
+    height: 38px; padding: 0 20px;
+    font-size: 15px; font-weight: 600;
+    color: #fff; background: #0b5ed7;
+    border: none; border-radius: 8px;
+    cursor: pointer;
+  }
+  .topbar button.active { background: #084298; }
+  .topbar .spacer { flex: 1; }
+  .topbar .clock { font-size: 15px; font-weight: 600; color: #455a64; }
+
+  /* ===== МНЕМОСХЕМА ===== */
+  .mnemo {
+    flex: 1; min-height: 0;
+    position: relative;
+    background: #fafbfc;
+    overflow: hidden;
+  }
+
+  .mnemo-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ===== АНИМАЦИЯ ВОЗДУХА ===== */
+  .flow-dot { fill: #43a047; opacity: 0; }
+  .flow-dot.active {
+    opacity: 1;
+    animation: flowMove 2.5s linear infinite;
+  }
+  @keyframes flowMove {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(440px); }
+  }
+
+  .flow-arrow {
+    transition: fill .3s ease, opacity .3s ease;
+    fill: #cfd8dc;
+  }
+  .flow-arrow.active {
+    fill: #43a047;
+    animation: arrowPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes arrowPulse {
+    0%, 100% { opacity: .6; }
+    50%      { opacity: 1; }
+  }
+
+  .flow-wave {
+    stroke: #cfd8dc;
+    transition: stroke .3s ease;
+  }
+  .flow-wave.active {
+    stroke: #66bb6a;
+    stroke-dasharray: 10 14;
+    animation: waveMove 1s linear infinite;
+  }
+  @keyframes waveMove {
+    to { stroke-dashoffset: -24; }
+  }
+
+  /* ===== КАРТОЧКИ УЗЛОВ ===== */
+  .node {
+    position: absolute;
+    width: 140px;
+    min-height: 130px;
+    background: #ffffff;
+    border: 2px solid #cfd8dc;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    cursor: pointer;
+    user-select: none;
+    overflow: hidden;
+    transition: border-color .18s ease, background .18s ease,
+                box-shadow .18s ease, transform .08s ease;
+  }
+  .node:hover { box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+  .node:active { transform: scale(.98); }
+
+  .node .elem-icon {
+    position: absolute;
+    top: 8px; left: 8px;
+    width: 26px; height: 26px;
+    color: #90a4ae;
+    transition: color .2s ease;
+    pointer-events: none;
+  }
+  .node .elem-icon svg {
+    width: 100%; height: 100%; display: block;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .node.on .elem-icon { color: #43a047; }
+
+  .node .state-dot {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #cfd8dc;
+    transition: background .2s ease, box-shadow .2s ease;
+  }
+  .node.on .state-dot {
+    background: #43a047;
+    box-shadow: 0 0 6px rgba(67,160,71,.6);
+  }
+
+  .node .hint-icon {
+    position: absolute;
+    top: 8px; right: 26px;
+    width: 16px; height: 16px;
+    color: #b0bec5;
+    opacity: .7;
+    pointer-events: none;
+    transition: color .2s ease, opacity .2s ease;
+  }
+  .node .hint-icon svg {
+    width: 100%; height: 100%; display: block;
+    stroke: currentColor; stroke-width: 2;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .node:hover .hint-icon { color: #0b5ed7; opacity: 1; }
+  .node.on .hint-icon { color: #66bb6a; opacity: .9; }
+
+  .node .title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #546e7a;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    margin-top: 30px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .node .values {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: auto;
+  }
+  .node .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #78909c;
+  }
+  .node .row .val {
+    font-size: 14px;
+    font-weight: 700;
+    color: #263238;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .node.on { border-color: #43a047; background: #f1f8f2; }
+
+  /* ===== ПОЛОСА УДЕРЖАНИЯ ===== */
+  .node .hold-indicator {
+    position: absolute;
+    left: 0; bottom: 0;
+    height: 3px;
+    width: 0%;
+    background: #0b5ed7;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    pointer-events: none;
+    transition: width .05s linear, background .15s ease, opacity .3s ease;
+  }
+  .node.holding .hold-indicator {
+    width: 100%;
+    transition: width var(--hold-ms, 500ms) linear;
+  }
+  .node.triggered .hold-indicator {
+    width: 100%;
+    background: #43a047;
+    opacity: 0;
+    transition: opacity .35s ease, background .15s ease;
+  }
+
+  /* ===== SVG-ТЕКСТ ===== */
+  .svg-label {
+    font: 700 11px system-ui, sans-serif;
+    fill: #90a4ae;
+    letter-spacing: 1px;
+  }
+  .svg-room {
+    font: 700 13px system-ui, sans-serif;
+    fill: #546e7a;
+    letter-spacing: 1.5px;
+  }
+
+  /* ===== ОБЩИЙ СТИЛЬ ПОПАПА ===== */
+  .popup {
+    position: fixed;
+    z-index: 200;
+    background: #ffffff;
+    border: 1px solid #cfd8dc;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    padding: 14px 16px 12px;
+    opacity: 0;
+    transform: translateY(6px) scale(.98);
+    transition: opacity .15s ease, transform .15s ease;
+    pointer-events: none;
+  }
+  .popup.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .popup .popup-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .popup .popup-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #263238;
+  }
+  .popup .popup-close {
+    width: 28px; height: 28px;
+    border: none; background: transparent;
+    border-radius: 8px;
+    font-size: 18px; line-height: 1;
+    color: #90a4ae; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s ease, color .15s ease;
+  }
+  .popup .popup-close:hover { background: #f1f5f9; color: #475569; }
+
+  /* Попап тренда */
+  .trend-popup { width: 380px; }
+  .trend-popup .chart {
+    width: 100%; height: 140px; display: block;
+    background: #fafbfc; border-radius: 8px;
+  }
+  .trend-popup .chart .grid-line { stroke: #e8edf1; stroke-width: 1; }
+  .trend-popup .chart .axis {
+    fill: #b0bec5; font: 500 9px system-ui, sans-serif;
+  }
+  .trend-popup .chart .line {
+    fill: none; stroke: #43a047; stroke-width: 2.5;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .trend-popup .chart .area { fill: rgba(67,160,71,.15); }
+  .trend-popup .chart .last-dot {
+    fill: #43a047; stroke: #fff; stroke-width: 2;
+  }
+  .trend-popup .popup-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; margin-top: 10px;
+  }
+  .trend-popup .stat {
+    background: #f5f8fa; border-radius: 6px;
+    padding: 6px 4px; text-align: center;
+  }
+  .trend-popup .stat .lbl {
+    font-size: 9px; color: #90a4ae;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .trend-popup .stat .v {
+    font-size: 13px; font-weight: 700; color: #263238;
+    margin-top: 2px; font-variant-numeric: tabular-nums;
+  }
+
+  /* Попап меню */
+  .ctx-popup { width: 320px; }
+
+  .ctx-popup .ctx-section {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .ctx-popup .ctx-slider-block {
+    background: #f5f8fa;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .ctx-popup .ctx-slider-block .lbl {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+  .ctx-popup .ctx-slider-block .val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e2936;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ctx-popup .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 32px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .ctx-popup .slider::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 3px; background: #e2e8f0;
+  }
+  .ctx-popup .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    margin-top: -8px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #0b5ed7;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    cursor: pointer;
+  }
+  .ctx-popup .slider::-moz-range-track {
+    height: 6px; border-radius: 3px; background: #e2e8f0;
+  }
+  .ctx-popup .slider::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #ffffff; border: 2px solid #0b5ed7;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: pointer;
+  }
+
+  .ctx-popup .slider-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #b0bec5;
+    margin-top: 4px;
+  }
+
+  .ctx-popup .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e2936;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    cursor: pointer;
+    transition: background .12s ease;
+  }
+  .ctx-popup .ctx-item:hover { background: #f1f5f9; }
+  .ctx-popup .ctx-item .ico {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    color: #64748b;
+  }
+  .ctx-popup .ctx-item .ico svg {
+    width: 100%; height: 100%; display: block;
+    stroke: currentColor; fill: none; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .ctx-popup .ctx-item.danger { color: #dc2626; }
+  .ctx-popup .ctx-item.danger .ico { color: #dc2626; }
+  .ctx-popup .ctx-item.danger:hover { background: #fef2f2; }
+
+  /* Затемнение */
+  .popup-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, .18);
+    z-index: 190;
+    opacity: 0; pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  .popup-backdrop.visible { opacity: 1; pointer-events: auto; }
+
+  /* ===== ПОПАП ПОДТВЕРЖДЕНИЯ ===== */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, .35);
+    display: none; align-items: center; justify-content: center;
+    z-index: 300; padding: 24px;
+  }
+  .confirm-overlay.open { display: flex; }
+
+  .confirm {
+    background: #ffffff; border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(15,23,42,.35);
+    width: 100%; max-width: 420px;
+    padding: 24px 24px 20px;
+    animation: confirmIn .18s cubic-bezier(.2, 0, .2, 1);
+  }
+  @keyframes confirmIn {
+    from { transform: scale(.94); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .confirm .icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #eff6ff; display: flex;
+    align-items: center; justify-content: center;
+    margin: 0 auto 14px; color: #2563eb;
+    transition: background .2s ease, color .2s ease;
+  }
+  .confirm .icon svg { width: 28px; height: 28px; }
+  .confirm .icon.danger { background: #fee2e2; color: #dc2626; }
+
+  .confirm h2 {
+    margin: 0 0 8px; font-size: 20px; font-weight: 700;
+    color: #1e2936; text-align: center;
+  }
+  .confirm p {
+    margin: 0 0 20px; font-size: 14px; line-height: 1.5;
+    color: #64748b; text-align: center;
+  }
+  .confirm p b { color: #1e2936; }
+
+  .confirm .actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .confirm .actions button {
+    height: 48px; font-size: 15px; font-weight: 600;
+    border-radius: 10px; cursor: pointer; border: none;
+    transition: transform .08s ease, background .15s ease;
+  }
+  .confirm .actions button:active { transform: scale(.97); }
+  .confirm .btn-cancel {
+    background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;
+  }
+  .confirm .btn-cancel:hover { background: #e8edf3; }
+  .confirm .btn-confirm { background: #16a34a; color: #ffffff; }
+  .confirm .btn-confirm:hover { background: #15803d; }
+  .confirm .btn-confirm.danger { background: #dc2626; }
+  .confirm .btn-confirm.danger:hover { background: #b91c1c; }
+</style>
+</head>
+<body>
+
+<div class="screen">
+
+  <div class="topbar">
+    <button class="active">Главная</button>
+    <button>Настройки</button>
+    <button>Тренды</button>
+    <span class="spacer"></span>
+    <span class="clock" id="clock">12:00</span>
+  </div>
+
+  <div class="mnemo">
+
+    <svg class="mnemo-bg" viewBox="0 0 1024 470" preserveAspectRatio="xMidYMid meet">
+      <text class="svg-label" x="30" y="30">ПРИТОК (с улицы)</text>
+      <text class="svg-label" x="994" y="30" text-anchor="end">ВЫБРОС (на улицу)</text>
+
+      <rect x="20" y="50" width="984" height="360" rx="14"
+            fill="#ffffff" stroke="#cfd8dc" stroke-width="2"/>
+
+      <line class="flow-wave" id="wave-prit" x1="60" y1="130" x2="700" y2="130" stroke-width="3"/>
+      <line class="flow-wave" id="wave-vyt"  x1="60" y1="370" x2="700" y2="370" stroke-width="3"/>
+
+      <g id="arrows-prit">
+        <polygon class="flow-arrow" points="140,124 140,136 152,130"/>
+        <polygon class="flow-arrow" points="260,124 260,136 272,130"/>
+        <polygon class="flow-arrow" points="380,124 380,136 392,130"/>
+        <polygon class="flow-arrow" points="500,124 500,136 512,130"/>
+        <polygon class="flow-arrow" points="620,124 620,136 632,130"/>
+      </g>
+      <g id="arrows-vyt">
+        <polygon class="flow-arrow" points="700,364 700,376 688,370"/>
+        <polygon class="flow-arrow" points="580,364 580,376 568,370"/>
+        <polygon class="flow-arrow" points="460,364 460,376 448,370"/>
+        <polygon class="flow-arrow" points="340,364 340,376 328,370"/>
+        <polygon class="flow-arrow" points="220,364 220,376 208,370"/>
+      </g>
+
+      <circle class="flow-dot" id="flow-prit-1" cx="60" cy="130" r="4"/>
+      <circle class="flow-dot" id="flow-prit-2" cx="60" cy="130" r="4" style="animation-delay:-0.8s"/>
+      <circle class="flow-dot" id="flow-prit-3" cx="60" cy="130" r="4" style="animation-delay:-1.6s"/>
+
+      <circle class="flow-dot" id="flow-vyt-1" cx="700" cy="370" r="4"
+              style="animation-direction:reverse"/>
+      <circle class="flow-dot" id="flow-vyt-2" cx="700" cy="370" r="4"
+              style="animation-direction:reverse; animation-delay:-0.8s"/>
+      <circle class="flow-dot" id="flow-vyt-3" cx="700" cy="370" r="4"
+              style="animation-direction:reverse; animation-delay:-1.6s"/>
+
+      <rect x="480" y="220" width="140" height="60" rx="8"
+            fill="#f5f7f8" stroke="#b0bec5" stroke-width="2"/>
+      <text x="550" y="248" text-anchor="middle"
+            font="600 12px system-ui" fill="#546e7a">РЕКУПЕРАТОР</text>
+      <text x="550" y="266" text-anchor="middle"
+            font="600 11px system-ui" fill="#90a4ae">перекрёсток потоков</text>
+
+      <path d="M 550 130 V 220" stroke="#90a4ae" stroke-width="2" stroke-dasharray="4 4"/>
+      <path d="M 550 280 V 370" stroke="#90a4ae" stroke-width="2" stroke-dasharray="4 4"/>
+
+      <line x1="550" y1="370" x2="550" y2="430" stroke="#90a4ae" stroke-width="3"/>
+      <polygon points="544,430 556,430 550,442" fill="#90a4ae"/>
+      <text class="svg-room" x="550" y="462" text-anchor="middle">В ПОМЕЩЕНИЕ</text>
+    </svg>
+
+    <!-- Заслонка входная -->
+    <div class="node" data-reg="16" data-title="Заслонка входная" data-type="trend" style="left:40px; top:80px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="1.5"/>
+          <line x1="6" y1="9"  x2="18" y2="9"/>
+          <line x1="6" y1="12" x2="18" y2="12"/>
+          <line x1="6" y1="15" x2="18" y2="15"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Заслонка вх.</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+        <div class="row"><span>Влаж.</span><span class="val">4%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Фильтр -->
+    <div class="node" data-reg="17" data-title="Фильтр" data-type="trend" style="left:200px; top:80px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M 6 4 L 18 8 L 6 12 L 18 16 L 6 20"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Фильтр</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+        <div class="row"><span>Влаж.</span><span class="val">4%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Нагреватель -->
+    <div class="node" data-reg="18" data-title="Нагреватель" data-type="trend" style="left:360px; top:80px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="1.5"/>
+          <path d="M 7 8 Q 9 12 7 16"/>
+          <path d="M 12 8 Q 14 12 12 16"/>
+          <path d="M 17 8 Q 19 12 17 16"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Нагреватель</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">45°</span></div>
+        <div class="row"><span>Мощн.</span><span class="val">16кВт</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Водяной -->
+    <div class="node" data-reg="19" data-title="Водяной" data-type="trend" style="left:520px; top:80px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="7"/>
+          <path d="M 12 5 V 19"/>
+          <path d="M 5 12 H 19"/>
+          <path d="M 7 7 Q 12 10 17 7"/>
+          <path d="M 7 17 Q 12 14 17 17"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Водяной</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+        <div class="row"><span>Давл.</span><span class="val">16кВт</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Приточка -->
+    <div class="node" data-reg="21" data-title="Приточка" data-type="trend" style="left:740px; top:80px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M 12 12 Q 8 8 12 4 Q 16 8 12 12"/>
+          <path d="M 12 12 Q 16 14 20 10 Q 18 16 12 12"/>
+          <path d="M 12 12 Q 8 14 4 18 Q 10 20 12 12"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Приточка</div>
+      <div class="values">
+        <div class="row"><span>Скор.</span><span class="val">45м/с</span></div>
+        <div class="row"><span>Загр.</span><span class="val">72%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Фильтр 2 -->
+    <div class="node" data-reg="25" data-title="Фильтр 2" data-type="trend" style="left:40px; top:300px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M 6 4 L 18 8 L 6 12 L 18 16 L 6 20"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Фильтр 2</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+        <div class="row"><span>Влаж.</span><span class="val">4%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Рекуператор -->
+    <div class="node" data-reg="20" data-title="Рекуператор" data-type="trend" style="left:200px; top:300px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M 4 20 L 12 4 L 20 20 Z"/>
+          <line x1="8" y1="14" x2="16" y2="14"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Рекуператор</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+        <div class="row"><span>Влаж.</span><span class="val">4%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Увлажнитель — карточка с меню -->
+    <div class="node" data-reg="24" data-title="Увлажнитель" data-type="menu" style="left:360px; top:300px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M 12 3 C 8 9, 5 13, 5 16 a 7 7 0 0 0 14 0 c 0 -3 -3 -7 -7 -13 z"/>
+          <path d="M 9 16 a 3 3 0 0 0 3 3"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <circle cx="3" cy="8" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="13" cy="8" r="1.2" fill="currentColor" stroke="none"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Увлажнитель</div>
+      <div class="values">
+        <div class="row"><span>Влаж.</span><span class="val">45%</span></div>
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Вытяжка -->
+    <div class="node" data-reg="23" data-title="Вытяжка" data-type="trend" style="left:520px; top:300px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M 12 12 Q 8 8 12 4 Q 16 8 12 12"/>
+          <path d="M 12 12 Q 16 14 20 10 Q 18 16 12 12"/>
+          <path d="M 12 12 Q 8 14 4 18 Q 10 20 12 12"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Вытяжка</div>
+      <div class="values">
+        <div class="row"><span>Скор.</span><span class="val">40м/с</span></div>
+        <div class="row"><span>Загр.</span><span class="val">65%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+    <!-- Заслонка выходная -->
+    <div class="node" data-reg="22" data-title="Заслонка выходная" data-type="trend" style="left:740px; top:300px;">
+      <span class="elem-icon">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="14" rx="1.5"/>
+          <line x1="6" y1="9"  x2="18" y2="9"/>
+          <line x1="6" y1="12" x2="18" y2="12"/>
+          <line x1="6" y1="15" x2="18" y2="15"/>
+        </svg>
+      </span>
+      <span class="hint-icon">
+        <svg viewBox="0 0 16 16">
+          <polyline points="2,11 6,7 9,9 14,4"/>
+          <polyline points="10,4 14,4 14,8"/>
+        </svg>
+      </span>
+      <span class="state-dot"></span>
+      <div class="title">Заслонка вых.</div>
+      <div class="values">
+        <div class="row"><span>Темп.</span><span class="val">22.5°</span></div>
+        <div class="row"><span>Влаж.</span><span class="val">4%</span></div>
+      </div>
+      <div class="hold-indicator"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Затемнение -->
+<div class="popup-backdrop" id="popupBackdrop"></div>
+
+<!-- ПОПАП ТРЕНДА -->
+<div class="popup trend-popup" id="trendPopup">
+  <div class="popup-head">
+    <div class="popup-title" id="popupTitle">Тренд</div>
+    <button class="popup-close" id="popupClose" aria-label="Закрыть">✕</button>
+  </div>
+  <svg class="chart" id="popupChart" viewBox="0 0 380 140" preserveAspectRatio="none"></svg>
+  <div class="popup-stats">
+    <div class="stat"><div class="lbl">Мин</div><div class="v" id="popupMin">—</div></div>
+    <div class="stat"><div class="lbl">Сред</div><div class="v" id="popupAvg">—</div></div>
+    <div class="stat"><div class="lbl">Макс</div><div class="v" id="popupMax">—</div></div>
+    <div class="stat"><div class="lbl">Сейчас</div><div class="v" id="popupNow">—</div></div>
+  </div>
+</div>
+
+<!-- ПОПАП МЕНЮ -->
+<div class="popup ctx-popup" id="ctxPopup">
+  <div class="popup-head">
+    <div class="popup-title" id="ctxTitle">Увлажнитель</div>
+    <button class="popup-close" id="ctxClose" aria-label="Закрыть">✕</button>
+  </div>
+
+  <button class="ctx-item" data-action="trend">
+    <span class="ico">
+      <svg viewBox="0 0 24 24">
+        <polyline points="3,17 9,11 13,13 21,5"/>
+        <polyline points="15,5 21,5 21,11"/>
+      </svg>
+    </span>
+    Открыть тренд
+  </button>
+
+  <div class="ctx-section">
+    <div class="ctx-slider-block">
+      <div class="lbl">
+        <span>Уставка влажности</span>
+        <span class="val" id="sliderVal">45 %</span>
+      </div>
+      <input type="range" class="slider" id="ctxSlider" min="0" max="100" value="45" step="1">
+      <div class="slider-scale"><span>0</span><span>50</span><span>100</span></div>
+    </div>
+  </div>
+
+  <div class="ctx-section">
+    <button class="ctx-item" data-action="lock">
+      <span class="ico">
+        <svg viewBox="0 0 24 24">
+          <rect x="4" y="11" width="16" height="10" rx="2"/>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+        </svg>
+      </span>
+      Заблокировать
+    </button>
+
+    <button class="ctx-item danger" data-action="stop">
+      <span class="ico">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="8" y1="8" x2="16" y2="16"/>
+          <line x1="16" y1="8" x2="8" y2="16"/>
+        </svg>
+      </span>
+      Отключить
+    </button>
+  </div>
+</div>
+
+<!-- ПОПАП ПОДТВЕРЖДЕНИЯ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm">
+    <div class="icon" id="confirmIcon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 9v4"/>
+        <path d="M12 17h.01"/>
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+    </div>
+    <h2 id="confirmTitle">Вы уверены?</h2>
+    <p id="confirmText">Вы собираетесь включить <b id="confirmName">узел</b>.<br>Продолжить?</p>
+    <div class="actions">
+      <button class="btn-cancel" id="confirmCancel">Отмена</button>
+      <button class="btn-confirm" id="confirmOk">Да, включить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ЧАСЫ
+   ============================================================ */
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    String(d.getHours()).padStart(2, '0') + ':' +
+    String(d.getMinutes()).padStart(2, '0');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ============================================================
+   ИСТОРИЯ ТРЕНДОВ (демо)
+   ============================================================ */
+const history = {};
+const MAX_POINTS = 30;
+
+function generateSeries(n) {
+  const arr = [];
+  let v = 45;
+  for (let i = 0; i < n; i++) {
+    v += (Math.random() - 0.5) * 8;
+    v = Math.max(20, Math.min(70, v));
+    arr.push(v);
+  }
+  return arr;
+}
+
+document.querySelectorAll('.node').forEach(node => {
+  history[node.dataset.reg] = generateSeries(MAX_POINTS);
+});
+
+setInterval(() => {
+  document.querySelectorAll('.node').forEach(node => {
+    const arr = history[node.dataset.reg];
+    if (!arr) return;
+    let v = arr[arr.length - 1];
+    v += (Math.random() - 0.5) * 8;
+    v = Math.max(20, Math.min(70, v));
+    arr.push(v);
+    if (arr.length > MAX_POINTS) arr.shift();
+  });
+}, 1500);
+
+/* ============================================================
+   АНИМАЦИЯ ВОЗДУХА
+   ============================================================ */
+function updateFlowAnimation() {
+  const pritOn = document.querySelector('.node[data-reg="21"]')?.classList.contains('on');
+  const vytOn  = document.querySelector('.node[data-reg="23"]')?.classList.contains('on');
+
+  document.querySelectorAll('#flow-prit-1, #flow-prit-2, #flow-prit-3').forEach(el => {
+    el.classList.toggle('active', pritOn);
+  });
+  document.querySelectorAll('#flow-vyt-1, #flow-vyt-2, #flow-vyt-3').forEach(el => {
+    el.classList.toggle('active', vytOn);
+  });
+  document.querySelectorAll('#arrows-prit .flow-arrow').forEach(el => {
+    el.classList.toggle('active', pritOn);
+  });
+  document.querySelectorAll('#arrows-vyt .flow-arrow').forEach(el => {
+    el.classList.toggle('active', vytOn);
+  });
+  document.getElementById('wave-prit')?.classList.toggle('active', pritOn);
+  document.getElementById('wave-vyt')?.classList.toggle('active', vytOn);
+}
+
+/* ============================================================
+   ОБЩИЕ КОНСТАНТЫ
+   ============================================================ */
+const HOLD_MS = 500;             // время удержания для срабатывания попапа
+const TAP_THRESHOLD_MS = 100;    // граница «тап vs попытка удержания»
+const OFFSET = 12;               // отступ попапа от карточки
+const POPUP_H = 240;             // примерная высота попапа
+
+const popupBackdrop = document.getElementById('popupBackdrop');
+
+/* ============================================================
+   ЛОГИКА УДЕРЖАНИЯ (тренд + меню)
+   ============================================================ */
+let holdTimer = null;
+let holdStartTime = 0;
+let suppressClick = false;
+let activeTrendNode = null;
+let trendLiveTimer = null;
+let activeCtxNode = null;
+
+document.querySelectorAll('.node').forEach(node => {
+  node.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+
+    const type = node.dataset.type;
+    if (type !== 'trend' && type !== 'menu') return;
+
+    holdStartTime = Date.now();
+
+    // запуск полосы удержания
+    node.style.setProperty('--hold-ms', HOLD_MS + 'ms');
+    node.classList.add('holding');
+
+    holdTimer = setTimeout(() => {
+      holdTimer = null;
+      suppressClick = true;
+
+      // полоса «вспыхнула»
+      node.classList.remove('holding');
+      node.classList.add('triggered');
+      setTimeout(() => node.classList.remove('triggered'), 350);
+
+      // открыть нужный попап
+      if (type === 'trend') showTrendPopup(node);
+      else if (type === 'menu') showCtxPopup(node);
+    }, HOLD_MS);
+  });
+
+  const cancelHold = () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    node.classList.remove('holding');
+
+    // если держали дольше TAP_THRESHOLD_MS — подавляем click
+    const heldFor = Date.now() - holdStartTime;
+    if (heldFor >= TAP_THRESHOLD_MS) {
+      suppressClick = true;
+      setTimeout(() => { suppressClick = false; }, 300);
+    }
+  };
+
+  node.addEventListener('pointerup', cancelHold);
+  node.addEventListener('pointercancel', cancelHold);
+  node.addEventListener('pointerleave', cancelHold);
+});
+
+/* Страховка на document — если отпустили вне карточки */
+document.addEventListener('pointerup', () => {
+  if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+  if (activeTrendNode) activeTrendNode.classList.remove('holding');
+  if (activeCtxNode) activeCtxNode.classList.remove('holding');
+  if (suppressClick) {
+    setTimeout(() => { suppressClick = false; }, 300);
+  }
+});
+
+/* ============================================================
+   ПОЗИЦИОНИРОВАНИЕ ПОПАПОВ
+   ============================================================ */
+function positionPopup(node, width, el) {
+  const r = node.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // слева от карточки
+  let left = r.left - width - OFFSET;
+  let top  = r.top;
+
+  // не влезает слева — справа
+  if (left < 8) left = r.right + OFFSET;
+
+  // не влезает ни там, ни там — снизу
+  if (left + width > vw - 8) {
+    left = Math.max(8, Math.min(r.left, vw - width - 8));
+    top = r.bottom + OFFSET;
+  }
+
+  // не влезает снизу — прижимаем
+  if (top + POPUP_H > vh - 8) top = Math.max(8, vh - POPUP_H - 8);
+  if (top < 8) top = 8;
+
+  el.style.left = left + 'px';
+  el.style.top  = top  + 'px';
+}
+
+/* ============================================================
+   ПОПАП ТРЕНДА
+   ============================================================ */
+const popup = document.getElementById('trendPopup');
+const popupTitle = document.getElementById('popupTitle');
+const popupChart = document.getElementById('popupChart');
+const popupMin = document.getElementById('popupMin');
+const popupAvg = document.getElementById('popupAvg');
+const popupMax = document.getElementById('popupMax');
+const popupNow = document.getElementById('popupNow');
+const popupClose = document.getElementById('popupClose');
+
+const POPUP_W = 380;
+
+function showTrendPopup(node) {
+  closeCtxPopup();       // закрыть меню, если открыто
+  activeTrendNode = node;
+  popupTitle.textContent = node.dataset.title || 'Тренд';
+  drawPopup(history[node.dataset.reg] || []);
+  positionPopup(node, POPUP_W, popup);
+  popup.classList.add('visible');
+  popupBackdrop.classList.add('visible');
+
+  stopTrendUpdates();
+  trendLiveTimer = setInterval(() => {
+    if (!activeTrendNode) return;
+    const arr = history[activeTrendNode.dataset.reg];
+    if (!arr) return;
+    let v = arr[arr.length - 1];
+    v += (Math.random() - 0.5) * 8;
+    v = Math.max(20, Math.min(70, v));
+    arr.push(v);
+    if (arr.length > MAX_POINTS) arr.shift();
+    drawPopup(arr);
+  }, 400);
+}
+
+function closeTrendPopup() {
+  popup.classList.remove('visible');
+  if (!ctxPopup.classList.contains('visible')) {
+    popupBackdrop.classList.remove('visible');
+  }
+  stopTrendUpdates();
+  activeTrendNode = null;
+}
+
+function stopTrendUpdates() {
+  if (trendLiveTimer) { clearInterval(trendLiveTimer); trendLiveTimer = null; }
+}
+
+popupClose.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeTrendPopup();
+});
+
+function drawPopup(data) {
+  const W = 380, H = 140;
+  const padL = 32, padR = 10, padT = 10, padB = 20;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  if (data.length < 2) { popupChart.innerHTML = ''; return; }
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const yMin = min - range * 0.15;
+  const yMax = max + range * 0.15;
+  const yRange = yMax - yMin;
+
+  const x = i => padL + (i / (data.length - 1)) * innerW;
+  const y = v => padT + innerH - ((v - yMin) / yRange) * innerH;
+
+  let grid = '';
+  for (let i = 0; i <= 4; i++) {
+    const yy = padT + (innerH / 4) * i;
+    const val = yMax - (yRange / 4) * i;
+    grid += `<line class="grid-line" x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}"/>`;
+    grid += `<text class="axis" x="${padL - 6}" y="${yy + 3}" text-anchor="end">${val.toFixed(0)}</text>`;
+  }
+
+  const points = data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const areaPoints = `${padL},${padT + innerH} ${points} ${W - padR},${padT + innerH}`;
+  const lastX = x(data.length - 1);
+  const lastY = y(data[data.length - 1]);
+
+  popupChart.innerHTML = `
+    ${grid}
+    <polygon class="area" points="${areaPoints}"/>
+    <polyline class="line" points="${points}"/>
+    <circle class="last-dot" cx="${lastX}" cy="${lastY}" r="4"/>
+  `;
+
+  const avg = data.reduce((a, b) => a + b, 0) / data.length;
+  popupMin.textContent = min.toFixed(1);
+  popupAvg.textContent = avg.toFixed(1);
+  popupMax.textContent = max.toFixed(1);
+  popupNow.textContent = data[data.length - 1].toFixed(1);
+}
+
+/* ============================================================
+   ПОПАП КОНТЕКСТНОГО МЕНЮ
+   ============================================================ */
+const ctxPopup = document.getElementById('ctxPopup');
+const ctxTitle = document.getElementById('ctxTitle');
+const ctxClose = document.getElementById('ctxClose');
+const ctxSlider = document.getElementById('ctxSlider');
+const sliderVal = document.getElementById('sliderVal');
+
+const CTX_W = 320;
+
+function showCtxPopup(node) {
+  closeTrendPopup();     // закрыть тренд, если открыт
+  activeCtxNode = node;
+  ctxTitle.textContent = node.dataset.title || 'Узел';
+  positionPopup(node, CTX_W, ctxPopup);
+  ctxPopup.classList.add('visible');
+  popupBackdrop.classList.add('visible');
+}
+
+function closeCtxPopup() {
+  ctxPopup.classList.remove('visible');
+  if (!popup.classList.contains('visible')) {
+    popupBackdrop.classList.remove('visible');
+  }
+  activeCtxNode = null;
+}
+
+ctxClose.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeCtxPopup();
+});
+
+popupBackdrop.addEventListener('click', () => {
+  closeTrendPopup();
+  closeCtxPopup();
+});
+
+ctxPopup.querySelectorAll('.ctx-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const action = item.dataset.action;
+    const node = activeCtxNode;
+
+    if (action === 'trend') {
+      closeCtxPopup();
+      if (node) showTrendPopup(node);
+      return;
+    }
+    if (action === 'stop') {
+      if (node) {
+        node.classList.remove('on');
+        updateFlowAnimation();
+      }
+      closeCtxPopup();
+      return;
+    }
+    console.log('Действие:', action, 'для', node?.dataset.title);
+    closeCtxPopup();
+  });
+});
+
+ctxSlider.addEventListener('input', (e) => {
+  sliderVal.textContent = e.target.value + ' %';
+});
+ctxSlider.addEventListener('change', (e) => {
+  console.log('Уставка влажности:', e.target.value, '% для', activeCtxNode?.dataset.title);
+});
+
+/* ============================================================
+   ПОДТВЕРЖДЕНИЕ ВКЛ/ВЫКЛ (только короткий тап)
+   ============================================================ */
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmIcon = document.getElementById('confirmIcon');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmText = document.getElementById('confirmText');
+const confirmName = document.getElementById('confirmName');
+const confirmOk = document.getElementById('confirmOk');
+const confirmCancel = document.getElementById('confirmCancel');
+
+let pendingNode = null;
+let pendingAction = null;
+
+document.querySelectorAll('.node').forEach(node => {
+  node.addEventListener('click', (e) => {
+    // подавляем клик после удержания / попытки удержания
+    if (suppressClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    // попап открыт — не открываем подтверждение
+    if (popup.classList.contains('visible')) return;
+    if (ctxPopup.classList.contains('visible')) return;
+
+    const isOn = node.classList.contains('on');
+    openConfirm(node, isOn ? 'off' : 'on');
+  });
+});
+
+function openConfirm(node, action) {
+  pendingNode = node;
+  pendingAction = action;
+
+  const name = node.dataset.title || 'узел';
+  confirmName.textContent = name;
+
+  if (action === 'on') {
+    confirmIcon.classList.remove('danger');
+    confirmTitle.textContent = 'Вы уверены?';
+    confirmText.innerHTML = `Вы собираетесь <b>включить</b> <b>${name}</b>.<br>Продолжить?`;
+    confirmOk.textContent = 'Да, включить';
+    confirmOk.classList.remove('danger');
+  } else {
+    confirmIcon.classList.add('danger');
+    confirmTitle.textContent = 'Вы уверены?';
+    confirmText.innerHTML = `Вы собираетесь <b>выключить</b> <b>${name}</b>.<br>Продолжить?`;
+    confirmOk.textContent = 'Да, выключить';
+    confirmOk.classList.add('danger');
+  }
+
+  confirmOverlay.classList.add('open');
+}
+
+confirmOk.addEventListener('click', () => {
+  if (pendingNode && pendingAction) {
+    if (pendingAction === 'on') pendingNode.classList.add('on');
+    else pendingNode.classList.remove('on');
+    updateFlowAnimation();
+  }
+  closeConfirm();
+});
+
+confirmCancel.addEventListener('click', closeConfirm);
+
+confirmOverlay.addEventListener('click', (e) => {
+  if (e.target === confirmOverlay) closeConfirm();
+});
+
+function closeConfirm() {
+  confirmOverlay.classList.remove('open');
+  pendingNode = null;
+  pendingAction = null;
+}
+
+/* ============================================================
+   ESC — закрыть всё
+   ============================================================ */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeTrendPopup();
+    closeCtxPopup();
+    closeConfirm();
+  }
+});
+
+/* ============================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ============================================================ */
+updateFlowAnimation();
+</script>
+
+</body>
+</html>

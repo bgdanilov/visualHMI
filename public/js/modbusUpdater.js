@@ -93,7 +93,7 @@ export class ModbusUpdater {
         if (!this._isFloatType(registerType)) {
             return String(value);
         }
-        
+
         const decimalPlaces = this._getDecimalPlaces(element);
         if (decimalPlaces === null || isNaN(decimalPlaces) || decimalPlaces < 0) {
             return String(value);
@@ -113,10 +113,10 @@ export class ModbusUpdater {
         const key = String(regId);
         // 🔥 Форматируем начальное значение для отображения (только для float)
         const formattedValue = this._formatValue(input.value, input, registerType);
-        this.caches.inputs.set(key, { 
-            registerType, 
-            element: input, 
-            originalValue: formattedValue 
+        this.caches.inputs.set(key, {
+            registerType,
+            element: input,
+            originalValue: formattedValue
         });
         input.value = formattedValue;
     }
@@ -138,10 +138,10 @@ export class ModbusUpdater {
         const key = String(regId);
         const entry = this.caches.inputs.get(key);
         if (!entry || !entry.element) return false;
-        
+
         const currentValue = entry.element.value;
         const originalValue = entry.originalValue;
-        
+
         return currentValue !== originalValue;
     }
 
@@ -151,6 +151,14 @@ export class ModbusUpdater {
             this.caches.toggles.set(key, { registerType, toggles: [] });
         }
         this.caches.toggles.get(key).toggles.push(button);
+
+        // 🔥 Сохраняем тексты при добавлении
+        if (!button.dataset.textOn) {
+            button.dataset.textOn = 'Вкл';
+        }
+        if (!button.dataset.textOff) {
+            button.dataset.textOff = 'Выкл';
+        }
     }
 
     getBytesCount(registerType) {
@@ -194,7 +202,7 @@ export class ModbusUpdater {
                 }
 
                 const value = this.readValue(dataView, offset, regInfo.registerType);
-                
+
                 if (value !== undefined && !isNaN(value)) {
                     regInfo.spans.forEach(({ element, formatSpec }) => {
                         const displayValue = formatSpec
@@ -210,7 +218,7 @@ export class ModbusUpdater {
             // --- ОБНОВЛЕНИЕ TOGGLE КНОПОК ---
             for (const [regId, regInfo] of this.caches.toggles) {
                 const offset = parseInt(regId) * 2;
-                
+
                 if (offset + 2 > bytesLength) {
                     console.warn(`Недостаточно данных для регистра ${regId}`);
                     continue;
@@ -230,7 +238,9 @@ export class ModbusUpdater {
                             const isOn = ((rawValue >> bitIndex) & 1) === 1;
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
-                            button.textContent = isOn ? 'Вкл' : 'Выкл';
+
+                            // 🔥 Используем кастомные тексты
+                            button.textContent = isOn ? button.dataset.textOn : button.dataset.textOff;
                         }
                     }
                 });
@@ -246,7 +256,7 @@ export class ModbusUpdater {
                 // - пользователь редактирует
                 // - инпут в фокусе
                 // - значение уже изменено пользователем
-                if (this.sendingRegisters.has(regKey) || 
+                if (this.sendingRegisters.has(regKey) ||
                     this.editingInputs.has(regKey) ||
                     document.activeElement === input ||
                     input.value !== regInfo.originalValue) {
@@ -266,7 +276,7 @@ export class ModbusUpdater {
                 if (value !== undefined && !isNaN(value) && input) {
                     // 🔥 Форматируем значение для отображения (только для float)
                     const displayValue = this._formatValue(value, input, regInfo.registerType);
-                    
+
                     if (input.value !== displayValue) {
                         input.value = displayValue;
                         regInfo.originalValue = displayValue;
@@ -284,7 +294,7 @@ export class ModbusUpdater {
         try {
             const regKey = String(regId);
             const regInfo = this.caches.inputs.get(regKey);
-            
+
             if (!regInfo || !regInfo.element) {
                 console.warn(`Input для регистра ${regId} не найден`);
                 return;
@@ -292,7 +302,7 @@ export class ModbusUpdater {
 
             const dataView = await api.readModbus();
             const bytesLength = dataView.byteLength;
-            
+
             const offset = parseInt(regId) * 2;
             const byteCount = this.getBytesCount(regInfo.registerType);
 
@@ -306,7 +316,7 @@ export class ModbusUpdater {
             if (value !== undefined && !isNaN(value) && regInfo.element) {
                 // 🔥 Форматируем значение для отображения (только для float)
                 const displayValue = this._formatValue(value, regInfo.element, regInfo.registerType);
-                
+
                 if (regInfo.element.value !== displayValue) {
                     regInfo.element.value = displayValue;
                     regInfo.originalValue = displayValue;

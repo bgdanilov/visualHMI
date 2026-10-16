@@ -1,26 +1,30 @@
-@font-face {
+/* ============================================
+   @FONT-FACE И БАЗОВЫЕ СТИЛИ
+   ============================================ */
+
+ /*  @font-face {
     font-family: 'DejaVu Sans Mono';
     src: url('../fonts/DejaVuSansMono.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
-}
-
+}*/
 
 body {
-    font-family: Verdana, Geneva, sans-serif;
+    font-family: 'Liberation Mono', 'Courier New', monospace !important;
+    letter-spacing: 0px !important;
     margin: 0;
     overflow: hidden;
     background-color: #f0f0f0;
     width: 100vw;
     height: 100vh;
+    /*cursor:none;*/
 }
 
 #render-area {
     position: absolute;
-    width: 1280px;
-    height: 760px;
-    /*border: 2px solid #333;*/
-    background-color: #fff;
+    width: 1600px;
+    height: 1000px;
+    background-color: #eef2f6;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     overflow: hidden;
 }
@@ -30,9 +34,12 @@ p, span, h2 {
     padding: 0;
 }
 
+/* ============================================
+   ОБЩИЕ СТИЛИ БЛОКОВ
+   ============================================ */
+
 .block {
     position: absolute;
-    /* Абсолютное позиционирование */
     border: 1px solid #ccc;
     background-color: #e9e9e9;
     padding: 10px;
@@ -41,11 +48,43 @@ p, span, h2 {
     border-radius: 5px;
 }
 
+/* 🔥 Класс для отмены стандартных стилей */
+.block.plain {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+/* 🔥 Отмена только фона */
+.block.no-bg {
+    background: transparent !important;
+}
+
+/* 🔥 Отмена только рамки */
+.block.no-border {
+    border: none !important;
+}
+
+/* 🔥 Отмена только тени */
+.block.no-shadow {
+    box-shadow: none !important;
+}
+
+/* 🔥 Отмена только отступов */
+.block.no-padding {
+    padding: 0 !important;
+}
+
+/* ============================================
+   CONTENT
+   ============================================ */
+
 .content {
     display: flex;
-    justify-content: center; /* Центр по горизонтали */
-    align-items: baseline; /* Выравнивание по базовой линии текста */
-    gap: 5px;           /* Небольшой отступ между префиксом и числом */
+    justify-content: center;
+    align-items: baseline;
+    gap: 5px;
     width: 100%;
 }
 
@@ -54,10 +93,13 @@ p, span, h2 {
 }
 
 .content span {
-    display: inline;    /* Убеждаемся, что p ведет себя как строка */
+    display: inline;
 }
 
-/* Заголовки */
+/* ============================================
+   ЗАГОЛОВКИ
+   ============================================ */
+
 span.title {
     margin-bottom: 5px;
     font-size: 0.9em;
@@ -65,10 +107,21 @@ span.title {
 
 .only-title span.title {
     margin: 0;
+    font-size: 24px;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: geometricPrecision !important;
 }
 
-/* Текст */
-span.number, span.prefix:not(.btn), span.postfix {
+/* ============================================
+   ТЕКСТ
+   ============================================ */
+
+span.number, 
+span.prefix:not(.btn), 
+span.postfix {
     font-family: 'DejaVu Sans Mono', monospace;
 }
 
@@ -80,35 +133,30 @@ span.number {
 
 .title-group-number .content span.number {
     font-size: 1.1em;
-    /*min-width: 5ch;
-    max-width: 5ch;*/
-    /*text-align: right;*/
-   /* overflow: hidden;*/
 }
 
 .content .prefix,
 .content .postfix {
-    /*justify-content: right; /* Префикс и постфикс выравниваются по левому краю */
     white-space: pre;
-   /* text-align: right;*/
-    /*flex-shrink: 0;*/
 }
 
 .content .prefix {
     justify-content: right;
-   /* min-width: 6ch;*/
 }
+
 .content .postfix {
     justify-content: left;
     min-width: 3ch;
 }
 
+/* ============================================
+   TOGGLE BUTTON
+   ============================================ */
 
-/* Стиль для кнопки "Вкл/Откл" */
 .toggle-button button {
     cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 3px;
+    padding: 25px 20px;
+    border-radius: 5px;
     border: 1px solid #aaa;
     background-color: #d3d3d3;
     color: #333;
@@ -116,19 +164,40 @@ span.number {
 }
 
 .toggle-button.on {
-    background-color: #4CAF50; /* Зеленый для Вкл */
+    background-color: #62bc65;
     color: white;
 }
 
 .toggle-button.off {
-    background-color: #f44336; /* Красный для Выкл */
+    background-color: #808080;
     color: white;
 }
+
 .toggle-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
 }
+
+.toggle-button.waiting {
+    background-color: #bdbdbd !important;
+    color: #666 !important;
+    border-color: #999 !important;
+    opacity: 0.7;
+    cursor: wait;
+    pointer-events: none;
+    animation: pulse-waiting 1s ease-in-out infinite;
+}
+
+@keyframes pulse-waiting {
+    0% { opacity: 0.7; }
+    50% { opacity: 0.9; }
+    100% { opacity: 0.7; }
+}
+
+/* ============================================
+   PAGE BUTTON
+   ============================================ */
 
 .page-button {
     border: none;
@@ -138,53 +207,21 @@ span.number {
 
 .page-button button {
     cursor: pointer;
-    padding: 10px 15px;
-    border-radius: 3px;
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 1.5em;
     border: 1px solid #aaa;
     background-color: #0056b3;
     color: #d3d3d3;
     transition: background-color 0.2s ease;
 }
 
+/* ============================================
+   TITLE INPUT
+   ============================================ */
 
-/* Состояние ОЖИДАНИЯ (серый фон, текст остается) */
-.toggle-button.waiting {
-    background-color: #bdbdbd !important;
-    color: #666 !important;
-    border-color: #999 !important;
-    opacity: 0.7;
-    cursor: wait;
-    pointer-events: none;
-}
-
-
-/* Анимация пульсации для состояния ожидания */
-@keyframes pulse-waiting {
-    0% { opacity: 0.7; }
-    50% { opacity: 0.9; }
-    100% { opacity: 0.7; }
-}
-
-.toggle-button.waiting {
-    animation: pulse-waiting 1s ease-in-out infinite;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Стиль для поля ввода */
-.title-input-send input[type="text"], .title-input input[type="text"] {
-    /*width: calc(100% - 32px); /* Учитываем padding */
+.title-input-send input[type="text"], 
+.title-input input[type="text"] {
     padding: 8px;
     margin: 5px 0 10px 0;
     border: 1px solid #ccc;
@@ -192,12 +229,7 @@ span.number {
     font-size: 1.3em;
     font-weight: bold;
 }
-/*.title-input input[type="text"]:not(:placeholder-shown) {
-    font-size: 1.2em;
-    font-weight: bold;
-}*/
 
-/* Стиль для поля вывода числа */
 .number-display {
     font-size: 1.5em;
     font-weight: bold;
@@ -205,8 +237,12 @@ span.number {
     color: #333;
 }
 
-/* Стиль для кнопки "Отправить" */
-.title-input-send button, .send-button button {
+/* ============================================
+   SEND BUTTON
+   ============================================ */
+
+.title-input-send button, 
+.send-button button {
     cursor: pointer;
     padding: 8px 15px;
     border: none;
@@ -216,33 +252,11 @@ span.number {
     transition: background-color 0.2s ease;
 }
 
-.title-input-send button:hover, .send-button button:hover {
+.title-input-send button:hover, 
+.send-button button:hover {
     background-color: #0056b3;
 }
 
-/* Добавьте к существующим стилям */
-
-/* Status bar */
-#status-bar {
-    display: flex;
-    gap: 20px;
-    font-size: 14px;
-    color: #666;
-}
-
-#connection-status {
-    padding: 4px 12px;
-    border-radius: 12px;
-    background: #e8f5e9;
-    color: #2e7d32;
-}
-
-#connection-status.offline {
-    background: #ffebee;
-    color: #c62828;
-}
-
-/* Кнопки в состоянии отправки */
 .send-button.sending {
     background: #ff9800 !important;
     color: white !important;
@@ -259,39 +273,25 @@ span.number {
     color: white !important;
 }
 
-/* Toggle button в состоянии ожидания */
-.toggle-button.waiting {
-    opacity: 0.6;
-    cursor: wait;
-    animation: pulse 1s infinite;
+.send-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-}
+/* ============================================
+   INPUT
+   ============================================ */
 
-/* Input в режиме редактирования */
 .input-value-field:focus {
     outline: 2px solid #ff9800;
     outline-offset: 2px;
 }
 
-/* Footer debug info */
-#debug-info {
-    font-size: 12px;
-    color: #999;
-    padding: 5px 10px;
-    font-family: monospace;
-}
-
-/* Dirty input — жёлтая рамка */
 .input-value-field.input-changed {
     border-color: #ff9800 !important;
     background-color: #fff8e1;
 }
 
-/* Кнопка сброса (×) — скрыта по умолчанию */
 .input-reset-btn {
     display: none;
     cursor: pointer;
@@ -303,20 +303,19 @@ span.number {
     line-height: 1;
     flex-shrink: 0;
 }
+
 .input-reset-btn:hover {
     color: #c00;
 }
+
 .input-value-field.input-changed + .input-reset-btn {
     display: inline-block;
 }
 
-/* Send-button disabled */
-.send-button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
+/* ============================================
+   NUMPAD
+   ============================================ */
 
-/* Нумпад overlay */
 .numpad-overlay {
     position: fixed;
     inset: 0;
@@ -369,30 +368,37 @@ span.number {
     user-select: none;
     font-family: inherit;
 }
+
 .numpad-btn:active {
     background: #e0e0e0;
 }
+
 .numpad-btn-clear {
     background: #ff9800;
     color: #fff;
     border-color: #e65100;
 }
+
 .numpad-btn-clear:active {
     background: #e65100;
 }
+
 .numpad-btn-ok {
     background: #4caf50;
     color: #fff;
     border-color: #388e3c;
 }
+
 .numpad-btn-ok:active {
     background: #388e3c;
 }
+
 .numpad-btn-cancel {
     background: #f44336;
     color: #fff;
     border-color: #d32f2f;
 }
+
 .numpad-btn-cancel:active {
     background: #d32f2f;
 }
@@ -401,8 +407,220 @@ span.number {
     display: flex;
     gap: 8px;
 }
+
 .numpad-actions .numpad-btn {
     flex: 1;
     padding: 12px 0;
     font-size: 18px;
+}
+
+/* ============================================
+   EMPTY BOX
+   ============================================ */
+
+   .block.empty-box {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    z-index: 1;
+    cursor: pointer;
+}
+
+.block.empty-box .empty-box-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+}
+
+/* 🔥 Заголовок контейнера - по центру */
+.block.empty-box .empty-box-title {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    z-index: 10;
+    font-family: 'Liberation Mono', 'Courier New', monospace;
+    letter-spacing: 0px;
+    white-space: nowrap;
+}
+
+/* 🔥 Дочерние блоки внутри контейнера */
+.block.empty-box .block {
+    position: absolute;
+    z-index: 2;
+}
+
+/* 🔥 Убираем стандартные стили у вложенных блоков если надо */
+.block.empty-box .block.plain {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+/* ============================================
+   IMAGE
+   ============================================ */
+
+.block.image {
+    position: absolute;
+    overflow: hidden;
+    box-sizing: border-box;
+    user-select: none;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-block {
+    width: 100%;
+    height: 100%;
+    display: block;
+    padding: 0;
+    margin: 0;
+    transition: transform 0.3s ease;
+}
+
+/* Анимация вращения */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+@keyframes spin-pause {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(180deg); }
+    50% { transform: rotate(180deg); }
+    75% { transform: rotate(360deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.block.image .image-block.spinning {
+    animation: spin 3s linear infinite;
+}
+
+.block.image .image-block.spin-slow {
+    animation: spin 10s linear infinite;
+}
+
+.block.image .image-block.spin-fast {
+    animation: spin 1s linear infinite;
+}
+
+.block.image .image-block.spin-pause {
+    animation: spin-pause 4s ease-in-out infinite;
+}
+
+.block.image .image-block.spin-reverse {
+    animation: spin-reverse 3s linear infinite;
+}
+
+.block.image:hover .image-block {
+    transform: scale(1.02);
+}
+
+.block.image:hover .image-block[class*="spin"] {
+    animation-play-state: paused;
+}
+
+.block.image .image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    color: #999;
+    font-size: 14px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    padding: 0;
+    margin: 0;
+    gap: 8px;
+}
+
+.block.image .image-placeholder span:first-child {
+    font-size: 32px;
+}
+
+.block.image .image-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: #ffebee;
+    color: #c62828;
+    font-size: 14px;
+    border: 2px solid #ef9a9a;
+    border-radius: 4px;
+    gap: 5px;
+    padding: 0;
+    margin: 0;
+}
+
+.block.image .image-error span:first-child {
+    font-size: 32px;
+}
+
+/* Шахматный фон для PNG */
+.block.image .image-block[src*=".png"] {
+    background: repeating-conic-gradient(#f0f0f0 0% 25%, #ffffff 0% 50%) 0 0 / 20px 20px;
+}
+
+/* ============================================
+   STATUS BAR
+   ============================================ */
+
+#status-bar {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+#connection-status {
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+#connection-status.offline {
+    background: #ffebee;
+    color: #c62828;
+}
+
+#debug-info {
+    font-size: 12px;
+    color: #999;
+    padding: 5px 10px;
+    font-family: monospace;
 }

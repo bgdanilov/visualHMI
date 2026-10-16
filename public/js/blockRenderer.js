@@ -37,6 +37,11 @@ export class BlockRenderer {
         block.style.left = `${blockData.x}px`;
         block.style.top = `${blockData.y}px`;
 
+        // 🔥 Если установлен флаг plain - добавляем класс
+        if (blockData.plain) {
+            block.classList.add('plain');
+        }
+
         switch (blockData.type) {
             case BLOCK_TYPES.ONLY_NUMBER:
                 return this._createOnlyNumber(block, blockData);
@@ -54,6 +59,10 @@ export class BlockRenderer {
                 return this._createSendButton(block, blockData);
             case BLOCK_TYPES.PAGE_BUTTON:
                 return this._createPageButton(block, blockData);
+            case BLOCK_TYPES.EMPTY_BOX:  // 🔥 Новый случай
+                return this._createEmptyBox(block, blockData);
+            case BLOCK_TYPES.IMAGE:  // 🔥 Новый случай
+                return this._createImage(block, blockData);
             default:
                 console.warn(`Неизвестный тип блока: ${blockData.type}`);
                 return null;
@@ -150,17 +159,109 @@ export class BlockRenderer {
     }
 
     _createToggleButton(block, data) {
-        const { regAddress, regType = 'b0', prefix = '', text = 'Вкл' } = data;
+        const {
+            regAddress,
+            regType = 'b0',
+            prefix = '',
+            textOn = 'Вкл',     // 🔥 Текст для состояния ВКЛ
+            textOff = 'Выкл',    // 🔥 Текст для состояния ВЫКЛ
+            width,
+            height
+        } = data;
+
+        // Для обратной совместимости, если указан старый параметр 'text'
+        const defaultText = data.text || textOn;
 
         block.innerHTML = `
             <div class="content" data-reg="${regAddress}" data-type="${regType}">
                 <span class="prefix btn">${prefix}</span>
                 <button class="toggle-button off" data-reg="${regAddress}">
-                    ${text}
+                    ${defaultText}
                 </button>
             </div>`;
 
         const toggleButton = block.querySelector('.toggle-button');
+
+        // 🔥 Если заданы размеры, передаем их кнопке
+        // Стили
+
+        if (width || height) {
+            //toggleButton.style.padding = '0';
+            // 🔥 Убираем отступы у content
+            const content = block.querySelector('.content');
+            if (content) {
+                content.style.padding = '0';
+                content.style.gap = '0';
+            }
+        }
+        if (width) {
+            toggleButton.style.width = `${width}px`;
+            toggleButton.style.minWidth = `${width}px`;
+        }
+        if (height) {
+            toggleButton.style.height = `${height}px`;
+            toggleButton.style.minHeight = `${height}px`;
+        }
+
+        // 🔥 Сохраняем тексты в data-атрибуты для использования в обновлении
+        toggleButton.dataset.textOn = textOn;
+        toggleButton.dataset.textOff = textOff;
+
+        this.updater.addToggle(regAddress, toggleButton, regType);
+        this._setupToggleButton(toggleButton, regAddress, regType);
+
+        return block;
+    }
+
+    _createToggleButton(block, data) {
+        const {
+            regAddress,
+            regType = 'b0',
+            prefix = '',
+            textOn = 'Вкл',     // 🔥 Текст для состояния ВКЛ
+            textOff = 'Выкл',    // 🔥 Текст для состояния ВЫКЛ
+            width,
+            height
+        } = data;
+
+        // Для обратной совместимости, если указан старый параметр 'text'
+        const defaultText = data.text || textOn;
+
+        block.innerHTML = `
+            <div class="content" data-reg="${regAddress}" data-type="${regType}">
+                <span class="prefix btn">${prefix}</span>
+                <button class="toggle-button off" data-reg="${regAddress}">
+                    ${defaultText}
+                </button>
+            </div>`;
+
+        const toggleButton = block.querySelector('.toggle-button');
+
+        // 🔥 Если заданы размеры, передаем их кнопке
+        // Стили
+
+        if (width || height) {
+            //toggleButton.style.padding = '0';
+            // 🔥 Убираем отступы у content
+            const content = block.querySelector('.content');
+            if (content) {
+                content.style.padding = '0';
+                content.style.gap = '0';
+            }
+        }
+        if (width) {
+            toggleButton.style.width = `${width}px`;
+            toggleButton.style.minWidth = `${width}px`;
+        }
+        if (height) {
+            toggleButton.style.height = `${height}px`;
+            toggleButton.style.minHeight = `${height}px`;
+        }
+
+        // 🔥 Сохраняем тексты в data-атрибуты для использования в обновлении
+        toggleButton.dataset.textOn = textOn;
+        toggleButton.dataset.textOff = textOff;
+
         this.updater.addToggle(regAddress, toggleButton, regType);
         this._setupToggleButton(toggleButton, regAddress, regType);
 
@@ -276,6 +377,273 @@ export class BlockRenderer {
         return block;
     }
 
+    _createEmptyBox(block, data) {
+        // 🔥 Получаем ширину и высоту из данных
+        const width = data.width || 300;
+        const height = data.height || 200;
+
+        // 🔥 Опциональные стили рамки
+        const borderColor = data.borderColor || '#cccccc';
+        const borderWidth = data.borderWidth || 2;
+        const borderStyle = data.borderStyle || 'solid';
+        const borderRadius = data.borderRadius || 0;
+        const backgroundColor = data.backgroundColor || 'transparent';
+
+        // 🔥 Устанавливаем размеры блоку
+        block.style.width = `${width}px`;
+        block.style.height = `${height}px`;
+        block.style.minWidth = `${width}px`;
+        block.style.minHeight = `${height}px`;
+        block.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
+        block.style.borderRadius = `${borderRadius}px`;
+        block.style.backgroundColor = backgroundColor;
+        block.style.overflow = 'hidden';
+        block.style.position = 'absolute';
+        block.style.zIndex = '1';
+
+        const {
+            regAddress,
+            regType = 'b0',
+            prefix = '',
+            textOn = 'Вкл',     // 🔥 Текст для состояния ВКЛ
+            textOff = 'Выкл'    // 🔥 Текст для состояния ВЫКЛ
+        } = data;
+
+        // 🔥 Создаем внутренний контейнер для дочерних блоков
+        const container = document.createElement('div');
+        container.className = 'empty-box-container';
+        container.style.cssText = `
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+        `;
+
+        // 🔥 Заголовок если есть
+        let titleHtml = '';
+        if (data.title) {
+            titleHtml = `<div class="empty-box-title">${data.title}</div>`;
+        }
+
+        // 🔥 Строим HTML
+        block.innerHTML = titleHtml;
+        block.appendChild(container);
+
+        // 🔥 Если есть дочерние блоки - рендерим их
+        if (data.children && Array.isArray(data.children) && data.children.length > 0) {
+            data.children.forEach(childData => {
+                const childBlock = this.createBlock(childData);
+                if (childBlock) {
+                    childBlock.style.position = 'absolute';
+                    childBlock.style.left = `${childData.x || 0}px`;
+                    childBlock.style.top = `${childData.y || 0}px`;
+                    childBlock.style.margin = '0';
+
+                    if (data.plain) {
+                        childBlock.classList.add('plain');
+                    }
+
+                    container.appendChild(childBlock);
+                    this.blocks.set(childBlock.id, childBlock);
+                }
+            });
+        }
+
+        // 🔥 Если есть дополнительные CSS классы
+        if (data.className) {
+            block.classList.add(data.className);
+        }
+
+        // 🔥 Если контейнер должен работать как toggle-button
+        if (data.toggle && data.regAddress !== undefined) {
+            // 🔥 Регистрируем блок в updater как toggle-элемент
+           // this.updater.addToggle(data.regAddress, block, data.regType || 'b0');
+
+            // 🔥 Добавляем классы и стили для toggle-блока
+            block.classList.add('toggle-block');
+            block.style.cursor = 'pointer';
+            block.style.transition = 'all 0.3s ease';
+
+            // 🔥 Сохраняем исходные цвета для возврата при выключении
+            block._borderColor = borderColor;
+            block._backgroundColor = backgroundColor;
+
+            // 🔥 Обработчик клика
+            block.addEventListener('click', async (event) => {
+                // 🔥 Если клик по интерактивному элементу - игнорируем
+                if (event.target.closest('button') ||
+                    event.target.closest('input') ||
+                    event.target.closest('.toggle-button') ||
+                    event.target.closest('.page-button') ||
+                    event.target.closest('.send-button') ||
+                    event.target.closest('.input-value-field') ||
+                    event.target.closest('.input-reset-btn') ||
+                    event.target.closest('.input-save-btn')) {
+                    return;
+                }
+
+                if (block._isProcessing) return;
+
+                const isOn = block.classList.contains('on');
+                const newState = isOn ? 0 : 1;
+
+                block._isProcessing = true;
+                block.style.opacity = '0.7';
+
+                try {
+                    await this.api.writeRegister(data.regAddress, newState, data.regType || 'b0');
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                    await this.updater.update();
+                } catch (error) {
+                    console.error('❌ Ошибка:', error);
+                    block.style.borderColor = 'red';
+                    setTimeout(() => {
+                        block.style.borderColor = block._borderColor;
+                    }, 2000);
+                } finally {
+                    block._isProcessing = false;
+                    block.style.opacity = '1';
+                }
+            });
+        }
+
+        return block;
+    }
+
+    _createImage(block, data) {
+        const {
+            src,
+            width,
+            height,
+            alt = '',
+            title = '',
+            objectFit = 'contain',
+            borderRadius = 0,
+            border = 'none',
+            opacity = 1,
+            backgroundColor = 'transparent',
+            spin = false,        // 🔥 Включить вращение
+            spinSpeed = 'normal' // 🔥 Скорость: 'slow', 'normal', 'fast'
+        } = data;
+
+        // Стили
+        if (width) {
+            block.style.width = `${width}px`;
+            block.style.minWidth = `${width}px`;
+        }
+
+        if (height) {
+            block.style.height = `${height}px`;
+            block.style.minHeight = `${height}px`;
+        }
+
+        block.style.borderRadius = `${borderRadius}px`;
+        block.style.opacity = opacity;
+        block.style.border = border;
+        block.style.backgroundColor = backgroundColor;
+        block.style.padding = '0';
+        block.style.margin = '0';
+
+        if (!src) {
+            block.innerHTML = `
+                <div class="content image-placeholder">
+                    <span>📷 Нет изображения</span>
+                </div>
+            `;
+            return block;
+        }
+
+        // 🔥 Определяем класс вращения
+        let spinClass = '';
+        if (spin) {
+            if (spinSpeed === 'slow') {
+                spinClass = 'spin-slow';
+            } else if (spinSpeed === 'fast') {
+                spinClass = 'spin-fast';
+            } else if (spinSpeed === 'pause') {
+                spinClass = 'spin-pause';
+            } else if (spinSpeed === 'reverse') {
+                spinClass = 'spin-reverse';
+            } else {
+                spinClass = 'spinning'; // normal
+            }
+        }
+
+        block.innerHTML = `
+            <div class="content image-wrapper" style="padding: 0; margin: 0;">
+                <img 
+                    src="${src}" 
+                    alt="${alt}" 
+                    title="${title}"
+                    class="image-block ${spinClass}"
+                    style="object-fit: ${objectFit}; padding: 0; margin: 0; display: block;"
+                    loading="lazy"
+                >
+            </div>
+        `;
+
+        const img = block.querySelector('img');
+        if (img) {
+            img.onerror = function () {
+                this.style.display = 'none';
+                this.parentElement.innerHTML = `
+                    <div class="image-error">
+                        <span>❌</span>
+                        <span>Ошибка загрузки</span>
+                    </div>
+                `;
+            };
+
+            img.onload = function () {
+                if (!width) {
+                    block.style.width = `${this.naturalWidth}px`;
+                    block.style.minWidth = `${this.naturalWidth}px`;
+                }
+                if (!height) {
+                    block.style.height = `${this.naturalHeight}px`;
+                    block.style.minHeight = `${this.naturalHeight}px`;
+                }
+            };
+        }
+
+        // 🔥 Управление вращением через клик (опционально)
+        if (data.toggleSpinOnClick) {
+            const imgEl = block.querySelector('img');
+            if (imgEl) {
+                imgEl.style.cursor = 'pointer';
+                imgEl.addEventListener('click', () => {
+                    imgEl.classList.toggle('spinning');
+                    imgEl.classList.toggle('spin-slow');
+                    imgEl.classList.toggle('spin-fast');
+                    imgEl.classList.toggle('spin-pause');
+                    imgEl.classList.toggle('spin-reverse');
+                });
+            }
+        }
+
+        if (data.onClick) {
+            const imgEl = block.querySelector('img');
+            if (imgEl) {
+                imgEl.style.cursor = 'pointer';
+                imgEl.addEventListener('click', () => {
+                    if (typeof data.onClick === 'function') {
+                        data.onClick(data);
+                    } else if (typeof data.onClick === 'string') {
+                        try {
+                            new Function(data.onClick)(); пше
+                        } catch (e) {
+                            console.warn('Ошибка выполнения onClick:', e);
+                        }
+                    }
+                });
+            }
+        }
+
+        return block;
+    }
+
     _parseBlockFormat(formatString, regSpec) {
         let i = 0, formatPrefix = '', formatSpec = null, formatPostfix = '';
 
@@ -326,13 +694,13 @@ export class BlockRenderer {
             this.notification.warning('Пустое значение', { title: 'Предупреждение' });
             return false;
         }
-    
+
         const min = input.dataset.min !== '' ? parseFloat(input.dataset.min) : null;
         const max = input.dataset.max !== '' ? parseFloat(input.dataset.max) : null;
-        const decimalPlaces = input.dataset.decimalPlaces !== undefined 
-            ? parseInt(input.dataset.decimalPlaces) 
+        const decimalPlaces = input.dataset.decimalPlaces !== undefined
+            ? parseInt(input.dataset.decimalPlaces)
             : DEFAULT_DECIMAL_PLACES;
-    
+
         // 🔥 Передаем registerType в валидатор
         const result = this.validator.validateWithCorrection(value, {
             min,
@@ -364,7 +732,7 @@ export class BlockRenderer {
             } else if (result.wasRounded) {
                 message = `Значение округлено до ${finalValue}`;
             }
-            
+
             this.notification.warning(message, {
                 title: 'Коррекция',
                 duration: 2000
@@ -425,32 +793,32 @@ export class BlockRenderer {
     _setupInputHandlers(input, regAddress) {
         const regKey = String(regAddress);
         const renderer = this;
-    
+
         const min = input.dataset.min !== '' ? parseFloat(input.dataset.min) : null;
         const max = input.dataset.max !== '' ? parseFloat(input.dataset.max) : null;
-        const decimalPlaces = input.dataset.decimalPlaces !== undefined 
-            ? parseInt(input.dataset.decimalPlaces) 
+        const decimalPlaces = input.dataset.decimalPlaces !== undefined
+            ? parseInt(input.dataset.decimalPlaces)
             : DEFAULT_DECIMAL_PLACES;
         const registerType = input.dataset.type || 'u2';  // 🔥 Тип регистра
-        
+
         // 🔥 Проверка, является ли тип float
         const isFloatType = registerType === 'f4';
-    
+
         const validateAndCorrectInput = (value) => {
             if (!value || value.trim() === '') {
                 return { valid: true, value: value, normalized: value };
             }
-            
+
             const result = renderer.validator.validateWithCorrection(value, {
                 min: min,
                 max: max,
                 decimalPlaces: decimalPlaces,
                 registerType: registerType
             });
-            
+
             return result;
         };
-    
+
         const applyValidationResult = (result, input, regAddress) => {
             if (result.valid) {
                 if (result.corrected || result.wasRounded) {
@@ -460,14 +828,14 @@ export class BlockRenderer {
                     } else if (result.wasRounded) {
                         message = `Значение округлено до ${result.normalized}`;
                     }
-                    
+
                     if (message) {
                         renderer.notification.warning(message, {
                             title: 'Коррекция',
                             duration: 2000
                         });
                     }
-                    
+
                     input.value = result.normalized;
                     renderer._updateInputDirtyState(input, regAddress);
                 }
@@ -486,39 +854,39 @@ export class BlockRenderer {
                 return false;
             }
         };
-    
+
         input.addEventListener('focus', () => {
             this.updater.editingInputs.add(regKey);
             input.style.backgroundColor = '#fff8e1';
             input.style.borderColor = '#ff9800';
         });
-    
+
         // 🔥 Валидация при потере фокуса
         input.addEventListener('blur', () => {
             if (this._numpadOpenReg === regKey) return;
-            
+
             const currentValue = input.value;
             if (currentValue && currentValue.trim() !== '') {
                 const result = validateAndCorrectInput(currentValue);
                 applyValidationResult(result, input, regAddress);
             }
-            
+
             this.updater.editingInputs.delete(regKey);
             input.style.backgroundColor = '';
             if (!input.classList.contains('input-changed')) {
                 input.style.borderColor = '#ccc';
             }
         });
-    
+
         // 🔥 Ввод с клавиатуры с проверкой типа
         input.addEventListener('input', () => {
             const value = input.value;
-            
+
             // 🔥 Если не float - запрещаем ввод точки
             if (!isFloatType && value.includes('.')) {
                 // Удаляем точку
                 input.value = value.replace(/\./g, '');
-                
+
                 if (!this._decimalWarningShown) {
                     this._decimalWarningShown = true;
                     this.notification.warning(
@@ -532,14 +900,14 @@ export class BlockRenderer {
                 this._updateInputDirtyState(input, regAddress);
                 return;
             }
-            
+
             // 🔥 Если float - проверяем количество знаков после запятой
             if (isFloatType && value.includes('.')) {
                 const parts = value.split('.');
                 if (parts.length === 2 && parts[1].length > decimalPlaces) {
                     const corrected = parts[0] + '.' + parts[1].slice(0, decimalPlaces);
                     input.value = corrected;
-                    
+
                     if (!this._decimalWarningShown) {
                         this._decimalWarningShown = true;
                         this.notification.warning(
@@ -552,10 +920,10 @@ export class BlockRenderer {
                     }
                 }
             }
-            
+
             this._updateInputDirtyState(input, regAddress);
         });
-    
+
         input.addEventListener('keydown', (event) => {
             // 🔥 Блокируем ввод точки для целых типов
             if (!isFloatType && event.key === '.') {
@@ -566,12 +934,12 @@ export class BlockRenderer {
                 );
                 return;
             }
-            
+
             if (event.key === 'Enter') {
                 event.preventDefault();
                 input.blur();
             }
-            
+
             if (event.key === 'Escape') {
                 if (this._numpadOpenReg === regKey) return;
                 input.blur();
@@ -582,19 +950,19 @@ export class BlockRenderer {
                 }
             }
         });
-    
+
         input.addEventListener('change', () => {
             this._updateInputDirtyState(input, regAddress);
         });
-    
+
         // 🔥 Открытие numpad с учетом типа
         input.addEventListener('click', () => {
             if (this._numpadOpenReg === regKey) return;
             this._numpadOpenReg = regKey;
             input.readOnly = true;
-        
+
             const curValue = input.value;
-        
+
             numpadManager.show(curValue, {
                 min: min,
                 max: max,
@@ -603,34 +971,34 @@ export class BlockRenderer {
                 allowFloat: isFloatType,
                 onOk(val) {
                     input.readOnly = false;
-                    
+
                     console.log('📥 Значение из numpad:', val);
                     console.log('📥 Текущее originalValue:', renderer.updater.caches.inputs.get(regKey)?.originalValue);
-                    
+
                     // 🔥 Устанавливаем значение в input
                     input.value = val;
-                    
+
                     // 🔥 Сразу обновляем dirty-статус
                     renderer._updateInputDirtyState(input, regAddress);
-                    
+
                     // 🔥 Применяем валидацию
                     const result = validateAndCorrectInput(val);
                     applyValidationResult(result, input, regAddress);
-                    
+
                     renderer._numpadOpenReg = null;
                     renderer.updater.editingInputs.delete(regKey);
                     input.style.backgroundColor = '';
                     if (!input.classList.contains('input-changed')) {
                         input.style.borderColor = '#ccc';
                     }
-                    
+
                     // 🔥 ПРИНУДИТЕЛЬНО обновляем кнопку сохранения
                     setTimeout(() => {
                         renderer._updateInputDirtyState(input, regAddress);
                         window.dispatchEvent(new CustomEvent('input-dirty-change'));
                         console.log('🔄 Принудительное обновление dirty-статуса');
                     }, 50);
-                    
+
                     input.blur();
                 },
                 onCancel() {
@@ -646,12 +1014,12 @@ export class BlockRenderer {
                     if (!input.classList.contains('input-changed')) {
                         input.style.borderColor = '#ccc';
                     }
-                    
+
                     // 🔥 Обновляем кнопку сохранения при отмене
                     setTimeout(() => {
                         window.dispatchEvent(new CustomEvent('input-dirty-change'));
                     }, 50);
-                    
+
                     input.blur();
                 }
             });
@@ -661,15 +1029,15 @@ export class BlockRenderer {
     _updateInputDirtyState(input, regAddress) {
         const regKey = String(regAddress);
         const isDirty = this.updater.isDirty(regKey);
-        
+
         console.log(`🔄 Dirty-статус для ${regKey}:`, {
             current: input.value,
             original: this.updater.caches.inputs.get(regKey)?.originalValue,
             isDirty: isDirty
         });
-    
+
         input.classList.toggle('input-changed', isDirty);
-    
+
         // 🔥 Обновляем состояние кнопки сохранения
         window.dispatchEvent(new CustomEvent('input-dirty-change'));
     }
@@ -722,6 +1090,100 @@ export class BlockRenderer {
         });
     }
 
+
+    _setupToggleBlock(block, data) {
+        const { regAddress, regType = 'b0' } = data;
+        let isProcessing = false;
+
+        // 🔥 Сохраняем исходные цвета
+        const borderColor = block.style.borderColor || '#cccccc';
+        const backgroundColor = block.style.backgroundColor || 'transparent';
+
+        block.classList.add('toggle-block');
+        block.style.cursor = 'pointer';
+        block.style.transition = 'all 0.3s ease';
+
+        // 🔥 Функция обновления состояния блока
+        const updateBlockState = (isOn) => {
+            block.classList.toggle('on', isOn);
+            block.classList.toggle('off', !isOn);
+
+            if (isOn) {
+                block.style.borderColor = '#4CAF50';
+                block.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+            } else {
+                block.style.borderColor = borderColor;
+                block.style.backgroundColor = backgroundColor;
+            }
+        };
+
+        // 🔥 Получаем текущее состояние
+        const getCurrentState = () => {
+            const regKey = String(regAddress);
+            const toggleData = this.updater.caches.toggles.get(regKey);
+            if (toggleData && toggleData.toggles.length > 0) {
+                return toggleData.toggles[0].classList.contains('on');
+            }
+            return false;
+        };
+
+        block.addEventListener('click', async (event) => {
+            // 🔥 Если клик по интерактивному элементу - игнорируем
+            if (event.target.closest('button') ||
+                event.target.closest('input') ||
+                event.target.closest('.toggle-button') ||
+                event.target.closest('.page-button') ||
+                event.target.closest('.send-button') ||
+                event.target.closest('.input-value-field') ||
+                event.target.closest('.input-reset-btn') ||
+                event.target.closest('.input-save-btn')) {
+                return;
+            }
+
+            if (isProcessing) return;
+
+            const isOn = getCurrentState();
+            const newState = isOn ? 0 : 1;
+            const regKey = String(regAddress);
+
+            console.log(`🔄 Блок ${regAddress}: ${isOn ? 'Выкл' : 'Вкл'}`);
+
+            isProcessing = true;
+            block.style.opacity = '0.7';
+            block.style.cursor = 'wait';
+
+            try {
+                await this.api.writeRegister(regAddress, newState, regType);
+                await new Promise(resolve => setTimeout(resolve, 400));
+                await this.updater.update();
+
+                const newIsOn = getCurrentState();
+                updateBlockState(newIsOn);
+
+            } catch (error) {
+                console.error('❌ Ошибка:', error);
+                block.style.borderColor = 'red';
+
+                setTimeout(() => {
+                    block.style.borderColor = borderColor;
+                    block.style.backgroundColor = backgroundColor;
+                }, 1500);
+            } finally {
+                setTimeout(() => {
+                    isProcessing = false;
+                    block.style.opacity = '1';
+                    block.style.cursor = 'pointer';
+                }, 150);
+            }
+        });
+
+        // 🔥 Инициализация
+        setTimeout(() => {
+            const isOn = getCurrentState();
+            updateBlockState(isOn);
+        }, 200);
+    }
+
     _setupToggleButton(button, regAddress, registerType) {
         let isProcessing = false;
 
@@ -732,7 +1194,11 @@ export class BlockRenderer {
             const newState = isOn ? 0 : 1;
             const regKey = String(regAddress);
 
-            console.log(`🔄 Кнопка ${regAddress}: ${isOn ? 'Выкл' : 'Вкл'}`);
+            // 🔥 Получаем кастомные тексты из data-атрибутов
+            const textOn = button.dataset.textOn || 'Вкл';
+            const textOff = button.dataset.textOff || 'Выкл';
+
+            console.log(`🔄 Кнопка ${regAddress}: ${isOn ? textOff : textOn}`);
 
             isProcessing = true;
             button.disabled = true;
@@ -740,9 +1206,7 @@ export class BlockRenderer {
 
             try {
                 await this.api.writeRegister(regAddress, newState, registerType);
-
                 await new Promise(resolve => setTimeout(resolve, 400));
-
                 await this.updater.update();
 
             } catch (error) {
@@ -751,7 +1215,7 @@ export class BlockRenderer {
                 button.style.borderColor = 'red';
 
                 setTimeout(() => {
-                    button.textContent = isOn ? 'Вкл' : 'Выкл';
+                    button.textContent = isOn ? textOn : textOff;
                     button.style.borderColor = '';
                     button.classList.remove('waiting');
                 }, 1500);
@@ -770,17 +1234,17 @@ export class BlockRenderer {
         if (!regAttr) return;
         const regs = regAttr.split(',').map(r => r.trim());
         const hasDirty = regs.some(reg => this.updater.isDirty(reg));
-        
+
         console.log(`🔘 Кнопка сохранения для ${regAttr}: dirty=${hasDirty}`);
-        
+
         sendButton.disabled = !hasDirty;
     }
 
     _setupSendButton(sendButton) {
         const originalText = sendButton.textContent;
-    
+
         this._updateSendButtonState(sendButton);
-    
+
         // 🔥 Подписываемся на событие изменения dirty-статуса
         window.addEventListener('input-dirty-change', () => {
             if (!document.body.contains(sendButton)) return;
