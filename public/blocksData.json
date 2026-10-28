@@ -11,625 +11,78 @@
       "type": "page-button",
       "targetPage": "settings",
       "text": "Настройки",
-      "x": 193,
+      "x": 181,
       "y": 10
     },
     {
       "type": "page-button",
       "targetPage": "shit",
       "text": "Треш",
-      "x": 390,
-      "y": 10
-    },
-    {
-      "type": "empty-box",
-      "x": 50,
-      "y": 535,
-      "width": 235,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Заслонка входная",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/damper.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b0",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "textOff": "Закрыта",
-          "textOn": "Открыта",
-          "x": 50,
-          "y": 250,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 310,
-      "y": 170,
-      "width": 235,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Заслонка выходная",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/damper.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b1",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "textOff": "Закрыта",
-          "textOn": "Открыта",
-          "x": 50,
-          "y": 230,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 310,
-      "y": 535,
-      "width": 210,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Приточка",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/in-fan.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Скорость%2.2f м/с",
-              0
-            ],
-            [
-              "Загрузка%4i %",
-              2
-            ],
-            [
-              "Фильтр %4c",
-              "20:b0"
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b2",
-          "type": "toggle-button",
-          "x": 50,
-          "y": 250,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 575,
-      "y": 170,
-      "width": 210,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Вытяжка",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/out-fan.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Скорость%2.2f м/с",
-              0
-            ],
-            [
-              "Загрузка%4i %",
-              2
-            ],
-            [
-              "Фильтр %4c",
-              "20:b0"
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b3",
-          "type": "toggle-button",
-          "x": 50,
-          "y": 230,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 545,
-      "y": 535,
-      "width": 240,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Электронагреватель",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/heater.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f C",
-              0
-            ],
-            [
-              "Шаг%4i",
-              2
-            ],
-            [
-              "Мощность%4i кВт",
-              4
-            ],
-            [
-              "Влажность%4i %",
-              6
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b4",
-          "type": "toggle-button",
-          "x": 60,
-          "y": 250,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 810,
-      "y": 170,
-      "width": 150,
-      "height": 710,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Рекуператор",
-      "children": [
-        {
-          "type": "image",
-          "x": 0,
-          "y": 30,
-          "src": "/images/reco.jpg",
-          "border": "none",
-          "width": 120,
-          "height": 120,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b5",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "x": 20,
-          "y": 615,
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "text": "Температура",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "type": "title-number",
-          "text": "Влажность",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 210
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 990,
-      "y": 170,
-      "width": 235,
-      "height": 225,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Фильтр",
-      "children": [
-        {
-          "type": "image",
-          "x": 10,
-          "y": 30,
-          "src": "/images/filter-out.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b6",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "x": 120,
-          "y": 40,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 990,
-      "y": 400,
-      "width": 295,
-      "height": 480,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Водяной охд./нагреватель",
-      "children": [
-        {
-          "type": "image",
-          "x": 10,
-          "y": 30,
-          "src": "/images/water-pump.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b7",
-          "type": "toggle-button",
-          "x": 95,
-          "y": 35,
-          "textOff": "Водяной Насос",
-          "textOn": "Водяной Насос",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура воды %2.2f C",
-              0
-            ],
-            [
-              "Давление воды %4i кВт",
-              4
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "type": "image",
-          "x": 20,
-          "y": 240,
-          "src": "/images/valve.jpg",
-          "border": "none",
-          "width": 60,
-          "height": 60,
-          "alt": "Кран",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b8",
-          "type": "toggle-button",
-          "x": 95,
-          "y": 235,
-          "textOff": "3-ходовый кран",
-          "textOn": "3-ходовый кран",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Положение крана %4i",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 315
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Т воздуха %2.2f C",
-              0
-            ],
-            [
-              "Влажность воздуха %4i %",
-              6
-            ]
-          ],
-          "x": 0,
-          "y": 380
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 1310,
-      "y": 400,
-      "width": 150,
-      "height": 480,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Увлажнитель",
-      "children": [
-        {
-          "type": "image",
-          "x": 20,
-          "y": 30,
-          "src": "/images/hydro.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b9",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "x": 20,
-          "y": 380,
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "text": "Температура",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "type": "title-number",
-          "text": "Влажность",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 210
-        }
-      ]
-    }
-  ],
-  "shit": [
-    {
-      "type": "page-button",
-      "targetPage": "main",
-      "text": "Главная",
-      "x": 10,
-      "y": 10
-    },
-    {
-      "type": "page-button",
-      "targetPage": "settings",
-      "text": "Настройки",
-      "x": 193,
-      "y": 10
-    },
-    {
-      "type": "page-button",
-      "targetPage": "graff",
-      "text": "Треш",
-      "x": 390,
+      "x": 380,
       "y": 10
     },
     {
       "type": "node-card",
-      "x": 50,
+      "x": 125,
       "y": 535,
-      "width": 235,
+      "width": 160,
       "height": 345,
-      "title": "Заслонка входная",
-      "icon": "damper",
+      "icon": "meatballs",
       "toggle": true,
       "regAddress": 20,
       "regType": "b0",
       "requireConfirm": true,
-      "longPress": "popup:menu",
+      "longPress": "popup:trend",
       "popupData": {
         "reg": 16,
         "title": "Заслонка входная"
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 80,
+          "text": "Заслонка входная"
+        },
+        {
           "type": "image",
-          "x": 60,
-          "y": 30,
+          "x": 55,
+          "y": 20,
           "src": "/images/damper.jpg",
-          "width": 80,
-          "height": 80,
+          "width": 50,
+          "height": 50,
           "objectFit": "contain",
           "plain": true
         },
         {
-          "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
           "plain": true,
+          "text": "Температура",
           "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
+            "%4.1f С",
+            0
+          ]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 210,
+          "plain": true,
+          "text": "Влажность",
+          "format": [
+            "%4.1f %",
+            0
           ]
         }
       ]
     },
     {
       "type": "node-card",
-      "x": 310,
-      "y": 170,
-      "width": 235,
+      "x": 395,
+      "y": 180,
+      "width": 160,
       "height": 345,
       "title": "Заслонка выходная",
       "icon": "damper",
@@ -637,45 +90,57 @@
       "regAddress": 20,
       "regType": "b1",
       "requireConfirm": true,
-      "longPress": "popup:menu",
+      "longPress": "popup:trend",
       "popupData": {
         "reg": 17,
         "title": "Заслонка выходная"
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 80,
+          "text": "Заслонка выходная"
+        },
+        {
           "type": "image",
-          "x": 60,
-          "y": 30,
+          "x": 55,
+          "y": 20,
           "src": "/images/damper.jpg",
-          "width": 80,
-          "height": 80,
+          "width": 50,
+          "height": 50,
           "objectFit": "contain",
           "plain": true
         },
         {
-          "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
           "plain": true,
+          "text": "Температура",
           "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
+            "%4.1f С",
+            0
+          ]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 210,
+          "plain": true,
+          "text": "Влажность",
+          "format": [
+            "%4.1f %",
+            0
           ]
         }
       ]
     },
     {
       "type": "node-card",
-      "x": 310,
+      "x": 295,
       "y": 535,
-      "width": 210,
+      "width": 160,
       "height": 345,
       "title": "Приточка",
       "icon": "fan",
@@ -683,49 +148,59 @@
       "regAddress": 20,
       "regType": "b2",
       "requireConfirm": true,
-      "longPress": "popup:menu",
+      "longPress": "popup:trend",
       "popupData": {
         "reg": 16,
         "title": "Приточка"
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 95,
+          "text": "Приточка"
+        },
+        {
           "type": "image",
           "x": 60,
-          "y": 30,
+          "y": 20,
           "src": "/images/in-fan.jpg",
-          "width": 80,
-          "height": 80,
+          "width": 50,
+          "height": 50,
           "objectFit": "contain",
           "plain": true
         },
         {
-          "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
           "plain": true,
-          "format": [
-            [
-              "Скорость%2.2f м/с",
-              16
-            ],
-            [
-              "Загрузка%4i %",
-              18
-            ],
-            [
-              "Фильтр %4c",
-              "20:b0"
-            ]
-          ]
+          "text": "Скорость",
+          "format": ["%4.1f м/с", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 210,
+          "plain": true,
+          "text": "Загрузка",
+          "format": ["%3i %", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 270,
+          "plain": true,
+          "text": "Фильтр",
+          "format": ["%1c", "20:b0"]
         }
       ]
     },
     {
       "type": "node-card",
-      "x": 575,
-      "y": 170,
-      "width": 210,
+      "x": 565,
+      "y": 180,
+      "width": 160,
       "height": 345,
       "title": "Вытяжка",
       "icon": "fan",
@@ -733,49 +208,59 @@
       "regAddress": 20,
       "regType": "b3",
       "requireConfirm": true,
-      "longPress": "popup:menu",
+      "longPress": "popup:trend",
       "popupData": {
         "reg": 18,
         "title": "Вытяжка"
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 95,
+          "text": "Вытяжка"
+        },
+        {
           "type": "image",
           "x": 60,
-          "y": 30,
+          "y": 20,
           "src": "/images/out-fan.jpg",
-          "width": 80,
-          "height": 80,
+          "width": 50,
+          "height": 50,
           "objectFit": "contain",
           "plain": true
         },
         {
-          "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
           "plain": true,
-          "format": [
-            [
-              "Скорость%2.2f м/с",
-              16
-            ],
-            [
-              "Загрузка%4i %",
-              18
-            ],
-            [
-              "Фильтр %4c",
-              "20:b0"
-            ]
-          ]
+          "text": "Скорость",
+          "format": ["%4.1f м/с", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 210,
+          "plain": true,
+          "text": "Загрузка",
+          "format": ["%3i %", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 270,
+          "plain": true,
+          "text": "Фильтр",
+          "format": ["%1c", "20:b0"]
         }
       ]
     },
     {
       "type": "node-card",
-      "x": 545,
+      "x": 465,
       "y": 535,
-      "width": 240,
+      "width": 260,
       "height": 345,
       "title": "Электронагреватель",
       "icon": "heater",
@@ -790,10 +275,520 @@
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 95,
+          "text": "Электронагреватель"
+        },
+        {
+          "type": "image",
+          "x": 100,
+          "y": 20,
+          "src": "/images/heater.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
+          "plain": true,
+          "text": "Температура",
+          "format": ["%4.1f С", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 150,
+          "y": 150,
+          "plain": true,
+          "text": "Шаг",
+          "format": ["%2i", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 230,
+          "plain": true,
+          "text": "Мощность",
+          "format": ["%4.1f кВт", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 150,
+          "y": 230,
+          "plain": true,
+          "text": "Влажность",
+          "format": ["%4.1f %", 0]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 735,
+      "y": 350,
+      "width": 150,
+      "height": 400,
+      "title": "Рекуператор",
+      "icon": "reco",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b5",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 20,
+        "title": "Рекуператор"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 110,
+          "text": "Рекупе- ратор"
+        },
+        {
+          "type": "image",
+          "x": 40,
+          "y": 30,
+          "src": "/images/reco.jpg",
+          "width": 70,
+          "height": 70,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 190,
+          "plain": true,
+          "text": "Температура",
+          "format": [
+            "%4.1f С",
+            0
+          ]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 270,
+          "plain": true,
+          "text": "Влажность",
+          "format": [
+            "%4.1f %",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 895,
+      "y": 180,
+      "width": 160,
+      "height": 345,
+      "title": "Фильтр",
+      "icon": "filter",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b6",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 21,
+        "title": "Фильтр"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 95,
+          "text": "Фильтр"
+        },
+        {
+          "type": "image",
+          "x": 55,
+          "y": 20,
+          "src": "/images/filter-out.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
+          "plain": true,
+          "text": "Температура",
+          "format": [
+            "%4.1f С",
+            0
+          ]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 210,
+          "plain": true,
+          "text": "Влажность",
+          "format": [
+            "%4.1f %",
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 895,
+      "y": 535,
+      "width": 440,
+      "height": 345,
+      "title": "Водяной охд./нагреватель",
+      "icon": "pump",
+      "toggle": false,
+      "longPress": "popup:menu",
+      "popupData": {
+        "reg": 22,
+        "title": "Положение крана"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 60,
+          "y": 30,
+          "text": "Водяной охд./нагреватель"
+        },
+        {
+          "type": "image",
+          "x": 20,
+          "y": 75,
+          "src": "/images/water-pump.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "toggle-button",
+          "x": 90,
+          "y": 70,
+          "plain": true,
+          "regAddress": 20,
+          "regType": "b7",
+          "textOff": "Насос вод.",
+          "textOn": "Насос вод."
+        },
+        {
+          "type": "title-number",
+          "x": 260,
+          "y": 90,
+          "plain": true,
+          "text": "Температура воды",
+          "format": ["%4.1f С", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 260,
+          "y": 150,
+          "plain": true,
+          "text": "Давление воды",
+          "format": ["%5.1f Па", 0]
+        },
+        {
+          "type": "image",
+          "x": 20,
+          "y": 180,
+          "src": "/images/valve.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "toggle-button",
+          "x": 90,
+          "y": 170,
+          "plain": true,
+          "regAddress": 20,
+          "regType": "b8",
+          "textOff": "Кран 3-х.",
+          "textOn": "Кран 3-х."
+        },
+        {
+          "type": "title-number",
+          "x": 260,
+          "y": 210,
+          "plain": true,
+          "text": "Положение крана",
+          "format": ["%4i", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 280,
+          "plain": true,
+          "text": "Температура воздуха",
+          "format": ["%4.2f С", 0]
+        },
+        {
+          "type": "title-number",
+          "x": 260,
+          "y": 280,
+          "plain": true,
+          "text": "Влажность воздуха",
+          "format": ["%5.1f %", 0]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 1345,
+      "y": 535,
+      "width": 150,
+      "height": 345,
+      "title": "Увлажнитель",
+      "icon": "humidifier",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b9",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 23,
+        "title": "Увлажнитель"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 80,
+          "text": "Увлажни- тель"
+        },
+        {
+          "type": "image",
+          "x": 55,
+          "y": 20,
+          "src": "/images/hydro.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 150,
+          "plain": true,
+          "text": "Температура",
+          "format": [
+            "%4.1f С",
+            0
+          ]
+        },
+        {
+          "type": "title-number",
+          "x": 20,
+          "y": 210,
+          "plain": true,
+          "text": "Влажность",
+          "format": [
+            "%5.1f %",
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "shit": [
+    {
+      "type": "page-button",
+      "targetPage": "main",
+      "text": "На главную",
+      "x": 10,
+      "y": 10
+    },
+    {
+      "type": "node-card",
+      "x": 50,
+      "y": 535,
+      "width": 235,
+      "height": 280,
+      "icon": "meatballs",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b0",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 16,
+        "title": "Заслонка входная"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 120,
+          "text": "Заслонка входная"
+        },
+        {
+          "type": "image",
+          "x": 77,
+          "y": 30,
+          "src": "/images/damper.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-group-number",
+          "x": 20,
+          "y": 160,
+          "plain": true,
+          "format": [["Температура%2.2f С", 0], ["Влажность%4i %", 2]]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 300,
+      "y": 275,
+      "width": 255,
+      "height": 250,
+      "title": "Заслонка выходная",
+      "icon": "damper",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b1",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 17,
+        "title": "Заслонка выходная"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 120,
+          "text": "Заслонка выходная"
+        },
+        {
           "type": "image",
           "x": 60,
           "y": 30,
-          "src": "/images/heater.jpg",
+          "src": "/images/damper.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-group-number",
+          "x": 20,
+          "y": 160,
+          "plain": true,
+          "format": [
+            [
+              "Температура%2.2f С",
+              0
+            ],
+            [
+              "Влажность%4i %",
+              2
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 295,
+      "y": 535,
+      "width": 235,
+      "height": 280,
+      "title": "Приточка",
+      "icon": "fan",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b2",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 16,
+        "title": "Приточка"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 120,
+          "text": "Приточка"
+        },
+        {
+          "type": "image",
+          "x": 60,
+          "y": 30,
+          "src": "/images/in-fan.jpg",
+          "width": 50,
+          "height": 80,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-group-number",
+          "x": 20,
+          "y": 160,
+          "plain": true,
+          "format": [
+            [
+              "Скорость%2.2f м/с",
+              16
+            ],
+            [
+              "Загрузка%4i %",
+              18
+            ],
+            [
+              "Фильтр %4c",
+              "20:b0"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 565,
+      "y": 275,
+      "width": 235,
+      "height": 250,
+      "title": "Вытяжка",
+      "icon": "fan",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b3",
+      "requireConfirm": true,
+      "longPress": "popup:trend",
+      "popupData": {
+        "reg": 18,
+        "title": "Вытяжка"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 120,
+          "text": "Вытяжка"
+        },
+        {
+          "type": "image",
+          "x": 60,
+          "y": 30,
+          "src": "/images/out-fan.jpg",
           "width": 80,
           "height": 80,
           "objectFit": "contain",
@@ -801,12 +796,68 @@
         },
         {
           "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "x": 20,
+          "y": 160,
           "plain": true,
           "format": [
             [
-              "Температура%2.2f C",
+              "Скорость%2.2f м/с",
+              16
+            ],
+            [
+              "Загрузка%4i %",
+              18
+            ],
+            [
+              "Фильтр %4c",
+              "20:b0"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "type": "node-card",
+      "x": 540,
+      "y": 535,
+      "width": 260,
+      "height": 280,
+      "title": "Электронагреватель",
+      "icon": "heater",
+      "toggle": true,
+      "regAddress": 20,
+      "regType": "b4",
+      "requireConfirm": true,
+      "longPress": "popup:menu",
+      "popupData": {
+        "reg": 19,
+        "title": "Электронагреватель"
+      },
+      "children": [
+        {
+          "type": "only-title",
+          "x": 20,
+          "y": 120,
+          "text": "Электронагреватель"
+        },
+        {
+          "type": "image",
+          "x": 60,
+          "y": 30,
+          "src": "/images/heater.jpg",
+          "width": 50,
+          "height": 50,
+          "objectFit": "contain",
+          "plain": true
+        },
+        {
+          "type": "title-group-number",
+          "x": 20,
+          "y": 160,
+          "plain": true,
+          "format": [
+            [
+              "Температура%4.2f C",
               0
             ],
             [
@@ -828,9 +879,9 @@
     {
       "type": "node-card",
       "x": 810,
-      "y": 170,
+      "y": 160,
       "width": 150,
-      "height": 710,
+      "height": 720,
       "title": "Рекуператор",
       "icon": "reco",
       "toggle": true,
@@ -855,7 +906,7 @@
         },
         {
           "type": "title-number",
-          "x": 0,
+          "x": 20,
           "y": 170,
           "plain": true,
           "text": "Температура",
@@ -866,7 +917,7 @@
         },
         {
           "type": "title-number",
-          "x": 0,
+          "x": 20,
           "y": 250,
           "plain": true,
           "text": "Влажность",
@@ -879,25 +930,31 @@
     },
     {
       "type": "node-card",
-      "x": 990,
-      "y": 170,
+      "x": 970,
+      "y": 160,
       "width": 235,
-      "height": 225,
+      "height": 230,
       "title": "Фильтр",
       "icon": "filter",
       "toggle": true,
       "regAddress": 20,
       "regType": "b6",
       "requireConfirm": true,
-      "longPress": "popup:menu",
+      "longPress": "popup:trend",
       "popupData": {
         "reg": 21,
         "title": "Фильтр"
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 120,
+          "text": "Фильтр"
+        },
+        {
           "type": "image",
-          "x": 10,
+          "x": 50,
           "y": 30,
           "src": "/images/filter-out.jpg",
           "width": 80,
@@ -907,8 +964,8 @@
         },
         {
           "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "x": 20,
+          "y": 160,
           "plain": true,
           "format": [
             [
@@ -925,9 +982,9 @@
     },
     {
       "type": "node-card",
-      "x": 990,
+      "x": 970,
       "y": 400,
-      "width": 295,
+      "width": 310,
       "height": 480,
       "title": "Водяной охд./нагреватель",
       "icon": "pump",
@@ -935,13 +992,19 @@
       "longPress": "popup:menu",
       "popupData": {
         "reg": 22,
-        "title": "Водяной охд./нагреватель"
+        "title": "Положение крана"
       },
       "children": [
         {
+          "type": "only-title",
+          "x": 20,
+          "y": 40,
+          "text": "Водяной охд./нагреватель"
+        },
+        {
           "type": "image",
-          "x": 10,
-          "y": 30,
+          "x": 20,
+          "y": 90,
           "src": "/images/water-pump.jpg",
           "width": 80,
           "height": 80,
@@ -950,8 +1013,8 @@
         },
         {
           "type": "toggle-button",
-          "x": 95,
-          "y": 35,
+          "x": 120,
+          "y": 100,
           "plain": true,
           "regAddress": 20,
           "regType": "b7",
@@ -960,16 +1023,16 @@
         },
         {
           "type": "title-group-number",
-          "x": 0,
-          "y": 130,
+          "x": 20,
+          "y": 190,
           "plain": true,
           "format": [
             [
-              "Температура воды %2.2f C",
+              "Температура воды %4.2f C",
               0
             ],
             [
-              "Давление воды %4i кВт",
+              "Давление воды %4i атм.",
               4
             ]
           ]
@@ -977,7 +1040,7 @@
         {
           "type": "image",
           "x": 20,
-          "y": 240,
+          "y": 280,
           "src": "/images/valve.jpg",
           "width": 60,
           "height": 60,
@@ -986,8 +1049,8 @@
         },
         {
           "type": "toggle-button",
-          "x": 95,
-          "y": 235,
+          "x": 110,
+          "y": 275,
           "plain": true,
           "regAddress": 20,
           "regType": "b8",
@@ -996,8 +1059,8 @@
         },
         {
           "type": "title-group-number",
-          "x": 0,
-          "y": 315,
+          "x": 20,
+          "y": 365,
           "plain": true,
           "format": [
             [
@@ -1008,25 +1071,20 @@
         },
         {
           "type": "title-group-number",
-          "x": 0,
-          "y": 380,
+          "x": 20,
+          "y": 410,
           "plain": true,
           "format": [
-            [
-              "Т воздуха %2.2f C",
-              0
-            ],
-            [
-              "Влажность воздуха %4i %",
-              6
-            ]
+            [ "Влажность воздуха %4i %", 6 ],
+            [ "Т воздуха %4.2f C", 0 ]
+      
           ]
         }
       ]
     },
     {
       "type": "node-card",
-      "x": 1310,
+      "x": 1290,
       "y": 400,
       "width": 150,
       "height": 480,
@@ -1036,7 +1094,7 @@
       "regAddress": 20,
       "regType": "b9",
       "requireConfirm": true,
-      "longPress": "popup:menu",
+      "longPress": "popup:trend",
       "popupData": {
         "reg": 23,
         "title": "Увлажнитель"
@@ -1054,7 +1112,7 @@
         },
         {
           "type": "title-number",
-          "x": 0,
+          "x": 20,
           "y": 130,
           "plain": true,
           "text": "Температура",
@@ -1065,7 +1123,7 @@
         },
         {
           "type": "title-number",
-          "x": 0,
+          "x": 20,
           "y": 210,
           "plain": true,
           "text": "Влажность",
@@ -1079,6 +1137,13 @@
   ],
   "settings": [
     {
+      "type": "page-button",
+      "targetPage": "main",
+      "text": "На главную",
+      "x": 10,
+      "y": 10
+    },
+    {
       "regAddress": 20,
       "regType": "b0",
       "description": "Источник",
@@ -1086,7 +1151,7 @@
       "text": "Сеть",
       "prefix": "Сеть",
       "x": 10,
-      "y": 10
+      "y": 100
     },
     {
       "regAddress": 20,
@@ -1095,15 +1160,8 @@
       "type": "toggle-button",
       "text": "Вкл",
       "prefix": "Генератор",
-      "x": 160,
-      "y": 10
-    },
-    {
-      "type": "page-button",
-      "targetPage": "main",
-      "text": "На главную",
-      "x": 10,
-      "y": 80
+      "x": 180,
+      "y": 100
     },
     {
       "type": "title-input",
@@ -1161,548 +1219,6 @@
       "type": "send-button",
       "text": "Сохранить",
       "description": "Кнопка-отправить"
-    }
-  ],
-  "graff": [
-    {
-      "type": "page-button",
-      "targetPage": "main",
-      "text": "Главная",
-      "x": 10,
-      "y": 10
-    },
-    {
-      "type": "page-button",
-      "targetPage": "settings",
-      "text": "Настройки",
-      "x": 193,
-      "y": 10
-    },
-    {
-      "type": "page-button",
-      "targetPage": "shit",
-      "text": "Треш",
-      "x": 390,
-      "y": 10
-    },
-    {
-      "type": "empty-box",
-      "x": 50,
-      "y": 535,
-      "width": 235,
-      "height": 225,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Заслонка входная ...",
-      "toggle": true,
-      "regAddress": 20,
-      "regType": "b0",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/damper.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 310,
-      "y": 170,
-      "width": 235,
-      "height": 225,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Заслонка выходная",
-      "toggle": true,
-      "regAddress": 20,
-      "regType": "b1",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/damper.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 310,
-      "y": 535,
-      "width": 210,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Приточка",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/in-fan.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Скорость%2.2f м/с",
-              0
-            ],
-            [
-              "Загрузка%4i %",
-              2
-            ],
-            [
-              "Фильтр %4c",
-              "20:b0"
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b2",
-          "type": "toggle-button",
-          "x": 50,
-          "y": 250,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 575,
-      "y": 170,
-      "width": 210,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Вытяжка",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/out-fan.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Скорость%2.2f м/с",
-              0
-            ],
-            [
-              "Загрузка%4i %",
-              2
-            ],
-            [
-              "Фильтр %4c",
-              "20:b0"
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b3",
-          "type": "toggle-button",
-          "x": 50,
-          "y": 230,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 545,
-      "y": 535,
-      "width": 240,
-      "height": 345,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Электронагреватель",
-      "children": [
-        {
-          "type": "image",
-          "x": 60,
-          "y": 30,
-          "src": "/images/heater.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f C",
-              0
-            ],
-            [
-              "Шаг%4i",
-              2
-            ],
-            [
-              "Мощность%4i кВт",
-              4
-            ],
-            [
-              "Влажность%4i %",
-              6
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b4",
-          "type": "toggle-button",
-          "x": 60,
-          "y": 250,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 810,
-      "y": 170,
-      "width": 150,
-      "height": 710,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Рекуператор",
-      "children": [
-        {
-          "type": "image",
-          "x": 0,
-          "y": 30,
-          "src": "/images/reco.jpg",
-          "border": "none",
-          "width": 120,
-          "height": 120,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b5",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "x": 20,
-          "y": 615,
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "text": "Температура",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "type": "title-number",
-          "text": "Влажность",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 210
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 990,
-      "y": 170,
-      "width": 235,
-      "height": 225,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Фильтр",
-      "children": [
-        {
-          "type": "image",
-          "x": 10,
-          "y": 30,
-          "src": "/images/filter-out.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура%2.2f С",
-              0
-            ],
-            [
-              "Влажность%4i %",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "regAddress": 20,
-          "regType": "b6",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "x": 120,
-          "y": 40,
-          "plain": true
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 990,
-      "y": 400,
-      "width": 295,
-      "height": 480,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Водяной охд./нагреватель",
-      "children": [
-        {
-          "type": "image",
-          "x": 10,
-          "y": 30,
-          "src": "/images/water-pump.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b7",
-          "type": "toggle-button",
-          "x": 95,
-          "y": 35,
-          "textOff": "Водяной Насос",
-          "textOn": "Водяной Насос",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Температура воды %2.2f C",
-              0
-            ],
-            [
-              "Давление воды %4i кВт",
-              4
-            ]
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "type": "image",
-          "x": 20,
-          "y": 240,
-          "src": "/images/valve.jpg",
-          "border": "none",
-          "width": 60,
-          "height": 60,
-          "alt": "Кран",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b8",
-          "type": "toggle-button",
-          "x": 95,
-          "y": 235,
-          "textOff": "3-ходовый кран",
-          "textOn": "3-ходовый кран",
-          "plain": true
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Положение крана %4i",
-              2
-            ]
-          ],
-          "x": 0,
-          "y": 315
-        },
-        {
-          "type": "title-group-number",
-          "format": [
-            [
-              "Т воздуха %2.2f C",
-              0
-            ],
-            [
-              "Влажность воздуха %4i %",
-              6
-            ]
-          ],
-          "x": 0,
-          "y": 380
-        }
-      ]
-    },
-    {
-      "type": "empty-box",
-      "x": 1310,
-      "y": 400,
-      "width": 150,
-      "height": 480,
-      "borderColor": "#d3dbe3",
-      "borderWidth": 3,
-      "borderStyle": "solid",
-      "borderRadius": 10,
-      "backgroundColor": "#ffffff",
-      "title": "Увлажнитель",
-      "children": [
-        {
-          "type": "image",
-          "x": 20,
-          "y": 30,
-          "src": "/images/hydro.jpg",
-          "border": "none",
-          "width": 80,
-          "height": 80,
-          "alt": "Логотип",
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "regAddress": 20,
-          "regType": "b9",
-          "description": "Заслонка",
-          "type": "toggle-button",
-          "x": 20,
-          "y": 380,
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "text": "Температура",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 130
-        },
-        {
-          "type": "title-number",
-          "text": "Влажность",
-          "format": [
-            "%2.2f С",
-            0
-          ],
-          "x": 0,
-          "y": 210
-        }
-      ]
     }
   ]
 }

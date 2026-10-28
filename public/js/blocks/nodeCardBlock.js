@@ -56,6 +56,17 @@ const ICONS = {
             <path d="M 20 8 L 12 12 L 20 16 Z"/>
             <line x1="12" y1="4" x2="12" y2="12"/>
         </svg>`,
+    trend: `
+        <svg viewBox="0 0 16 16">
+            <polyline points="2,11 6,7 9,9 14,4"/>
+            <polyline points="10,4 14,4 14,8"/>
+        </svg>`,
+    menu: `
+    <svg class="hint-icon" viewBox="0 0 30 30" width="30" height="30">
+    <circle cx="3" cy="3" r="3" fill="#666"/>
+    <circle cx="12" cy="3" r="3" fill="#666"/>
+    <circle cx="21" cy="3" r="3" fill="#666"/>
+</svg>`,
     default: `
         <svg viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="8"/>
@@ -88,35 +99,41 @@ export class NodeCardBlock extends BaseBlock {
         const isToggle = !!this.data.toggle;
         if (isToggle) root.classList.add('has-toggle');
 
+        // Подсказка (автоматическая)
+        const PREFIX = 'popup:';
+        const longPress = this.data.longPress;
+        let hintSvg = '';
+        let hintHtml = '';
+
+        if (typeof longPress === 'string' && longPress.startsWith(PREFIX)) {
+            const iconKey = longPress.slice(PREFIX.length);
+            hintSvg = ICONS[iconKey] || '';   // или дефолтная иконка
+            hintHtml = `<span class="hint-icon">${hintSvg}</span>`;
+        }
+
         // Иконка
-        const iconKey = this.data.icon || 'default';
-        const iconSvg = ICONS[iconKey] || ICONS.default;
-        const iconHtml = this.data.icon !== undefined || true
-            ? `<span class="elem-icon">${iconSvg}</span>`
-            : '';
+        /*const iconKey = this.data.icon || 'default';*/
+       /* const iconSvg = ICONS[iconKey] || ICONS.default;*/
+        // const iconHtml = this.data.icon !== undefined || true
+        //     ? `<span class="elem-icon">${iconSvg}</span>`
+        //     : '';
 
         // State dot
         const stateDotHtml = `<span class="state-dot"></span>`;
 
         // Подсказка (стрелка)
-        const hintHtml = this.data.longPress && this.data.longPress !== 'none'
-            ? `<span class="hint-icon">
-                   <svg viewBox="0 0 16 16">
-                       <polyline points="2,11 6,7 9,9 14,4"/>
-                       <polyline points="10,4 14,4 14,8"/>
-                   </svg>
-               </span>`
-            : '';
+       /* const hintHtml = this.data.longPress && this.data.longPress !== 'none'
+            ? `<span class="hint-icon">${iconSvg}</span>` : '';*/
 
         // Заголовок
-        const titleHtml = this.data.title
-            ? `<div class="title">${this.esc(this.data.title)}</div>`
-            : '';
+        //const titleHtml = this.data.title
+        //     ? `<div class="title">${this.esc(this.data.title)}</div>`
+        //     : '';
 
         // Полоса удержания
         const holdHtml = `<div class="hold-indicator"></div>`;
 
-        root.innerHTML = `${iconHtml}${hintHtml}${stateDotHtml}${titleHtml}${holdHtml}`;
+        root.innerHTML = `${hintHtml}${stateDotHtml}${holdHtml}`;
 
         this.el = root;
 
