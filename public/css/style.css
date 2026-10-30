@@ -2,7 +2,7 @@
    @FONT-FACE И БАЗОВЫЕ СТИЛИ
    ============================================ */
 
-
+/*
 @font-face {
     font-family: 'DejaVu Sans Mono';
     src: url('../fonts/DejaVuSansMono.woff2') format('woff2');
@@ -16,16 +16,16 @@
   font-weight: 300;
   font-style: normal;
   font-display: swap;
-}
+}*/
 
 @font-face {
     font-family: 'Inter Regular';
-    src: url('../fonts/inter-regular.woff2') format('woff2');
+    src: url('/fonts/Inter-Regular.woff2') format('woff2');
     font-weight: 300;
     font-style: normal;
     font-display: swap;
   }
-
+/*
   @font-face {
     font-family: 'Inter Thin';
     src: url('../fonts/inter-thin.woff2') format('woff2');
@@ -33,7 +33,7 @@
     font-style: normal;
     font-display: swap;
   }
-
+*/
 
 
 body {
@@ -146,7 +146,7 @@ p, span, h2 {
 .block.title-number > .value .number,
 .node.title-group-number > .value .number,
 .node.title-number > .value .number {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
 }
 
 .block .prefix,
@@ -1475,6 +1475,10 @@ p, span, h2 {
     font-size: 1.3rem;
     font-weight: 600;
     color: #333;
+}
+
+.block .title-number span.title {
+    font-size: 1.1rem;
 }
 
 .block .value > span.number {
