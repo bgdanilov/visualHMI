@@ -1467,6 +1467,47 @@ p, span, h2 {
 }
 
 
+
+
+
+
+
+/* === SVG BLOCK === */
+.svg-block {
+    transition: color 0.3s ease;
+    user-select: none;
+}
+
+@keyframes spin { 
+    from { transform: rotate(0deg); } 
+    to { transform: rotate(360deg); } 
+}
+
+/* Вращение с динамической скоростью */
+.svg-block.spinning svg {
+    animation: spin var(--spin-duration, 2s) linear infinite;
+}
+
+.svg-block.spin-slow svg     { animation: spin 4s linear infinite; }
+.svg-block.spin-fast svg     { animation: spin 1s linear infinite; }
+.svg-block.spin-pause svg    { animation-play-state: paused; }
+.svg-block.spin-reverse svg  { animation: spin 2s linear infinite reverse; }
+
+/* Плавность заполнения бочки */
+.svg-block svg rect {
+    transition: height 0.2s ease, y 0.2s ease, opacity 0.3s ease;
+}
+
+
+
+
+
+
+
+
+
+
+
 /*************** Патч *************/
 
 

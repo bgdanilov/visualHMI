@@ -10,7 +10,8 @@ export class ModbusUpdater {
             spans: new Map(),
             inputs: new Map(),
             toggles: new Map(),
-            nodeCards: new Map()      // ← новое
+            nodeCards: new Map(),
+            svgs: new Map()          // ← кэш для SVG-блоков
         };
         this.sendingRegisters = new Set();
         this.editingInputs = new Set();
@@ -20,7 +21,8 @@ export class ModbusUpdater {
         this.caches.spans.clear();
         this.caches.inputs.clear();
         this.caches.toggles.clear();
-        this.caches.nodeCards.clear();   // ← новое
+        this.caches.nodeCards.clear();
+        this.caches.svgs.clear();
     }
 
     _applyFormat(formatSpec, value, regType) {
@@ -72,12 +74,10 @@ export class ModbusUpdater {
         return s;
     }
 
-    // 🔥 Проверка, является ли тип регистра числом с плавающей точкой
     _isFloatType(registerType) {
         return registerType === 'f4';
     }
 
-    // 🔥 Получение decimalPlaces из data-атрибута или DEFAULT_DECIMAL_PLACES
     _getDecimalPlaces(element) {
         if (!element) return DEFAULT_DECIMAL_PLACES;
         const val = element.dataset.decimalPlaces;
@@ -88,14 +88,10 @@ export class ModbusUpdater {
         return isNaN(parsed) ? DEFAULT_DECIMAL_PLACES : parsed;
     }
 
-    // 🔥 Форматирование значения с учетом decimalPlaces для ОТОБРАЖЕНИЯ
-    // Только для float типов!
     _formatValue(value, element, registerType) {
-        // 🔥 Если не float - возвращаем как есть
         if (!this._isFloatType(registerType)) {
             return String(value);
         }
-
         const decimalPlaces = this._getDecimalPlaces(element);
         if (decimalPlaces === null || isNaN(decimalPlaces) || decimalPlaces < 0) {
             return String(value);
@@ -113,7 +109,6 @@ export class ModbusUpdater {
 
     addInput(regId, input, registerType) {
         const key = String(regId);
-        // 🔥 Форматируем начальное значение для отображения (только для float)
         const formattedValue = this._formatValue(input.value, input, registerType);
         this.caches.inputs.set(key, {
             registerType,
@@ -127,7 +122,6 @@ export class ModbusUpdater {
         const key = String(regId);
         const entry = this.caches.inputs.get(key);
         if (entry) {
-            // 🔥 Форматируем для хранения в originalValue (только для float)
             const formattedValue = this._formatValue(value, entry.element, entry.registerType);
             entry.originalValue = formattedValue;
             if (entry.element) {
@@ -140,10 +134,8 @@ export class ModbusUpdater {
         const key = String(regId);
         const entry = this.caches.inputs.get(key);
         if (!entry || !entry.element) return false;
-
         const currentValue = entry.element.value;
         const originalValue = entry.originalValue;
-
         return currentValue !== originalValue;
     }
 
@@ -154,7 +146,6 @@ export class ModbusUpdater {
         }
         this.caches.toggles.get(key).toggles.push(button);
 
-        // 🔥 Сохраняем тексты при добавлении
         if (!button.dataset.textOn) {
             button.dataset.textOn = 'Вкл';
         }
@@ -169,6 +160,25 @@ export class ModbusUpdater {
             this.caches.nodeCards.set(key, { registerType, cards: [] });
         }
         this.caches.nodeCards.get(key).cards.push(card);
+    }
+
+    // 🔥 НОВЫЙ МЕТОД: регистрация SVG-правила
+    addSvgRule(regId, blockInstance, regKey, registerType = 'u2') {
+        const key = String(regId);
+        if (!this.caches.svgs.has(key)) {
+            this.caches.svgs.set(key, []);
+        }
+        // Проверяем, нет ли уже этой привязки
+        const existing = this.caches.svgs.get(key).find(
+            item => item.block === blockInstance && item.regKey === regKey
+        );
+        if (existing) return;
+        
+        this.caches.svgs.get(key).push({ 
+            block: blockInstance, 
+            regKey, 
+            registerType 
+        });
     }
 
     getBytesCount(registerType) {
@@ -234,13 +244,13 @@ export class ModbusUpdater {
 
                 regInfo.toggles.forEach(button => {
                     if (button.disabled) return;
-                
+
                     const buttonRegType =
                         button.dataset.type
                         || button.closest('.content')?.dataset?.type
                         || regInfo.registerType
                         || 'b0';
-                
+
                     if (buttonRegType?.startsWith('b')) {
                         const bitIndex = parseInt(buttonRegType.substring(1));
                         if (bitIndex >= 0 && bitIndex <= 15) {
@@ -248,9 +258,7 @@ export class ModbusUpdater {
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
                             button.classList.add('toggle-button');
-                
-                            // Перетирать текст — ТОЛЬКО для настоящих toggle-button
-                            // (у кого заданы data-text-on / data-text-off)
+
                             if (button.dataset.textOn || button.dataset.textOff) {
                                 const textOn = button.dataset.textOn || 'Вкл';
                                 const textOff = button.dataset.textOff || 'Выкл';
@@ -261,7 +269,7 @@ export class ModbusUpdater {
                 });
             }
 
-            // --- ОБНОВЛЕНИЕ NODE-CARD (не перетирает содержимое) ---
+            // --- ОБНОВЛЕНИЕ NODE-CARD ---
             for (const [regId, regInfo] of this.caches.nodeCards) {
                 const offset = parseInt(regId) * 2;
                 if (offset + 2 > bytesLength) {
@@ -272,7 +280,6 @@ export class ModbusUpdater {
                 const rawValue = dataView.getUint16(offset, true);
 
                 regInfo.cards.forEach(card => {
-                    // Пропускаем карточки в процессе обработки (см. nodeCardBlock)
                     if (card._isProcessing) return;
 
                     const cardRegType = card.dataset.type || regInfo.registerType || 'b0';
@@ -283,7 +290,6 @@ export class ModbusUpdater {
                             const isOn = ((rawValue >> bitIndex) & 1) === 1;
                             card.classList.toggle('on', isOn);
                             card.classList.toggle('off', !isOn);
-                            // НИКАКОГО textContent!
                         }
                     }
                 });
@@ -294,11 +300,6 @@ export class ModbusUpdater {
                 const regKey = String(regId);
                 const input = regInfo.element;
 
-                // Пропускаем если:
-                // - идет отправка
-                // - пользователь редактирует
-                // - инпут в фокусе
-                // - значение уже изменено пользователем
                 if (this.sendingRegisters.has(regKey) ||
                     this.editingInputs.has(regKey) ||
                     document.activeElement === input ||
@@ -317,12 +318,34 @@ export class ModbusUpdater {
                 const value = this.readValue(dataView, offset, regInfo.registerType);
 
                 if (value !== undefined && !isNaN(value) && input) {
-                    // 🔥 Форматируем значение для отображения (только для float)
                     const displayValue = this._formatValue(value, input, regInfo.registerType);
 
                     if (input.value !== displayValue) {
                         input.value = displayValue;
                         regInfo.originalValue = displayValue;
+                    }
+                }
+            }
+
+            // --- 🔥 ОБНОВЛЕНИЕ SVG-БЛОКОВ (ПО ПРАВИЛАМ) ---
+            for (const [regId, entries] of this.caches.svgs) {
+                const offset = parseInt(regId) * 2;
+
+                for (const { block, regKey, registerType } of entries) {
+                    const byteCount = this.getBytesCount(registerType);
+
+                    if (offset + byteCount > bytesLength) {
+                        continue;
+                    }
+
+                    const value = this.readValue(dataView, offset, registerType);
+
+                    if (value !== undefined && !isNaN(value)) {
+                        try {
+                            block.updateByReg(regKey, value);
+                        } catch (err) {
+                            console.error(`Ошибка updateByReg у SVG (${regId}):`, err);
+                        }
                     }
                 }
             }
@@ -357,7 +380,6 @@ export class ModbusUpdater {
             const value = this.readValue(dataView, offset, regInfo.registerType);
 
             if (value !== undefined && !isNaN(value) && regInfo.element) {
-                // 🔥 Форматируем значение для отображения (только для float)
                 const displayValue = this._formatValue(value, regInfo.element, regInfo.registerType);
 
                 if (regInfo.element.value !== displayValue) {

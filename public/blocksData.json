@@ -160,16 +160,35 @@
           "y": 95,
           "text": "Приточка"
         },
+
         {
-          "type": "image",
+          "type": "svg",
           "x": 60,
           "y": 20,
-          "src": "/images/in-fan.jpg",
+          "src": "/icons/fan.svg",
           "width": 50,
           "height": 50,
-          "objectFit": "contain",
-          "plain": true
-        },
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b2",
+              "if": "== 1",
+              "then": { "spin": "normal", "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b2",
+              "if": "== 0",
+              "then": { "spin": null, "color": "#7f8c8d" }
+            }
+          ]
+        }
+
+
+
+
+
+
+        ,
         {
           "type": "title-number",
           "x": 20,
