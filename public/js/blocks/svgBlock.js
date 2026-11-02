@@ -93,33 +93,102 @@ export class SvgBlock extends BaseBlock {
         });
     }
 
-        // --- ВЫЧИСЛЕНИЕ УСЛОВИЯ ---
-        _evaluate(condition, value) {
-            if (!condition) return true;
-            
-            try {
-                // Если в условии нет слова value, подставляем его в начало
-                // Например: "== 1" превращается в "value == 1"
-                let expr = String(condition);
-                if (!expr.includes('value')) {
-                    expr = `value ${expr}`;
-                }
-                
-                // Теперь заменяем "value" на реальное число
-                expr = expr.replace(/value/g, Number(value));
-                
-                // Проверка на безопасность (только цифры, пробелы, операторы)
-                if (!/^[\d\s\.\+\-\*\/\(\)<>=!&|]+$/.test(expr)) {
-                    console.warn(`Небезопасное условие: ${condition}`);
-                    return false;
-                }
-                
-                return new Function(`return (${expr});`)();
-            } catch (e) {
-                console.warn(`Ошибка в условии "${condition}" (значение ${value}):`, e);
-                return false;
+         // --- ВЫЧИСЛЕНИЕ УСЛОВИЯ (DSL) ---
+    _evaluate(condition, value) {
+        if (condition === undefined || condition === null || condition === '') return true;
+
+        const v = Number(value);
+        if (!Number.isFinite(v)) return false;
+
+        try {
+            return this._evalExpr(String(condition), v);
+        } catch (e) {
+            console.warn(`Неподдерживаемое условие: "${condition}"`, e);
+            return false;
+        }
+    }
+
+    _evalExpr(expr, v) {
+        expr = String(expr).trim();
+        if (!expr) return true;
+
+        // Внешние скобки, охватывающие всё выражение
+        if (expr.startsWith('(') && expr.endsWith(')')) {
+            let depth = 0;
+            let coversAll = true;
+            for (let i = 0; i < expr.length; i++) {
+                if (expr[i] === '(') depth++;
+                else if (expr[i] === ')') depth--;
+                if (depth === 0 && i < expr.length - 1) { coversAll = false; break; }
+            }
+            if (coversAll) return this._evalExpr(expr.slice(1, -1), v);
+        }
+
+        // || (низший приоритет)
+        const orParts = this._splitTopLevel(expr, '||');
+        if (orParts.length > 1) {
+            return orParts.some(p => this._evalExpr(p, v));
+        }
+
+        // &&
+        const andParts = this._splitTopLevel(expr, '&&');
+        if (andParts.length > 1) {
+            return andParts.every(p => this._evalExpr(p, v));
+        }
+
+        // range a..b
+        const rangeMatch = expr.match(/^range\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)$/);
+        if (rangeMatch) {
+            const a = parseFloat(rangeMatch[1]);
+            const b = parseFloat(rangeMatch[2]);
+            return v >= Math.min(a, b) && v <= Math.max(a, b);
+        }
+
+        // Сравнение
+        const cmpMatch = expr.match(/^(==|!=|>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$/);
+        if (cmpMatch) {
+            const [, op, numStr] = cmpMatch;
+            const num = parseFloat(numStr);
+            switch (op) {
+                case '==': return v === num;
+                case '!=': return v !== num;
+                case '>=': return v >= num;
+                case '<=': return v <= num;
+                case '>':  return v >  num;
+                case '<':  return v <  num;
             }
         }
+
+        // Одиночное число — трактуем как "== num"
+        if (/^-?\d+(?:\.\d+)?$/.test(expr)) {
+            return v === parseFloat(expr);
+        }
+
+        throw new Error(`неизвестный токен: "${expr}"`);
+    }
+
+    // Разбивает строку по sep, игнорируя вхождения внутри скобок
+    _splitTopLevel(expr, sep) {
+        const parts = [];
+        let depth = 0;
+        let start = 0;
+
+        for (let i = 0; i < expr.length; i++) {
+            const ch = expr[i];
+            if (ch === '(') depth++;
+            else if (ch === ')') depth--;
+
+            if (depth === 0 && expr.startsWith(sep, i)) {
+                parts.push(expr.slice(start, i));
+                i += sep.length - 1;
+                start = i + 1;
+            }
+        }
+
+        if (parts.length === 0) return [expr];
+        parts.push(expr.slice(start));
+        return parts;
+    }
 
     // --- ПРИМЕНЕНИЕ ЭФФЕКТОВ ---
     _applyEffects(effects, value) {
