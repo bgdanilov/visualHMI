@@ -1,8 +1,8 @@
 # Архитектура HMI
 
-**Версия документа:** 1.0
-**Дата:** 2026-10
-**Статус:** актуально после рефакторинга (BaseBlock, блоки, node-card)
+**Версия документа:** 2.0
+**Дата:** 2026-11
+**Статус:** актуально после рефакторинга (BaseBlock, блоки, node-card, numpad split, titleInput split)
 
 ---
 
@@ -26,7 +26,8 @@
 ┌──────────────────── Браузер ─────────────────────────────────┐
 │                                                              │
 │  app.js (оркестратор)                                        │
-│    ├─ _setupScaling() — canvas 1600×1000 → fit to viewport   │
+│    ├─ _setupScaling() — canvas 1600×1200 → fit to viewport   │
+│    │                    (размер из CONFIG.CANVAS_W/H)        │
 │    ├─ load projectConfig.json (рабочий / редактирование)     │
 │    ├─ load blocksData.json (страницы экранов)                │
 │    ├─ создать ctx { renderArea, updater, api, numpad,        │
@@ -52,11 +53,19 @@
 │    └─ this.el — корневой HTMLElement                         │
 │                                                              │
 │  modbusUpdater — ядро обмена данными                         │
-│    ├─ caches: spans / inputs / toggles / nodeCards           │
+│    ├─ caches: spans / inputs / toggles / nodeCards / svgs    │
 │    ├─ update() — один GET /api/modbus + разбор по кэшам      │
+│    ├─ getInput(regId) — доступ к input из send-button        │
 │    └─ writeRegister() через apiClient                        │
 │                                                              │
 │  Сервисы: numpad, validator, notification, popup, confirm    │
+│    ├─ numpad: numpad.js → numpad/NumpadController.js         │
+│    │                          → numpad/NumpadView.js         │
+│    │                          → numpad/numpadMarkup.js       │
+│    └─ titleInput: titleInputBlock.js                         │
+│                   → titleInput/InputController.js            │
+│                   → titleInput/inputMarkup.js                │
+│                   → utils/parseInputConfig.js                │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,7 +83,7 @@ public/
 ├── images/
 └── js/
     ├── app.js                   — оркестратор
-    ├── constants.js             — CONFIG, BLOCK_TYPES
+    ├── constants.js             — CONFIG (в т.ч. CANVAS_W/H), BLOCK_TYPES
     │
     ├── api/
     │   └── apiClient.js         — HTTP-клиент
@@ -83,13 +92,18 @@ public/
     │   ├── modbusUpdater.js     — кэши, чтение/запись, форматирование
     │   ├── validator.js         — валидация/коррекция значений
     │   ├── notification.js      — тосты
-    │   ├── numpad.js            — экранная клавиатура
+    │   ├── numpad.js            — тонкий фасад numpadManager
+    │   ├── numpad/
+    │   │   ├── NumpadController.js  — логика ввода, config, callbacks
+    │   │   ├── NumpadView.js        — только DOM
+    │   │   └── numpadMarkup.js      — HTML-строка + NUMPAD_KEYS
     │   ├── popupService.js      — глобальные попапы (тренд, меню)
     │   ├── confirmService.js    — глобальный диалог подтверждения
     │   └── blockRegistry.js     — реестр типов блоков
     │
     ├── utils/
-    │   └── format.js            — parseBlockFormat, applyFormat
+    │   ├── format.js            — parseBlockFormat, applyFormat
+    │   └── parseInputConfig.js  — разбор data title-input
     │
     ├── renderer/
     │   └── blockRenderer.js     — тонкий рендерер (только через registry)
@@ -105,8 +119,11 @@ public/
         ├── pageButtonBlock.js
         ├── imageBlock.js
         ├── sendButtonBlock.js
-        ├── titleInputBlock.js
-        ├── emptyBoxBlock.js
+        ├── svgBlock.js
+        ├── titleInputBlock.js   — тонкий, вся логика в titleInput/
+        ├── titleInput/
+        │   ├── InputController.js  — валидация, numpad, dirty, save
+        │   └── inputMarkup.js      — HTML-строка
         └── nodeCardBlock.js
 ```
 
@@ -133,6 +150,7 @@ public/
 │  for toggle   → bit → classList on/off + text│
 │  for nodeCard → bit → classList on/off       │
 │  for input    → если не dirty → input.value  │
+│  for svg      → block.updateByReg(reg, val)  │
 └──────────────────────────────────────────────┘
        ▲
        │ POST /api/registers/:id
@@ -188,7 +206,7 @@ public/
 
 ## Навигация между страницами
 
-Страницы — ключи верхнего уровня в `blocksData.json`: `main`, `settings`, `graff`, `shit`.
+Страницы — ключи верхнего уровня в `blocksData.json`: `main`, `settings`, `shit`.
 
 Переключение — через `page-button`:
 1. Клик → `window.dispatchEvent('page-change', { targetPage })`.
@@ -199,8 +217,24 @@ public/
 
 ---
 
+## Холст и масштабирование
+
+- **Логический размер холста** — `CONFIG.CANVAS_W` × `CONFIG.CANVAS_H` в `constants.js` (сейчас `1600×1200`).
+- `style.css` **не задаёт** `width/height` у `#render-area` — размер ставится из `app.js:_setupScaling()` по `CONFIG`.
+- `visibility: hidden` на `#render-area` до инициализации — чтобы не было «схлопнутого» `0×0` на время загрузки JS.
+- `scale = Math.min(innerWidth/CANVAS_W, innerHeight/CANVAS_H)` — пропорциональное вписывание.
+- Тач-скрин: координаты кликов пересчитываются браузером автоматически (transform не мешает событиям).
+
+**Чтобы поменять размер холста:** правишь `CONFIG.CANVAS_W/H` в `constants.js`. Но `blocksData.json` привязан к `1600×1200` — блоки с `x ≥ CANVAS_W` или `y ≥ CANVAS_H` не видны.
+
+---
+
 ## Что удалено при рефакторинге
 
+- `public/js/blocks/emptyBoxBlock.js` — **удалён**, используйте `node-card`.
 - `public/js/blockRenderer.js` — заменён на `renderer/blockRenderer.js`.
 - `public/js/pageManager.js` — не использовался, импортировал несуществующий `EVENTS`.
 - `public/js/scalingManager.js` — дублировал `_setupScaling()` в `app.js`.
+- CSS `.block.empty-box`, `.block.node-card .elem-icon`, `.block.node-card > .title` — удалены.
+- Дублирующий CSS `POPUP SERVICE` (~200 строк) — удалён.
+- `new Function` в `svgBlock._evaluate` — заменён на безопасный DSL.

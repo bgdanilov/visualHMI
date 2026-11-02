@@ -1,8 +1,8 @@
 # Сервисы
 
-**Версия документа:** 1.0
-**Дата:** 2026-10
-**Статус:** актуально
+**Версия документа:** 2.0
+**Дата:** 2026-11
+**Статус:** актуально после рефакторинга
 
 Все сервисы — синглтоны, доступны блокам через `ctx`.
 
@@ -33,6 +33,7 @@ await api.writeRegister(regId, value, type)   // POST /api/registers/:id
 - `caches.inputs` — редактируемые поля.
 - `caches.toggles` — кнопки toggle.
 - `caches.nodeCards` — карточки node-card.
+- `caches.svgs` — SVG-правила.
 
 **Методы:**
 ```js
@@ -40,7 +41,9 @@ updater.addSpan(regId, span, type, formatSpec)     // регистрация ч�
 updater.addInput(regId, input, type)               // регистрация поля
 updater.addToggle(regId, button, type)             // регистрация toggle
 updater.addNodeCard(regId, card, type)             // регистрация node-card
+updater.addSvgRule(regId, block, regKey, type)     // регистрация SVG-правила
 
+updater.getInput(regId)                            // → { element, originalValue, registerType } | null
 await updater.update()                             // один цикл опроса
 await updater.updateSingleInput(regId)             // точечное обновление
 
@@ -109,12 +112,24 @@ numpad.show(initialValue, {
   decimalPlaces: 3,
   maxDecimalPlaces: 3,
   allowFloat: true,
+  allowSign: true,               // показать/скрыть +/- (по умолчанию true)
+  allowedValues: null,           // [0, 1] для битовых регистров
   onOk(value) { ... },
   onCancel() { ... }
 })
+
+numpad.hide()
+numpad.isOpen                    // boolean (геттер)
 ```
 
-При `allowFloat: false` — точка и `+/-` скрыты, разрешены только целые.
+**Поведение:**
+- `allowFloat: false` — точка **disabled**, только целые.
+- `allowSign: false` — `+/-` **disabled**.
+- `allowedValues: [0, 1]` — цифры `2…9`, `.`, `+/-` **disabled** (но **не скрыты** — layout не прыгает). Физическая клавиатура: `2…9` игнорируются.
+- Ввод с физической клавиатуры: `Enter` — OK, `Escape` — Cancel, `Backspace` — удалить символ, цифры — ввод.
+- `numpad.isOpen` — геттер для проверки, открыт ли numpad.
+
+**Под капотом:** `numpad.js` — тонкий фасад, вся логика в `numpad/NumpadController.js`, DOM — в `numpad/NumpadView.js`, разметка — в `numpad/numpadMarkup.js`.
 
 ---
 
@@ -125,7 +140,7 @@ numpad.show(initialValue, {
 **API:**
 ```js
 popupService.show({
-  type: 'trend' | 'menu' | ...,
+  type: 'trend' | 'menu' | 'settings' | ...,
   anchor: HTMLElement,
   data: { ... }
 })
@@ -162,6 +177,19 @@ popup.show({
 });
 ```
 
+### `settings` ⏳ (заглушка, в разработке)
+Попап настроек узла. Регистрируется через `popupService.register('settings', ...)`.
+
+```js
+popup.show({
+  type: 'settings',
+  anchor: cardElement,
+  data: { title: 'Электронагреватель', reg: 19 }
+});
+```
+
+> ⚠️ Если `type` не зарегистрирован — в консоли `console.warn`, попап не откроется. Иконка на карточке всё равно будет видна.
+
 **Поведение:**
 - Одновременно открыт только один попап.
 - Backdrop затемняет экран.
@@ -169,7 +197,7 @@ popup.show({
 - Позиционирование: слева от якоря → справа → снизу (по месту).
 - При открытии нового попапа — старый закрывается автоматически.
 
-**Расширение:** добавить новый тип можно через `popupService.register('settings', (popup, data, { close }) => { ... })`.
+**Расширение:** добавить новый тип можно через `popupService.register('my-type', (popup, data, { close }) => { ... })`.
 
 ---
 
