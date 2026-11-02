@@ -1164,7 +1164,8 @@
       "postfix": "А",
       "x": 400,
       "y": 100,
-      "size": 5
+      "size": 5,
+      "showSaveButton": true   
     },
     {
       "type": "title-input",
