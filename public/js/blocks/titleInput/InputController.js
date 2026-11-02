@@ -22,18 +22,18 @@ export class InputController {
      * @param {Object} params.ctx — контекст блока (updater, validator, numpad, notification, api)
      */
     constructor({ input, resetBtn, saveBtn, cfg, ctx }) {
-        this.input     = input;
-        this.resetBtn  = resetBtn;
-        this.saveBtn   = saveBtn;
-        this.cfg       = cfg;
-        this.ctx       = ctx;
+        this.input    = input;
+        this.resetBtn = resetBtn;
+        this.saveBtn  = saveBtn;
+        this.cfg      = cfg;
+        this.ctx      = ctx;
 
-        this.regKey    = String(cfg.regAddress);
-        this.isFloat   = cfg.isFloatType;
+        this.regKey  = String(cfg.regAddress);
+        this.isFloat = cfg.isFloatType;
+        this.isBit   = String(cfg.regType).startsWith('b');
 
-        this._numpadOpen         = false;
-        this._decimalWarnTimer   = null;
-        this._savedStateListeners = [];
+        this._numpadOpen       = false;
+        this._decimalWarnTimer = null;
     }
 
     // ============ ПУБЛИЧНЫЙ API ============
@@ -52,13 +52,10 @@ export class InputController {
     }
 
     detach() {
-        // Снимаем pending-таймеры
         if (this._decimalWarnTimer) {
             clearTimeout(this._decimalWarnTimer);
             this._decimalWarnTimer = null;
         }
-        // Слушатели — анонимные, но живут на элементах, которые удаляются вместе с блоком.
-        // Если понадобится — соберём сюда все removeEventListener.
     }
 
     // ============ ВАЛИДАЦИЯ ============
@@ -159,6 +156,19 @@ export class InputController {
         this.input.addEventListener('input', () => {
             const v = this.input.value;
 
+            // Битовый регистр — в поле только 0 или 1
+            if (this.isBit) {
+                const filtered = v.replace(/[^01]/g, '');
+                if (filtered !== v) {
+                    this.input.value = filtered.slice(0, 1);
+                    this._warnDecimal('Для битового регистра допустимы только 0 или 1');
+                } else if (filtered.length > 1) {
+                    this.input.value = filtered.slice(0, 1);
+                }
+                this._updateDirtyState();
+                return;
+            }
+
             if (!this.isFloat && v.includes('.')) {
                 this.input.value = v.replace(/\./g, '');
                 this._warnDecimal('Для этого регистра допустимы только целые числа');
@@ -183,6 +193,12 @@ export class InputController {
             if (!this.isFloat && e.key === '.') {
                 e.preventDefault();
                 this._warnDecimal('Для этого регистра допустимы только целые числа');
+                return;
+            }
+
+            if (this.isBit && /^[2-9]$/.test(e.key)) {
+                e.preventDefault();
+                this._warnDecimal('Для битового регистра допустимы только 0 или 1');
                 return;
             }
 
@@ -234,6 +250,8 @@ export class InputController {
             maxDecimalPlaces: dp,
             decimalPlaces: dp,
             allowFloat: this.isFloat,
+            allowedValues: this.isBit ? [0, 1] : null,
+            allowSign: !this.isBit,
             onOk: (val) => {
                 this.input.readOnly = false;
                 this.input.value = val;
@@ -241,7 +259,6 @@ export class InputController {
                 this._applyValidationResult(this._validate(val));
                 this._closeNumpad();
                 this.input.blur();
-                // Пересчитать dirty после blur (originalValue мог обновиться)
                 setTimeout(() => this._updateDirtyState(), 50);
             },
             onCancel: () => {
