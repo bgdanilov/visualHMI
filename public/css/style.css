@@ -19,15 +19,23 @@ body {
     width: 100vw;
     height: 100vh;
     font-size: 100%;
+
+    /* HMI: отключаем жесты браузера, выделение, подсветку тапа */
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
 }
 
 #render-area {
+    /* Размер ставится из app.js:_setupScaling() по CONFIG.CANVAS_W / CONFIG.CANVAS_H */
     position: absolute;
-    width: 1600px;
-    height: 1000px;
+    visibility: hidden;              /* показываем после _setupScaling() */
     background-color: #eef2f6;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    touch-action: none;
 }
 
 p, span, h2 {
@@ -140,17 +148,6 @@ p, span, h2 {
     font-size: 1.2rem;
 }
 
-.block .value .prefix,
-.node .value .prefix {
-    justify-content: right;
-}
-
-.block .value .postfix,
-.node .value .postfix {
-    justify-content: left;
-    min-width: 3ch;
-}
-
 /* ============================================
    TOGGLE BUTTON (.toggle)
    ============================================ */
@@ -166,6 +163,7 @@ p, span, h2 {
     transition: background-color 0.2s ease;
     font-family: inherit;
     font-size: 1.2rem;
+    touch-action: manipulation;
 }
 
 .block .toggle.on,
@@ -224,10 +222,15 @@ p, span, h2 {
     background-color: #0056b3;
     color: #d3d3d3;
     transition: background-color 0.2s ease;
+    touch-action: manipulation;
 }
 
 .block.page-button .page-button:hover {
     background-color: #004494;
+}
+
+.block.page-button .page-button:active {
+    background-color: #003577;
 }
 
 /* ============================================
@@ -264,6 +267,7 @@ p, span, h2 {
     padding: 0 4px;
     line-height: 1;
     flex-shrink: 0;
+    touch-action: manipulation;
 }
 
 .block.title-input .input-reset:hover {
@@ -283,6 +287,7 @@ p, span, h2 {
     color: white;
     margin-left: 6px;
     transition: background-color 0.2s ease;
+    touch-action: manipulation;
 }
 
 .block.title-input .input-save:hover {
@@ -306,10 +311,15 @@ p, span, h2 {
     background-color: #007bff;
     color: white;
     transition: background-color 0.2s ease;
+    touch-action: manipulation;
 }
 
 .block.send-button .send-button:hover {
     background-color: #0056b3;
+}
+
+.block.send-button .send-button:active {
+    background-color: #004494;
 }
 
 .block.send-button .send-button.sending {
@@ -395,7 +405,6 @@ p, span, h2 {
     animation-play-state: paused;
 }
 
-/* Заглушка (нет src) */
 .block.image .image-placeholder {
     display: flex;
     flex-direction: column;
@@ -417,7 +426,6 @@ p, span, h2 {
     font-size: 32px;
 }
 
-/* Ошибка загрузки */
 .block.image .image-error {
     display: flex;
     flex-direction: column;
@@ -439,7 +447,6 @@ p, span, h2 {
     font-size: 32px;
 }
 
-/* Шахматный фон для PNG */
 .block.image > img[src*=".png"] {
     background: repeating-conic-gradient(#f0f0f0 0% 25%, #ffffff 0% 50%) 0 0 / 20px 20px;
 }
@@ -458,6 +465,7 @@ p, span, h2 {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    touch-action: none;
 }
 
 .numpad {
@@ -499,6 +507,7 @@ p, span, h2 {
     cursor: pointer;
     user-select: none;
     font-family: inherit;
+    touch-action: manipulation;
 }
 
 .numpad-btn:active {
@@ -678,6 +687,7 @@ p, span, h2 {
     align-items: center;
     justify-content: center;
     transition: background .15s ease, color .15s ease;
+    touch-action: manipulation;
 }
 
 .popup .popup-close:hover {
@@ -779,6 +789,7 @@ p, span, h2 {
     height: 32px;
     background: transparent;
     cursor: pointer;
+    touch-action: manipulation;
 }
 
 .popup.ctx-popup .slider::-webkit-slider-runnable-track {
@@ -838,6 +849,7 @@ p, span, h2 {
     text-align: left;
     cursor: pointer;
     transition: background .12s ease;
+    touch-action: manipulation;
 }
 
 .popup.ctx-popup .ctx-item:hover {
@@ -883,6 +895,7 @@ p, span, h2 {
     opacity: 0;
     pointer-events: none;
     transition: opacity .18s ease;
+    touch-action: none;
 }
 
 .popup-backdrop.visible {
@@ -903,6 +916,7 @@ p, span, h2 {
     justify-content: center;
     z-index: 300;
     padding: 24px;
+    touch-action: none;
 }
 
 .confirm-overlay.open {
@@ -981,6 +995,7 @@ p, span, h2 {
     cursor: pointer;
     border: none;
     transition: transform .08s ease, background .15s ease;
+    touch-action: manipulation;
 }
 
 .confirm .actions button:active {
@@ -1073,8 +1088,8 @@ p, span, h2 {
     left: 8px;
     width: 30px;
     height: 30px;
-    color: #b0bec5;
-    opacity: .7;
+    color: #78909c;
+    opacity: .85;
     pointer-events: none;
     transition: color .2s ease, opacity .2s ease;
 }
@@ -1095,8 +1110,8 @@ p, span, h2 {
 }
 
 .block.node-card.on .hint-icon {
-    color: #66bb6a;
-    opacity: .9;
+    color: #43a047;
+    opacity: 1;
 }
 
 /* Полоса удержания — снизу */
