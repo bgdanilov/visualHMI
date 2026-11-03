@@ -1,201 +1,227 @@
-# Целевая разметка блоков
+# Сервисы
 
-**Версия документа:** 1.0
-**Дата:** 2026-10
-**Статус:** актуально
+**Версия документа:** 2.0
+**Дата:** 2026-11
+**Статус:** актуально после рефакторинга
 
-Словарь селекторов, классов и `data-*` атрибутов, которые используются в новой разметке блоков.
-
----
-
-## Правила
-
-1. **Один `.block` — один корень.** Без лишних обёрток `.content`.
-2. **`data-*` только на носителе значения** — `span.number`, `button.toggle`, `input.input`. Не на обёртках.
-3. **Никаких `.content`** — вместо неё `.value` (строка значения).
-4. **Заголовок блока** — `span.title` прямо в корне (не в `.value`).
-5. **Дочерние блоки внутри контейнера** — класс `.node` (без `.block`).
-6. **`innerHTML`** — единственный способ построения разметки.
+Все сервисы — синглтоны, доступны блокам через `ctx`.
 
 ---
 
-## Словарь селекторов
+## `apiClient` — `ctx.api`
 
-| Селектор | Назначение | Где живёт |
-|---|---|---|
-| `.block` | Корень любого блока | `<div class="block ...">` |
-| `.block.plain` | Без фона/рамки/тени | модификатор корня |
-| `.title` | Внутренний заголовок | `<span class="title">` |
-| `.value` | Строка значения | `<div class="value">` |
-| `.prefix` | Текст перед числом | `<span class="prefix">` |
-| `.number` | Число (носитель `data-reg`) | `<span class="number" data-reg data-type>` |
-| `.postfix` | Текст после числа | `<span class="postfix">` |
-| `.toggle` | Кнопка-переключатель | `<button class="toggle off">` |
-| `.toggle.on/.off/.waiting` | Состояния | классы на `<button>` |
-| `.page-button` | Кнопка навигации | `<button class="page-button">` |
-| `.send-button` | Кнопка отправки группы | `<button class="send-button">` |
-| `.input` | Поле ввода (носитель `data-reg`) | `<input class="input" data-reg data-type>` |
-| `.input-reset` | Кнопка сброса поля | `<button class="input-reset">` |
-| `.input-save` | Кнопка «💾» одного поля | `<button class="input-save">` |
-| `.image` | Блок картинки | `<div class="block image">` + `<img>` |
-| `.node` | Дочерний блок в контейнере | `<div class="node ...">` |
-| `.box-title` | Заголовок `empty-box` | `<span class="box-title">` |
-| `.node-card` | Корень `node-card` | `<div class="block node-card">` |
-| `.elem-icon` | Иконка элемента | `<span class="elem-icon">` |
-| `.state-dot` | Точка состояния | `<span class="state-dot">` |
-| `.hint-icon` | Иконка-подсказка (стрелка) | `<span class="hint-icon">` |
-| `.hold-indicator` | Полоса удержания | `<div class="hold-indicator">` |
+HTTP-клиент с таймаутом (по умолчанию 5000 мс).
+
+**Методы:**
+```js
+await api.loadConfig(fileName)       // GET /api/loadConfig?file=...
+await api.loadStaticJSON(fileName)   // GET /<fileName>
+await api.readModbus()               // GET /api/modbus → DataView
+await api.writeRegister(regId, value, type)   // POST /api/registers/:id
+```
+
+**Типы регистров:** `u2`, `s2`, `f4`, `b0…b15`.
 
 ---
 
-## Разметка по типам блоков
+## `modbusUpdater` — `ctx.updater`
 
-### `only-title`
-```html
-<div class="block only-title plain">
-  <span class="title">РЕКУПЕРАТОР</span>
-</div>
+Ядро обмена данными. Управляет кэшами, читает буфер, форматирует значения.
+
+**Кэши:**
+- `caches.spans` — read-only числа.
+- `caches.inputs` — редактируемые поля.
+- `caches.toggles` — кнопки toggle.
+- `caches.nodeCards` — карточки node-card.
+- `caches.svgs` — SVG-правила.
+
+**Методы:**
+```js
+updater.addSpan(regId, span, type, formatSpec)     // регистрация числа
+updater.addInput(regId, input, type)               // регистрация поля
+updater.addToggle(regId, button, type)             // регистрация toggle
+updater.addNodeCard(regId, card, type)             // регистрация node-card
+updater.addSvgRule(regId, block, regKey, type)     // регистрация SVG-правила
+
+updater.getInput(regId)                            // → { element, originalValue, registerType } | null
+await updater.update()                             // один цикл опроса
+await updater.updateSingleInput(regId)             // точечное обновление
+
+updater.isDirty(regId)                             // поле изменено?
+updater.updateOriginalValue(regId, value)          // зафиксировать значение
+updater.markAsSending(regId)                       // пометить как «отправляется»
+updater.unmarkAsSending(regId)
+
+updater.clearCaches()                              // очистить всё
 ```
 
-### `only-number`
-```html
-<div class="block only-number plain">
-  <div class="value">
-    <span class="prefix">P = </span>
-    <span class="number" data-reg="2" data-type="f4">--</span>
-    <span class="postfix"> кВт</span>
-  </div>
-</div>
+**Важно:** `update()` вызывается `app.js` каждые 300 мс. Пропускает поля, которые пользователь редактирует или которые в процессе записи.
+
+---
+
+## `validator` — `ctx.validator`
+
+Валидация и коррекция значений.
+
+**Методы:**
+```js
+validator.validate(value, { min, max, decimalPlaces, registerType, allowEmpty })
+validator.validateWithCorrection(value, opts)
+validator.formatNumber(value, decimalPlaces)
+validator.getDecimalCount(value)
 ```
 
-### `title-number`
-```html
-<div class="block title-number plain">
-  <span class="title">Температура</span>
-  <div class="value">
-    <span class="prefix">=</span>
-    <span class="number" data-reg="2" data-type="f4">--</span>
-    <span class="postfix"> С</span>
-  </div>
-</div>
-```
-
-### `title-group-number`
-```html
-<div class="block title-group-number plain">
-  <span class="title">ВХОД</span>
-  <div class="value">
-    <span class="prefix">Температура = </span>
-    <span class="number" data-reg="0" data-type="u2">--</span>
-    <span class="postfix"> С</span>
-  </div>
-  <div class="value">
-    <span class="prefix">Влажность = </span>
-    <span class="number" data-reg="2" data-type="u2">--</span>
-    <span class="postfix"> %</span>
-  </div>
-</div>
-```
-
-### `toggle-button`
-```html
-<div class="block toggle-button plain">
-  <div class="value">
-    <span class="prefix btn">Заслонка: </span>
-    <button class="toggle off" data-reg="20" data-type="b0"
-            data-text-on="Открыта" data-text-off="Закрыта">Закрыта</button>
-  </div>
-</div>
-```
-
-### `page-button`
-```html
-<div class="block page-button">
-  <div class="value">
-    <button class="page-button" data-target="main">На главную</button>
-  </div>
-</div>
-```
-
-### `send-button`
-```html
-<div class="block send-button">
-  <div class="value">
-    <button class="send-button" data-reg="16,18,20,21">Сохранить</button>
-  </div>
-</div>
-```
-
-### `image`
-```html
-<div class="block image plain" style="width:80px; height:80px;">
-  <img src="/images/fan.jpg" alt="Вентилятор">
-</div>
-```
-
-### `title-input`
-```html
-<div class="block title-input plain">
-  <span class="title">Ввод значения</span>
-  <div class="value">
-    <span class="prefix">Сумма</span>
-    <input class="input" data-reg="16" data-type="s2"
-           data-min="" data-max="" data-decimal-places="3">
-    <button class="input-reset" title="Сбросить">×</button>
-    <span class="postfix">А</span>
-    <button class="input-save">💾</button>
-  </div>
-</div>
-```
-
-### `empty-box`
-```html
-<div class="block empty-box" style="width:235px; height:345px;">
-  <span class="box-title">Заслонка входная</span>
-  <img class="node image plain" src="/images/damper.jpg" style="left:60px; top:30px;">
-  <div class="node title-group-number plain" style="left:0; top:130px;">
-    <div class="value">
-      <span class="prefix">Температура</span>
-      <span class="number" data-reg="0" data-type="u2">--</span>
-    </div>
-  </div>
-</div>
-```
-
-### `node-card`
-```html
-<div class="block node-card has-toggle off" data-reg="20" data-type="b2"
-     style="width:210px; height:345px;">
-  <span class="elem-icon"><svg>...</svg></span>
-  <span class="hint-icon"><svg>...</svg></span>
-  <span class="state-dot"></span>
-  <div class="title">Приточка</div>
-  <img class="node image plain" src="/images/in-fan.jpg" style="left:60px; top:30px;">
-  <div class="node title-group-number plain" style="left:0; top:130px;">
-    <div class="value">
-      <span class="prefix">Скорость</span>
-      <span class="number" data-reg="16" data-type="f4">--</span>
-      <span class="postfix"> м/с</span>
-    </div>
-  </div>
-  <div class="hold-indicator"></div>
-</div>
+`validateWithCorrection` возвращает:
+```js
+{
+  valid: true,
+  value: "исходное",
+  normalized: "исправленное",
+  corrected: true,      // было скорректировано
+  wasRounded: true      // было округлено
+}
 ```
 
 ---
 
-## Соответствие «старое → новое»
+## `notification` — `ctx.notification`
 
-| Старое | Новое | Комментарий |
-|---|---|---|
-| `.content` | `.value` | семантичнее |
-| `.title-group-number .content:not(:first-child)` | `.title-group-number > .value:not(:first-of-type)` | чётче |
-| `.toggle-button` (на `<button>`) | `.toggle` | короче |
-| `data-reg` на `.content` | `data-reg` на носителе | единая точка |
-| `.input-value-field` | `.input` | короче |
-| `.input-reset-btn` | `.input-reset` | короче |
-| `.input-save-btn` | `.input-save` | короче |
-| `.empty-box-container` | — | удалено |
-| `.empty-box-title` | `.box-title` | короче |
-| `.block.X` внутри `empty-box` | `.node X` | дети контейнера |
-| `.image-wrapper` + `.image-block` | `<img>` напрямую | убрано |
+Тосты в правом верхнем углу.
+
+**Методы:**
+```js
+notification.success(message, { title, duration })
+notification.error(message, opts)
+notification.warning(message, opts)
+notification.info(message, opts)
+notification.show(message, { type, duration, closable, title, onClick })
+```
+
+По умолчанию `duration: 3000` мс.
+
+---
+
+## `numpadManager` — `ctx.numpad`
+
+Экранная клавиатура. Открывается кликом по `<input class="input">`.
+
+**API:**
+```js
+numpad.show(initialValue, {
+  min, max,
+  decimalPlaces: 3,
+  maxDecimalPlaces: 3,
+  allowFloat: true,
+  allowSign: true,               // показать/скрыть +/- (по умолчанию true)
+  allowedValues: null,           // [0, 1] для битовых регистров
+  onOk(value) { ... },
+  onCancel() { ... }
+})
+
+numpad.hide()
+numpad.isOpen                    // boolean (геттер)
+```
+
+**Поведение:**
+- `allowFloat: false` — точка **disabled**, только целые.
+- `allowSign: false` — `+/-` **disabled**.
+- `allowedValues: [0, 1]` — цифры `2…9`, `.`, `+/-` **disabled** (но **не скрыты** — layout не прыгает). Физическая клавиатура: `2…9` игнорируются.
+- Ввод с физической клавиатуры: `Enter` — OK, `Escape` — Cancel, `Backspace` — удалить символ, цифры — ввод.
+- `numpad.isOpen` — геттер для проверки, открыт ли numpad.
+
+**Под капотом:** `numpad.js` — тонкий фасад, вся логика в `numpad/NumpadController.js`, DOM — в `numpad/NumpadView.js`, разметка — в `numpad/numpadMarkup.js`.
+
+---
+
+## `popupService` — `ctx.popup`
+
+Глобальный менеджер попапов. Один попап на приложение, один backdrop.
+
+**API:**
+```js
+popupService.show({
+  type: 'trend' | 'menu' | 'settings' | ...,
+  anchor: HTMLElement,
+  data: { ... }
+})
+
+popupService.hide()
+popupService.isOpen(type?)         // bool
+popupService.register(type, render)  // кастомный попап
+```
+
+**Встроенные типы:**
+
+### `trend`
+Попап с графиком (заглушка — фейковые данные), 4 метрики: Мин / Сред / Макс / Сейчас.
+
+```js
+popup.show({
+  type: 'trend',
+  anchor: cardElement,
+  data: { title: 'Приточка', reg: 21 }
+});
+```
+
+### `menu`
+Попап с контекстным меню:
+- Кнопка «Открыть тренд».
+- Слайдер уставки.
+- Кнопки «Заблокировать» / «Отключить».
+
+```js
+popup.show({
+  type: 'menu',
+  anchor: cardElement,
+  data: { title: 'Приточка', reg: 21 }
+});
+```
+
+### `settings` ⏳ (заглушка, в разработке)
+Попап настроек узла. Регистрируется через `popupService.register('settings', ...)`.
+
+```js
+popup.show({
+  type: 'settings',
+  anchor: cardElement,
+  data: { title: 'Электронагреватель', reg: 19 }
+});
+```
+
+> ⚠️ Если `type` не зарегистрирован — в консоли `console.warn`, попап не откроется. Иконка на карточке всё равно будет видна.
+
+**Поведение:**
+- Одновременно открыт только один попап.
+- Backdrop затемняет экран.
+- Клик по фону — закрывает.
+- Позиционирование: слева от якоря → справа → снизу (по месту).
+- При открытии нового попапа — старый закрывается автоматически.
+
+**Расширение:** добавить новый тип можно через `popupService.register('my-type', (popup, data, { close }) => { ... })`.
+
+---
+
+## `confirmService` — `ctx.confirm`
+
+Глобальный диалог подтверждения. Возвращает `Promise<boolean>`.
+
+**API:**
+```js
+const ok = await confirmService.ask({
+  title: 'Вы уверены?',
+  text: 'Вы собираетесь <b>включить</b> <b>узел</b>.',
+  confirmText: 'Да, включить',
+  cancelText: 'Отмена',
+  danger: false
+});
+
+if (ok) { /* ... */ }
+```
+
+**Поведение:**
+- Esc → `false`, Enter → `true`.
+- Клик по фону → `false`.
+- Один диалог на приложение.
+- Если уже открыт — старый закрывается как «отмена».
+
+**Стили:** `danger: true` — красная кнопка и иконка.

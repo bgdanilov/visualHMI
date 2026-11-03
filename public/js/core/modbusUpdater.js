@@ -139,6 +139,10 @@ export class ModbusUpdater {
         return currentValue !== originalValue;
     }
 
+    getInput(regId) {
+        return this.caches.inputs.get(String(regId)) || null;
+    }
+
     addToggle(regId, button, registerType) {
         const key = String(regId);
         if (!this.caches.toggles.has(key)) {

@@ -27,7 +27,6 @@
       "y": 535,
       "width": 160,
       "height": 345,
-      "icon": "meatballs",
       "toggle": true,
       "regAddress": 20,
       "regType": "b0",
@@ -84,8 +83,7 @@
       "y": 180,
       "width": 160,
       "height": 345,
-      "title": "Заслонка выходная",
-      "icon": "damper",
+      "name": "Заслонка выходная",
       "toggle": true,
       "regAddress": 20,
       "regType": "b1",
@@ -142,8 +140,7 @@
       "y": 535,
       "width": 160,
       "height": 345,
-      "title": "Приточка",
-      "icon": "fan",
+      "name": "Приточка",
       "toggle": true,
       "regAddress": 20,
       "regType": "b2",
@@ -160,7 +157,6 @@
           "y": 95,
           "text": "Приточка"
         },
-
         {
           "type": "svg",
           "x": 60,
@@ -181,14 +177,7 @@
               "then": { "spin": null, "color": "#7f8c8d" }
             }
           ]
-        }
-
-
-
-
-
-
-        ,
+        },
         {
           "type": "title-number",
           "x": 20,
@@ -221,8 +210,7 @@
       "y": 180,
       "width": 160,
       "height": 345,
-      "title": "Вытяжка",
-      "icon": "fan",
+      "name": "Вытяжка",
       "toggle": true,
       "regAddress": 20,
       "regType": "b3",
@@ -281,11 +269,10 @@
       "y": 535,
       "width": 260,
       "height": 345,
-      "title": "Электронагреватель",
-      "icon": "heater",
+      "name": "Электронагреватель",
       "toggle": true,
       "regAddress": 20,
-      "regType": "b4",
+      "regType": "b10",
       "requireConfirm": true,
       "longPress": "popup:menu",
       "popupData": {
@@ -300,14 +287,35 @@
           "text": "Электронагреватель"
         },
         {
-          "type": "image",
-          "x": 100,
+          "type": "svg",
+          "x": 90,
           "y": 20,
-          "src": "/images/heater.jpg",
+          "src": "/icons/heater.svg",
           "width": 50,
           "height": 50,
-          "objectFit": "contain",
-          "plain": true
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b10",
+              "if": "== 1",
+              "then": { "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b10",
+              "if": "== 1",
+              "then": { "target": ".pulse", "pulse": "slow", "color": "#E65100" }
+            },
+            {
+              "reg": "20:b10",
+              "if": "== 0",
+              "then": { "color": "#7f8c8d" }
+            },
+            {
+              "reg": "20:b10",
+              "if": "== 0",
+              "then": { "target": ".pulse", "pulse": null, "color": null }
+            }
+          ]
         },
         {
           "type": "title-number",
@@ -349,11 +357,10 @@
       "y": 350,
       "width": 150,
       "height": 400,
-      "title": "Рекуператор",
-      "icon": "reco",
+      "name": "Рекуператор",
       "toggle": true,
       "regAddress": 20,
-      "regType": "b5",
+      "regType": "b15",
       "requireConfirm": true,
       "longPress": "popup:trend",
       "popupData": {
@@ -368,14 +375,35 @@
           "text": "Рекупе- ратор"
         },
         {
-          "type": "image",
-          "x": 40,
-          "y": 30,
-          "src": "/images/reco.jpg",
-          "width": 70,
-          "height": 70,
-          "objectFit": "contain",
-          "plain": true
+          "type": "svg",
+          "x": 25,
+          "y": 20,
+          "src": "/icons/reco.svg",
+          "width": 90,
+          "height": 90,
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b15",
+              "if": "== 1",
+              "then": { "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b15",
+              "if": "== 1",
+              "then": { "target": ".rotation", "spin": "normal" }
+            },
+            {
+              "reg": "20:b15",
+              "if": "== 0",
+              "then": { "color": "#7f8c8d" }
+            },
+            {
+              "reg": "20:b15",
+              "if": "== 0",
+              "then": { "target": ".rotation", "spin": null }
+            }
+          ]
         },
         {
           "type": "title-number",
@@ -407,8 +435,7 @@
       "y": 180,
       "width": 160,
       "height": 345,
-      "title": "Фильтр",
-      "icon": "filter",
+      "name": "Фильтр",
       "toggle": true,
       "regAddress": 20,
       "regType": "b6",
@@ -465,8 +492,7 @@
       "y": 535,
       "width": 440,
       "height": 345,
-      "title": "Водяной охд./нагреватель",
-      "icon": "pump",
+      "name": "Водяной охд./нагреватель",
       "toggle": false,
       "longPress": "popup:menu",
       "popupData": {
@@ -481,14 +507,25 @@
           "text": "Водяной охд./нагреватель"
         },
         {
-          "type": "image",
+          "type": "svg",
           "x": 20,
           "y": 75,
-          "src": "/images/water-pump.jpg",
+          "src": "/icons/water-pump.svg",
           "width": 50,
           "height": 50,
-          "objectFit": "contain",
-          "plain": true
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b7",
+              "if": "== 1",
+              "then": { "pulse": "slow", "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b7",
+              "if": "== 0",
+              "then": { "pulse": null, "color": "#7f8c8d" }
+            }
+          ]
         },
         {
           "type": "toggle-button",
@@ -568,8 +605,7 @@
       "y": 535,
       "width": 150,
       "height": 345,
-      "title": "Увлажнитель",
-      "icon": "humidifier",
+      "name": "Увлажнитель",
       "toggle": true,
       "regAddress": 20,
       "regType": "b9",
@@ -635,7 +671,6 @@
       "y": 535,
       "width": 235,
       "height": 280,
-      "icon": "meatballs",
       "toggle": true,
       "regAddress": 20,
       "regType": "b0",
@@ -677,8 +712,7 @@
       "y": 275,
       "width": 255,
       "height": 250,
-      "title": "Заслонка выходная",
-      "icon": "damper",
+      "name": "Заслонка выходная",
       "toggle": true,
       "regAddress": 20,
       "regType": "b1",
@@ -729,8 +763,7 @@
       "y": 535,
       "width": 235,
       "height": 280,
-      "title": "Приточка",
-      "icon": "fan",
+      "name": "Приточка",
       "toggle": true,
       "regAddress": 20,
       "regType": "b2",
@@ -785,8 +818,7 @@
       "y": 275,
       "width": 235,
       "height": 250,
-      "title": "Вытяжка",
-      "icon": "fan",
+      "name": "Вытяжка",
       "toggle": true,
       "regAddress": 20,
       "regType": "b3",
@@ -841,8 +873,7 @@
       "y": 535,
       "width": 260,
       "height": 280,
-      "title": "Электронагреватель",
-      "icon": "heater",
+      "name": "Электронагреватель",
       "toggle": true,
       "regAddress": 20,
       "regType": "b4",
@@ -901,8 +932,7 @@
       "y": 160,
       "width": 150,
       "height": 720,
-      "title": "Рекуператор",
-      "icon": "reco",
+      "name": "Рекуператор",
       "toggle": true,
       "regAddress": 20,
       "regType": "b5",
@@ -953,8 +983,7 @@
       "y": 160,
       "width": 235,
       "height": 230,
-      "title": "Фильтр",
-      "icon": "filter",
+      "name": "Фильтр",
       "toggle": true,
       "regAddress": 20,
       "regType": "b6",
@@ -1005,8 +1034,7 @@
       "y": 400,
       "width": 310,
       "height": 480,
-      "title": "Водяной охд./нагреватель",
-      "icon": "pump",
+      "name": "Водяной охд./нагреватель",
       "toggle": false,
       "longPress": "popup:menu",
       "popupData": {
@@ -1096,7 +1124,6 @@
           "format": [
             [ "Влажность воздуха %4i %", 6 ],
             [ "Т воздуха %4.2f C", 0 ]
-      
           ]
         }
       ]
@@ -1107,8 +1134,7 @@
       "y": 400,
       "width": 150,
       "height": 480,
-      "title": "Увлажнитель",
-      "icon": "humidifier",
+      "name": "Увлажнитель",
       "toggle": true,
       "regAddress": 20,
       "regType": "b9",
@@ -1191,7 +1217,8 @@
       "postfix": "А",
       "x": 400,
       "y": 100,
-      "size": 5
+      "size": 5,
+      "showSaveButton": true   
     },
     {
       "type": "title-input",

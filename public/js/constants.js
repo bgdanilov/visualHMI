@@ -3,7 +3,9 @@ export const CONFIG = {
     PROJECT: 'projectConfig.json',
     BLOCKS: 'blocksData.json',
     UPDATE_INTERVAL_MS: 300,
-    API_TIMEOUT_MS: 5000
+    API_TIMEOUT_MS: 5000,
+    CANVAS_W: 1600,
+    CANVAS_H: 1200
 };
 
 export const BLOCK_TYPES = {
@@ -15,7 +17,7 @@ export const BLOCK_TYPES = {
     TITLE_INPUT: 'title-input',
     SEND_BUTTON: 'send-button',
     PAGE_BUTTON: 'page-button',
-    EMPTY_BOX: 'empty-box',
     IMAGE: 'image',
-    NODE_CARD: 'node-card'    // ← новое
+    NODE_CARD: 'node-card',
+    SVG: 'svg'
 };

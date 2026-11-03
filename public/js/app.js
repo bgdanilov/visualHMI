@@ -41,24 +41,32 @@ class App {
     }
 
     _setupScaling() {
-        const CANVAS_W = 1600;
-        const CANVAS_H = 1000;
-
+        const CANVAS_W = CONFIG.CANVAS_W;
+        const CANVAS_H = CONFIG.CANVAS_H;
+    
+        const el = this.renderArea;
+    
+        // Размер холста — из CONFIG. Это единственное место, где он задаётся.
+        el.style.width  = `${CANVAS_W}px`;
+        el.style.height = `${CANVAS_H}px`;
+    
         const fit = () => {
             const scale = Math.min(
                 window.innerWidth / CANVAS_W,
                 window.innerHeight / CANVAS_H
             );
-            const el = this.renderArea;
             el.style.position = 'absolute';
             el.style.transformOrigin = 'top left';
             el.style.transform = `scale(${scale})`;
             el.style.left = `${(window.innerWidth - CANVAS_W * scale) / 2}px`;
-            el.style.top = `${(window.innerHeight - CANVAS_H * scale) / 2}px`;
+            el.style.top  = `${(window.innerHeight - CANVAS_H * scale) / 2}px`;
         };
-
+    
         fit();
         window.addEventListener('resize', fit);
+    
+        // Показываем холст после того, как размеры выставлены
+        el.style.visibility = 'visible';
     }
 
     async initialize() {

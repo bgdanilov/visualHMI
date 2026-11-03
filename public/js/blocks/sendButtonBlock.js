@@ -85,20 +85,13 @@ export class SendButtonBlock extends BaseBlock {
 
             for (const reg of regs) {
                 const regKey = String(reg);
-                let regInfo = this.ctx.updater.caches.inputs.get(regKey);
+                const regInfo = this.ctx.updater.getInput(reg);
 
                 if (!regInfo) {
-                    console.warn(`⚠️ Регистр ${reg} не найден в кэше, ищем в DOM...`);
-                    const inputElement = document.querySelector(`.input[data-reg="${reg}"]`);
-                    if (inputElement) {
-                        const regType = inputElement.dataset.type || 'u2';
-                        this.ctx.updater.addInput(reg, inputElement, regType);
-                        regInfo = this.ctx.updater.caches.inputs.get(regKey);
-                    }
-                }
-
-                if (!regInfo) {
-                    console.error(`❌ Регистр ${reg} не найден`);
+                    console.error(
+                        `❌ send-button: регистр ${reg} не найден в кэше inputs. ` +
+                        `Проверь blocksData.json — для этого регистра нет связанного title-input.`
+                    );
                     failedRegisters.push(reg);
                     continue;
                 }
