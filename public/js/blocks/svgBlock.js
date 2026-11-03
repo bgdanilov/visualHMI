@@ -10,16 +10,14 @@ export class SvgBlock extends BaseBlock {
 
         const { src, width = 50, height = 50 } = this.data;
 
-        // Базовые стили контейнера
         root.style.width = `${width}px`;
         root.style.height = `${height}px`;
         root.style.display = 'inline-flex';
         root.style.alignItems = 'center';
         root.style.justifyContent = 'center';
         root.style.transition = 'color 0.3s ease, opacity 0.3s ease, transform 0.3s ease';
-        root.style.overflow = 'hidden';
+        root.style.overflow = 'hidden'; // Оставляем, чтобы ничего не вылезало
 
-        // Загружаем SVG
         fetch(src)
             .then(res => {
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -33,13 +31,10 @@ export class SvgBlock extends BaseBlock {
                     this.svgRoot.style.width = '100%';
                     this.svgRoot.style.height = '100%';
                     this.svgRoot.style.display = 'block';
-                    // Включаем наследование цвета
                     this.svgRoot.setAttribute('fill', 'currentColor');
                 }
                 
-                // Регистрируем правила в updater
                 this._registerRules();
-                // Применяем начальные значения (0)
                 this._initRules();
             })
             .catch(err => {
@@ -50,11 +45,8 @@ export class SvgBlock extends BaseBlock {
         return root;
     }
 
-    // --- РЕГИСТРАЦИЯ ПРАВИЛ В UPDATER ---
     _registerRules() {
         if (!this.data.rules) return;
-
-        // Собираем уникальные регистры (с типом), чтобы не регистрировать дубли
         const seen = new Set();
         this.data.rules.forEach(rule => {
             const parts = String(rule.reg).split(':');
@@ -63,14 +55,12 @@ export class SvgBlock extends BaseBlock {
             const key = `${regId}:${type}`;
             if (seen.has(key)) return;
             seen.add(key);
-
             modbusUpdater.addSvgRule(regId, this, rule.reg, type);
         });
     }
 
     _initRules() {
         if (!this.data.rules) return;
-        // Собираем уникальные reg из правил и инициализируем их нулём
         const seen = new Set();
         this.data.rules.forEach(rule => {
             if (seen.has(rule.reg)) return;
@@ -80,12 +70,18 @@ export class SvgBlock extends BaseBlock {
     }
 
     // --- ГЛАВНЫЙ МЕТОД ОБНОВЛЕНИЯ ---
-    // Вызывается из updater для конкретного регистра
     updateByReg(regKey, value) {
         if (!this.data.rules) return;
 
         const rules = this.data.rules.filter(r => r.reg === regKey);
-        
+        if (!rules.length) return;
+
+        // Защита от повторного сброса анимации при каждом опросе Modbus
+        if (!this._lastValues) this._lastValues = {};
+        const lastValue = this._lastValues[regKey];
+        if (lastValue === value) return;
+        this._lastValues[regKey] = value;
+
         rules.forEach(rule => {
             if (this._evaluate(rule.if, value)) {
                 this._applyEffects(rule.then, value);
@@ -93,7 +89,7 @@ export class SvgBlock extends BaseBlock {
         });
     }
 
-         // --- ВЫЧИСЛЕНИЕ УСЛОВИЯ (DSL) ---
+    // --- ВЫЧИСЛЕНИЕ УСЛОВИЯ ---
     _evaluate(condition, value) {
         if (condition === undefined || condition === null || condition === '') return true;
 
@@ -112,7 +108,6 @@ export class SvgBlock extends BaseBlock {
         expr = String(expr).trim();
         if (!expr) return true;
 
-        // Внешние скобки, охватывающие всё выражение
         if (expr.startsWith('(') && expr.endsWith(')')) {
             let depth = 0;
             let coversAll = true;
@@ -124,19 +119,12 @@ export class SvgBlock extends BaseBlock {
             if (coversAll) return this._evalExpr(expr.slice(1, -1), v);
         }
 
-        // || (низший приоритет)
         const orParts = this._splitTopLevel(expr, '||');
-        if (orParts.length > 1) {
-            return orParts.some(p => this._evalExpr(p, v));
-        }
+        if (orParts.length > 1) return orParts.some(p => this._evalExpr(p, v));
 
-        // &&
         const andParts = this._splitTopLevel(expr, '&&');
-        if (andParts.length > 1) {
-            return andParts.every(p => this._evalExpr(p, v));
-        }
+        if (andParts.length > 1) return andParts.every(p => this._evalExpr(p, v));
 
-        // range a..b
         const rangeMatch = expr.match(/^range\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)$/);
         if (rangeMatch) {
             const a = parseFloat(rangeMatch[1]);
@@ -144,7 +132,6 @@ export class SvgBlock extends BaseBlock {
             return v >= Math.min(a, b) && v <= Math.max(a, b);
         }
 
-        // Сравнение
         const cmpMatch = expr.match(/^(==|!=|>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$/);
         if (cmpMatch) {
             const [, op, numStr] = cmpMatch;
@@ -159,32 +146,25 @@ export class SvgBlock extends BaseBlock {
             }
         }
 
-        // Одиночное число — трактуем как "== num"
-        if (/^-?\d+(?:\.\d+)?$/.test(expr)) {
-            return v === parseFloat(expr);
-        }
+        if (/^-?\d+(?:\.\d+)?$/.test(expr)) return v === parseFloat(expr);
 
         throw new Error(`неизвестный токен: "${expr}"`);
     }
 
-    // Разбивает строку по sep, игнорируя вхождения внутри скобок
     _splitTopLevel(expr, sep) {
         const parts = [];
         let depth = 0;
         let start = 0;
-
         for (let i = 0; i < expr.length; i++) {
             const ch = expr[i];
             if (ch === '(') depth++;
             else if (ch === ')') depth--;
-
             if (depth === 0 && expr.startsWith(sep, i)) {
                 parts.push(expr.slice(start, i));
                 i += sep.length - 1;
                 start = i + 1;
             }
         }
-
         if (parts.length === 0) return [expr];
         parts.push(expr.slice(start));
         return parts;
@@ -194,117 +174,72 @@ export class SvgBlock extends BaseBlock {
     _applyEffects(effects, value) {
         if (!effects) return;
         
-        // 1. Вращение
-        if (effects.spin !== undefined) {
-            this._applySpin(effects.spin);
-        }
+        // Ищем цель (target), если она есть
+        const target = effects.target && this.svgRoot 
+            ? this.svgRoot.querySelector(effects.target) 
+            : null;
         
-        // 2. Цвет
+        // ЦВЕТ: если указан target — красим только его, иначе весь блок
         if (effects.color !== undefined) {
-            this._applyColorValue(effects.color);
+            const colorEl = target || this.el;
+            if (effects.color === null) colorEl.style.color = '';
+            else colorEl.style.color = effects.color;
         }
         
-        // 3. Заполнение
-        if (effects.fill !== undefined) {
-            this._applyFill(effects.fill, value);
+        // Для анимаций цель ищется так же
+        const animEl = target || this.el;
+        
+        // Вращение
+        if (effects.spin !== undefined) {
+            this._applySpin(effects.spin, animEl);
         }
         
-        // 4. Прозрачность
+        // Пульсация
+        if ('pulse' in effects) {
+            this._applyPulse(effects.pulse, animEl);
+        }
+        
+        // Прозрачность (оставим на весь блок)
         if (effects.opacity !== undefined) {
             this.el.style.opacity = effects.opacity;
         }
         
-        // 5. Скрытие/показ
+        // Скрытие/показ (оставим на весь блок)
         if (effects.visible !== undefined) {
             this.el.style.display = effects.visible ? 'inline-flex' : 'none';
         }
-        
-        // 6. Поворот (угол в градусах, может быть числом или формулой)
-        if (effects.rotate !== undefined) {
-            let deg = effects.rotate;
-            if (typeof deg === 'string') {
-                try {
-                    deg = new Function('value', `return ${deg};`)(value);
-                } catch (e) {
-                    console.warn(`Ошибка в формуле rotate: ${deg}`, e);
-                    deg = 0;
-                }
-            }
-            this.el.style.transform = `rotate(${deg}deg)`;
-        }
-        
-        // 7. Масштаб
-        if (effects.scale !== undefined) {
-            this.el.style.transform = `scale(${effects.scale})`;
+    }
+
+    _applySpin(speed, el = this.el) {
+        const SPIN_CLASSES = ['spinning', 'spin-slow', 'spin-fast', 'spin-pause', 'spin-reverse'];
+        SPIN_CLASSES.forEach(cls => el.classList.remove(cls));
+
+        if (speed === null || speed === false || speed === 'off') return;
+
+        if (typeof speed === 'string') {
+            const cls = {
+                'slow': 'spin-slow', 'fast': 'spin-fast', 'pause': 'spin-pause',
+                'reverse': 'spin-reverse', 'normal': 'spinning'
+            }[speed] || 'spinning';
+            el.classList.add(cls);
+        } else if (typeof speed === 'number') {
+            el.classList.add('spinning');
+            el.style.setProperty('--spin-duration', `${speed}s`);
         }
     }
 
-    // --- РЕАЛИЗАЦИЯ ЭФФЕКТОВ ---
-    
-    _applySpin(speed) {
-        const SPIN_CLASSES = ['spinning', 'spin-slow', 'spin-fast', 'spin-pause', 'spin-reverse'];
-        SPIN_CLASSES.forEach(cls => this.el.classList.remove(cls));
-        
-        if (speed === null || speed === false || speed === 'off') return;
-        
+    _applyPulse(speed, el = this.el) {
+        const PULSE_CLASSES = ['pulsing', 'pulse-slow', 'pulse-fast'];
+        PULSE_CLASSES.forEach(cls => el.classList.remove(cls));
+
+        if (speed === null || speed === undefined || speed === false || speed === 'off' || speed === 0) return;
+
         if (typeof speed === 'string') {
-            const cls = {
-                'slow': 'spin-slow',
-                'fast': 'spin-fast',
-                'pause': 'spin-pause',
-                'reverse': 'spin-reverse',
-                'normal': 'spinning'
-            }[speed] || 'spinning';
-            this.el.classList.add(cls);
+            const cls = { slow: 'pulse-slow', fast: 'pulse-fast', normal: 'pulsing' }[speed] || 'pulsing';
+            el.classList.add(cls);
         } else if (typeof speed === 'number') {
-            this.el.classList.add('spinning');
-            this.el.style.setProperty('--spin-duration', `${speed}s`);
-        }
-    }
-    
-    _applyColorValue(color) {
-        if (color === null) {
-            this.el.style.color = '';
-            return;
-        }
-        this.el.style.color = color;
-    }
-    
-    _applyFill(fillRule, value) {
-        if (!this.svgRoot) return;
-        
-        const target = this.svgRoot.querySelector(fillRule.target);
-        if (!target) {
-            console.warn(`Цель для fill не найдена: ${fillRule.target}`);
-            return;
-        }
-        
-        const min = fillRule.min ?? 0;
-        const max = fillRule.max ?? 100;
-        const clamped = Math.max(min, Math.min(max, Number(value)));
-        const t = (clamped - min) / (max - min);
-        
-        const prop = fillRule.property || 'height';
-        
-        if (prop === 'height') {
-            if (!target.dataset.origHeight) {
-                const bbox = target.getBBox();
-                target.dataset.origHeight = bbox.height;
-                target.dataset.origY = bbox.y;
-            }
-            const origH = parseFloat(target.dataset.origHeight);
-            const origY = parseFloat(target.dataset.origY);
-            const newH = origH * t;
-            const newY = origY + (origH - newH);
-            target.setAttribute('height', newH);
-            target.setAttribute('y', newY);
-        } else if (prop === 'width') {
-            if (!target.dataset.origWidth) {
-                target.dataset.origWidth = target.getBBox().width;
-            }
-            target.setAttribute('width', parseFloat(target.dataset.origWidth) * t);
-        } else if (prop === 'opacity') {
-            target.setAttribute('opacity', t);
+            el.classList.add('pulsing');
+            el.style.setProperty('--pulse-duration', `${speed}s`);
         }
     }
 }

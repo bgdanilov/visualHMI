@@ -272,7 +272,7 @@
       "name": "Электронагреватель",
       "toggle": true,
       "regAddress": 20,
-      "regType": "b4",
+      "regType": "b10",
       "requireConfirm": true,
       "longPress": "popup:menu",
       "popupData": {
@@ -287,14 +287,35 @@
           "text": "Электронагреватель"
         },
         {
-          "type": "image",
-          "x": 100,
+          "type": "svg",
+          "x": 90,
           "y": 20,
-          "src": "/images/heater.jpg",
+          "src": "/icons/heater.svg",
           "width": 50,
           "height": 50,
-          "objectFit": "contain",
-          "plain": true
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b10",
+              "if": "== 1",
+              "then": { "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b10",
+              "if": "== 1",
+              "then": { "target": ".pulse", "pulse": "slow", "color": "#E65100" }
+            },
+            {
+              "reg": "20:b10",
+              "if": "== 0",
+              "then": { "color": "#7f8c8d" }
+            },
+            {
+              "reg": "20:b10",
+              "if": "== 0",
+              "then": { "target": ".pulse", "pulse": null, "color": null }
+            }
+          ]
         },
         {
           "type": "title-number",
@@ -339,7 +360,7 @@
       "name": "Рекуператор",
       "toggle": true,
       "regAddress": 20,
-      "regType": "b5",
+      "regType": "b15",
       "requireConfirm": true,
       "longPress": "popup:trend",
       "popupData": {
@@ -354,14 +375,35 @@
           "text": "Рекупе- ратор"
         },
         {
-          "type": "image",
-          "x": 40,
-          "y": 30,
-          "src": "/images/reco.jpg",
-          "width": 70,
-          "height": 70,
-          "objectFit": "contain",
-          "plain": true
+          "type": "svg",
+          "x": 25,
+          "y": 20,
+          "src": "/icons/reco.svg",
+          "width": 90,
+          "height": 90,
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b15",
+              "if": "== 1",
+              "then": { "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b15",
+              "if": "== 1",
+              "then": { "target": ".rotation", "spin": "normal" }
+            },
+            {
+              "reg": "20:b15",
+              "if": "== 0",
+              "then": { "color": "#7f8c8d" }
+            },
+            {
+              "reg": "20:b15",
+              "if": "== 0",
+              "then": { "target": ".rotation", "spin": null }
+            }
+          ]
         },
         {
           "type": "title-number",
@@ -465,14 +507,25 @@
           "text": "Водяной охд./нагреватель"
         },
         {
-          "type": "image",
+          "type": "svg",
           "x": 20,
           "y": 75,
-          "src": "/images/water-pump.jpg",
+          "src": "/icons/water-pump.svg",
           "width": 50,
           "height": 50,
-          "objectFit": "contain",
-          "plain": true
+          "plain": true,
+          "rules": [
+            {
+              "reg": "20:b7",
+              "if": "== 1",
+              "then": { "pulse": "slow", "color": "#2ecc71" }
+            },
+            {
+              "reg": "20:b7",
+              "if": "== 0",
+              "then": { "pulse": null, "color": "#7f8c8d" }
+            }
+          ]
         },
         {
           "type": "toggle-button",

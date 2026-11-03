@@ -1061,7 +1061,8 @@ p, span, h2 {
 
 .block.node-card.on {
     border-color: #43a047;
-    background: #f1f8f2;
+  /*  background: #f1f8f2;*/
+    background: #FF6E6E;
 }
 
 /* State dot — правый верхний угол */
@@ -1159,11 +1160,18 @@ p, span, h2 {
    SVG BLOCK
    ============================================ */
 
-.svg-block {
+   .svg-block {
     transition: color 0.3s ease;
     user-select: none;
+    overflow: hidden; /* Иконка не будет вылезать за пределы блока */
 }
 
+/* Плавные переходы для элементов шкал */
+.svg-block svg rect {
+    transition: height 0.2s ease, y 0.2s ease, opacity 0.3s ease;
+}
+
+/* --- ВРАЩЕНИЕ (spin) --- */
 @keyframes spin-svg {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
@@ -1174,15 +1182,48 @@ p, span, h2 {
     to   { transform: rotate(0deg); }
 }
 
-.svg-block.spinning svg {
+/* Класс-маркер для вращающихся частей (например, <g class="rotation">) */
+.rotation {
+    transform-box: fill-box; /* Центр вращения по границам самого элемента */
+    transform-origin: center;
+}
+
+/* Сами анимации */
+.spinning {
     animation: spin-svg var(--spin-duration, 2s) linear infinite;
 }
 
-.svg-block.spin-slow svg     { animation: spin-svg 4s linear infinite; }
-.svg-block.spin-fast svg     { animation: spin-svg 1s linear infinite; }
-.svg-block.spin-pause svg    { animation-play-state: paused; }
-.svg-block.spin-reverse svg  { animation: spin-svg-reverse 2s linear infinite; }
+.spin-slow {
+    animation: spin-svg var(--spin-duration, 4s) linear infinite;
+}
 
-.svg-block svg rect {
-    transition: height 0.2s ease, y 0.2s ease, opacity 0.3s ease;
+.spin-fast {
+    animation: spin-svg var(--spin-duration, 1s) linear infinite;
+}
+
+.spin-reverse {
+    animation: spin-svg-reverse var(--spin-duration, 2s) linear infinite;
+}
+
+.spin-pause {
+    animation-play-state: paused;
+}
+
+/* --- ПУЛЬСАЦИЯ (pulse) --- */
+@keyframes pulseOpacity {
+    0%   { opacity: 1;    }
+    50%  { opacity: 0.35; }
+    100% { opacity: 1;    }
+}
+
+.pulsing {
+    animation: pulseOpacity var(--pulse-duration, 1.2s) ease-in-out infinite;
+}
+
+.pulse-slow {
+    animation: pulseOpacity 2.5s ease-in-out infinite;
+}
+
+.pulse-fast {
+    animation: pulseOpacity 0.6s ease-in-out infinite;
 }

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16.94621 16.984983">
+  <!-- Змеевик ТЭНа (нижняя часть) -->
+  <path
+     fill="none"
+     stroke="currentColor"
+     stroke-width="1.1"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     d="M 1.5,9.5 h 2.5 v 5.5 a 1.2,1.2 0 0 0 2.4,0 v -5.5 a 1.2,1.2 0 0 1 2.4,0 v 5.5 a 1.2,1.2 0 0 0 2.4,0 v -5.5 a 1.2,1.2 0 0 1 2.4,0 v 5.5 a 1.2,1.2 0 0 0 2.4,0 v -3.5 h 2.1" />
+     
+  <!-- Волны тепла (верхняя часть) -->
+  <g class="pulse" fill="none"
+     stroke="currentColor"
+     stroke-width="1.1"
+     stroke-linecap="round">
+  <path
+      d="M 4.5,7 C 5.2,6.2 5.2,5.3 4.5,4.5 C 3.8,3.7 3.8,2.8 4.5,2" />
+  <path
+     d="M 7.4,7 C 8.1,6.2 8.1,5.3 7.4,4.5 C 6.7,3.7 6.7,2.8 7.4,2" />
+  <path
+     d="M 10.3,7 C 11,6.2 11,5.3 10.3,4.5 C 9.6,3.7 9.6,2.8 10.3,2" />
+  <path
+     d="M 13.2,7 C 13.9,6.2 13.9,5.3 13.2,4.5 C 12.5,3.7 12.5,2.8 13.2,2" />
+     </g>
+</svg>
