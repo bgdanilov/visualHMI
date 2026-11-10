@@ -1,7 +1,7 @@
 // public/js/core/modbusUpdater.js
 import { api } from '../api/apiClient.js';
+import { evalCondition } from '../utils/condition.js';
 
-// 🔥 Глобальная настройка количества знаков после запятой
 const DEFAULT_DECIMAL_PLACES = 3;
 
 export class ModbusUpdater {
@@ -11,10 +11,12 @@ export class ModbusUpdater {
             inputs: new Map(),
             toggles: new Map(),
             nodeCards: new Map(),
-            svgs: new Map()
+            svgs: new Map(),
+            buttons: new Map()
         };
         this.sendingRegisters = new Set();
         this.editingInputs = new Set();
+        this.buttonIndices = new Map();
     }
 
     clearCaches() {
@@ -23,7 +25,11 @@ export class ModbusUpdater {
         this.caches.toggles.clear();
         this.caches.nodeCards.clear();
         this.caches.svgs.clear();
+        this.caches.buttons.clear();
+        // buttonIndices НЕ чистим — индексы кнопок переживают перерисовку
     }
+
+    // ============ ФОРМАТИРОВАНИЕ ============
 
     _applyFormat(formatSpec, value, regType) {
         const specifier = formatSpec.slice(-1);
@@ -33,32 +39,15 @@ export class ModbusUpdater {
 
         let s;
         switch (specifier) {
-            case 'f':
-                s = value.toFixed(prec >= 0 ? prec : 2);
-                break;
-            case 'e':
-                s = value.toExponential(prec >= 0 ? prec : 2);
-                break;
-            case 'E':
-                s = value.toExponential(prec >= 0 ? prec : 2).toUpperCase();
-                break;
-            case 'g':
-                s = prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4);
-                break;
-            case 'G':
-                s = (prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4)).toUpperCase();
-                break;
-            case 'd': case 'i':
-                s = String(Math.round(value));
-                break;
-            case 'u':
-                s = String(Math.max(0, Math.round(value)));
-                break;
-            case 'c':
-                s = String(value);
-                break;
-            default:
-                s = String(value);
+            case 'f': s = value.toFixed(prec >= 0 ? prec : 2); break;
+            case 'e': s = value.toExponential(prec >= 0 ? prec : 2); break;
+            case 'E': s = value.toExponential(prec >= 0 ? prec : 2).toUpperCase(); break;
+            case 'g': s = prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4); break;
+            case 'G': s = (prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4)).toUpperCase(); break;
+            case 'd': case 'i': s = String(Math.round(value)); break;
+            case 'u': s = String(Math.max(0, Math.round(value))); break;
+            case 'c': s = String(value); break;
+            default: s = String(value);
         }
 
         if (width > s.length) {
@@ -74,30 +63,24 @@ export class ModbusUpdater {
         return s;
     }
 
-    _isFloatType(registerType) {
-        return registerType === 'f4';
-    }
+    _isFloatType(registerType) { return registerType === 'f4'; }
 
     _getDecimalPlaces(element) {
         if (!element) return DEFAULT_DECIMAL_PLACES;
         const val = element.dataset.decimalPlaces;
-        if (val === undefined || val === '') {
-            return DEFAULT_DECIMAL_PLACES;
-        }
+        if (val === undefined || val === '') return DEFAULT_DECIMAL_PLACES;
         const parsed = parseInt(val);
         return isNaN(parsed) ? DEFAULT_DECIMAL_PLACES : parsed;
     }
 
     _formatValue(value, element, registerType) {
-        if (!this._isFloatType(registerType)) {
-            return String(value);
-        }
+        if (!this._isFloatType(registerType)) return String(value);
         const decimalPlaces = this._getDecimalPlaces(element);
-        if (decimalPlaces === null || isNaN(decimalPlaces) || decimalPlaces < 0) {
-            return String(value);
-        }
+        if (decimalPlaces === null || isNaN(decimalPlaces) || decimalPlaces < 0) return String(value);
         return parseFloat(value).toFixed(decimalPlaces);
     }
+
+    // ============ SPANS ============
 
     addSpan(regId, span, registerType, formatSpec, scale = 1) {
         const key = String(regId);
@@ -107,14 +90,12 @@ export class ModbusUpdater {
         this.caches.spans.get(key).spans.push({ element: span, formatSpec, scale });
     }
 
+    // ============ INPUTS ============
+
     addInput(regId, input, registerType) {
         const key = String(regId);
         const formattedValue = this._formatValue(input.value, input, registerType);
-        this.caches.inputs.set(key, {
-            registerType,
-            element: input,
-            originalValue: formattedValue
-        });
+        this.caches.inputs.set(key, { registerType, element: input, originalValue: formattedValue });
         input.value = formattedValue;
     }
 
@@ -124,9 +105,7 @@ export class ModbusUpdater {
         if (entry) {
             const formattedValue = this._formatValue(value, entry.element, entry.registerType);
             entry.originalValue = formattedValue;
-            if (entry.element) {
-                entry.element.value = formattedValue;
-            }
+            if (entry.element) entry.element.value = formattedValue;
         }
     }
 
@@ -134,14 +113,12 @@ export class ModbusUpdater {
         const key = String(regId);
         const entry = this.caches.inputs.get(key);
         if (!entry || !entry.element) return false;
-        const currentValue = entry.element.value;
-        const originalValue = entry.originalValue;
-        return currentValue !== originalValue;
+        return entry.element.value !== entry.originalValue;
     }
 
-    getInput(regId) {
-        return this.caches.inputs.get(String(regId)) || null;
-    }
+    getInput(regId) { return this.caches.inputs.get(String(regId)) || null; }
+
+    // ============ TOGGLES ============
 
     addToggle(regId, button, registerType) {
         const key = String(regId);
@@ -149,53 +126,61 @@ export class ModbusUpdater {
             this.caches.toggles.set(key, { registerType, toggles: [] });
         }
         this.caches.toggles.get(key).toggles.push(button);
-
-        if (!button.dataset.textOn) {
-            button.dataset.textOn = 'Вкл';
-        }
-        if (!button.dataset.textOff) {
-            button.dataset.textOff = 'Выкл';
-        }
+        if (!button.dataset.textOn) button.dataset.textOn = 'Вкл';
+        if (!button.dataset.textOff) button.dataset.textOff = 'Выкл';
     }
+
+    // ============ NODE-CARD (rules) ============
 
     /**
-     * Регистрация node-card.
+     * Регистрация rules для node-card (mode: 'effects').
      * @param {number} regId
      * @param {HTMLElement} card
-     * @param {string} registerType — тип чтения (u2, s2, f4, bN)
-     * @param {string|null} onCondition — выражение вида "> 0", "== 3", "range 1..5".
-     *   Если null — старое поведение по биту из card.dataset.type.
+     * @param {string} registerType
+     * @param {Array<{expr:string, then:object, order:number}>} rules
      */
-    addNodeCard(regId, card, registerType, onCondition = null) {
+    addNodeCardRules(regId, card, registerType, rules) {
         const key = String(regId);
         if (!this.caches.nodeCards.has(key)) {
-            this.caches.nodeCards.set(key, { registerType, cards: [] });
+            this.caches.nodeCards.set(key, { entries: [] });
         }
-        this.caches.nodeCards.get(key).cards.push({ card, onCondition });
+        this.caches.nodeCards.get(key).entries.push({
+            card,
+            registerType,
+            rules: rules.slice().sort((a, b) => a.order - b.order)
+        });
     }
 
-    // 🔥 НОВЫЙ МЕТОД: регистрация SVG-правила
+    // ============ SVG ============
+
     addSvgRule(regId, blockInstance, regKey, registerType = 'u2') {
         const key = String(regId);
-        if (!this.caches.svgs.has(key)) {
-            this.caches.svgs.set(key, []);
-        }
-        // Проверяем, нет ли уже этой привязки
+        if (!this.caches.svgs.has(key)) this.caches.svgs.set(key, []);
         const existing = this.caches.svgs.get(key).find(
             item => item.block === blockInstance && item.regKey === regKey
         );
         if (existing) return;
-
-        this.caches.svgs.get(key).push({
-            block: blockInstance,
-            regKey,
-            registerType
-        });
+        this.caches.svgs.get(key).push({ block: blockInstance, regKey, registerType });
     }
 
-    getBytesCount(registerType) {
-        return registerType === 'f4' ? 4 : 2;
+    // ============ BUTTON ============
+
+    addButton(regId, root, registerType, stateKey, onActual) {
+        const key = String(regId);
+        if (!this.caches.buttons.has(key)) {
+            this.caches.buttons.set(key, { entries: [] });
+        }
+        this.caches.buttons.get(key).entries.push({ root, stateKey, onActual, registerType });
     }
+
+    getButtonStateIndex(key) { return this.buttonIndices.get(key) ?? 0; }
+    setButtonStateIndex(key, idx, length) {
+        this.buttonIndices.set(key, length > 0 ? idx % length : 0);
+    }
+
+    // ============ READ / WRITE HELPERS ============
+
+    getBytesCount(registerType) { return registerType === 'f4' ? 4 : 2; }
 
     readValue(dataView, offset, registerType) {
         try {
@@ -218,97 +203,44 @@ export class ModbusUpdater {
         }
     }
 
-    /**
-     * Мини-парсер условий (тот же синтаксис, что у SVG-правил):
-     *   "> 0", "== 3", "!= 5", ">= 2.5", "<= 100", "range 1..5"
-     * @returns {boolean}
-     */
-    _evaluateCondition(expr, value) {
-        const v = Number(value);
-        if (!Number.isFinite(v)) return false;
-
-        const s = String(expr).trim();
-        if (!s) return true;
-
-        // range a..b
-        const range = s.match(/^range\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)$/);
-        if (range) {
-            const a = parseFloat(range[1]);
-            const b = parseFloat(range[2]);
-            return v >= Math.min(a, b) && v <= Math.max(a, b);
-        }
-
-        // сравнения
-        const cmp = s.match(/^(==|!=|>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$/);
-        if (cmp) {
-            const [, op, numStr] = cmp;
-            const n = parseFloat(numStr);
-            switch (op) {
-                case '==': return v === n;
-                case '!=': return v !== n;
-                case '>=': return v >= n;
-                case '<=': return v <= n;
-                case '>':  return v >  n;
-                case '<':  return v <  n;
-            }
-        }
-
-        // просто число — «равно»
-        if (/^-?\d+(?:\.\d+)?$/.test(s)) return v === parseFloat(s);
-
-        console.warn(`node-card: неизвестное условие "${expr}"`);
-        return false;
-    }
+    // ============ UPDATE ============
 
     async update() {
         try {
             const dataView = await api.readModbus();
             const bytesLength = dataView.byteLength;
 
-            // --- ОБНОВЛЕНИЕ СПАНОВ ---
+            // --- SPANS ---
             for (const [regId, regInfo] of this.caches.spans) {
                 const offset = parseInt(regId) * 2;
                 const byteCount = this.getBytesCount(regInfo.registerType);
-
                 if (offset + byteCount > bytesLength) {
                     console.warn(`Недостаточно данных для регистра ${regId}`);
                     continue;
                 }
-
                 const rawValue = this.readValue(dataView, offset, regInfo.registerType);
-
                 if (rawValue !== undefined && !isNaN(rawValue)) {
                     regInfo.spans.forEach(({ element, formatSpec, scale }) => {
-                        const value = (scale !== undefined && scale !== 1)
-                            ? rawValue * scale
-                            : rawValue;
-
+                        const value = (scale !== undefined && scale !== 1) ? rawValue * scale : rawValue;
                         const displayValue = formatSpec
                             ? this._applyFormat(formatSpec, value, regInfo.registerType)
                             : String(value);
-                        if (element.textContent !== displayValue) {
-                            element.textContent = displayValue;
-                        }
+                        if (element.textContent !== displayValue) element.textContent = displayValue;
                     });
                 }
             }
 
-            // --- ОБНОВЛЕНИЕ TOGGLE КНОПОК ---
+            // --- TOGGLES ---
             for (const [regId, regInfo] of this.caches.toggles) {
                 const offset = parseInt(regId) * 2;
                 if (offset + 2 > bytesLength) continue;
-
                 const rawValue = dataView.getUint16(offset, true);
 
                 regInfo.toggles.forEach(button => {
                     if (button.disabled) return;
-
-                    const buttonRegType =
-                        button.dataset.type
+                    const buttonRegType = button.dataset.type
                         || button.closest('.content')?.dataset?.type
-                        || regInfo.registerType
-                        || 'b0';
-
+                        || regInfo.registerType || 'b0';
                     if (buttonRegType?.startsWith('b')) {
                         const bitIndex = parseInt(buttonRegType.substring(1));
                         if (bitIndex >= 0 && bitIndex <= 15) {
@@ -316,77 +248,62 @@ export class ModbusUpdater {
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
                             button.classList.add('toggle-button');
-
                             if (button.dataset.textOn || button.dataset.textOff) {
-                                const textOn = button.dataset.textOn || 'Вкл';
-                                const textOff = button.dataset.textOff || 'Выкл';
-                                button.textContent = isOn ? textOn : textOff;
+                                button.textContent = isOn
+                                    ? (button.dataset.textOn || 'Вкл')
+                                    : (button.dataset.textOff || 'Выкл');
                             }
                         }
                     }
                 });
             }
 
-            // --- ОБНОВЛЕНИЕ NODE-CARD ---
-            for (const [regId, regInfo] of this.caches.nodeCards) {
+            // --- BUTTON ---
+            for (const [regId, regInfo] of this.caches.buttons) {
                 const offset = parseInt(regId) * 2;
-                const byteCount = this.getBytesCount(regInfo.registerType);
-
-                if (offset + byteCount > bytesLength) {
-                    console.warn(`Недостаточно данных для регистра ${regId}`);
-                    continue;
-                }
-
-                const rawValue = this.readValue(dataView, offset, regInfo.registerType);
-                if (rawValue === undefined || isNaN(rawValue)) continue;
-
-                regInfo.cards.forEach(({ card, onCondition }) => {
-                    if (card._isProcessing) return;
-
-                    let isOn;
-
-                    if (onCondition) {
-                        // 🔥 произвольное условие против сырого значения
-                        isOn = this._evaluateCondition(onCondition, rawValue);
-                    } else {
-                        // старое поведение — бит из card.dataset.type
-                        const cardRegType = card.dataset.type || regInfo.registerType || 'b0';
-                        if (!cardRegType.startsWith('b')) return;
-                        const bitIndex = parseInt(cardRegType.substring(1));
-                        if (!(bitIndex >= 0 && bitIndex <= 15)) return;
-                        isOn = ((rawValue >> bitIndex) & 1) === 1;
+                for (const entry of regInfo.entries) {
+                    const byteCount = this.getBytesCount(entry.registerType);
+                    if (offset + byteCount > bytesLength) continue;
+                    const value = this.readValue(dataView, offset, entry.registerType);
+                    if (value === undefined || isNaN(value)) continue;
+                    try { entry.onActual(value); } catch (e) {
+                        console.error('button onActual error:', e);
                     }
-
-                    card.classList.toggle('on',  isOn);
-                    card.classList.toggle('off', !isOn);
-                });
+                }
             }
 
-            // --- ОБНОВЛЕНИЕ INPUTS ---
+            // --- NODE-CARD (rules) ---
+            for (const [regId, regInfo] of this.caches.nodeCards) {
+                const offset = parseInt(regId) * 2;
+                for (const entry of regInfo.entries) {
+                    if (entry.card._isProcessing) continue;
+                    const byteCount = this.getBytesCount(entry.registerType);
+                    if (offset + byteCount > bytesLength) continue;
+                    const rawValue = this.readValue(dataView, offset, entry.registerType);
+                    if (rawValue === undefined || isNaN(rawValue)) continue;
+                    this._applyNodeCardRules(entry.card, rawValue, entry.rules);
+                }
+            }
+
+            // --- INPUTS ---
             for (const [regId, regInfo] of this.caches.inputs) {
                 const regKey = String(regId);
                 const input = regInfo.element;
-
                 if (this.sendingRegisters.has(regKey) ||
                     this.editingInputs.has(regKey) ||
                     document.activeElement === input ||
                     input.value !== regInfo.originalValue) {
                     continue;
                 }
-
                 const offset = parseInt(regId) * 2;
                 const byteCount = this.getBytesCount(regInfo.registerType);
-
                 if (offset + byteCount > bytesLength) {
                     console.warn(`Недостаточно данных для регистра ${regId}`);
                     continue;
                 }
-
                 const value = this.readValue(dataView, offset, regInfo.registerType);
-
                 if (value !== undefined && !isNaN(value) && input) {
                     const displayValue = this._formatValue(value, input, regInfo.registerType);
-
                     if (input.value !== displayValue) {
                         input.value = displayValue;
                         regInfo.originalValue = displayValue;
@@ -394,23 +311,15 @@ export class ModbusUpdater {
                 }
             }
 
-            // --- 🔥 ОБНОВЛЕНИЕ SVG-БЛОКОВ (ПО ПРАВИЛАМ) ---
+            // --- SVG ---
             for (const [regId, entries] of this.caches.svgs) {
                 const offset = parseInt(regId) * 2;
-
                 for (const { block, regKey, registerType } of entries) {
                     const byteCount = this.getBytesCount(registerType);
-
-                    if (offset + byteCount > bytesLength) {
-                        continue;
-                    }
-
+                    if (offset + byteCount > bytesLength) continue;
                     const value = this.readValue(dataView, offset, registerType);
-
                     if (value !== undefined && !isNaN(value)) {
-                        try {
-                            block.updateByReg(regKey, value);
-                        } catch (err) {
+                        try { block.updateByReg(regKey, value); } catch (err) {
                             console.error(`Ошибка updateByReg у SVG (${regId}):`, err);
                         }
                     }
@@ -423,32 +332,82 @@ export class ModbusUpdater {
         }
     }
 
+    // ============ NODE-CARD RULES APPLICATION ============
+
+    /**
+     * Применяет rules к карточке.
+     * class — приоритетный (первое истинное побеждает).
+     * color/background/borderColor/opacity/visible — накопительные.
+     */
+    _applyNodeCardRules(card, rawValue, rules) {
+        const knownClasses = new Set();
+        rules.forEach(r => { if (r.then?.class) knownClasses.add(r.then.class); });
+
+        let classMatched = false;
+
+        rules.forEach(rule => {
+            if (!evalCondition(rule.expr, rawValue)) return;
+            const then = rule.then || {};
+
+            if (then.class && !classMatched) {
+                knownClasses.forEach(c => card.classList.remove(c));
+                card.classList.add(then.class);
+                classMatched = true;
+            }
+
+            if (then.color)       card.style.color = then.color;
+            if (then.background)  card.style.backgroundColor = then.background;
+            if (then.borderColor) card.style.borderColor = then.borderColor;
+            if (then.opacity !== undefined) card.style.opacity = then.opacity;
+            if (then.visible !== undefined) card.style.display = then.visible ? '' : 'none';
+        });
+
+        if (!classMatched) {
+            knownClasses.forEach(c => card.classList.remove(c));
+        }
+    }
+
+    // ============ UPDATE HELPERS ============
+
+    async updateButton(regId) {
+        const key = String(regId);
+        const regInfo = this.caches.buttons.get(key);
+        if (!regInfo) return;
+
+        const dataView = await api.readModbus();
+        const bytesLength = dataView.byteLength;
+        const offset = parseInt(regId) * 2;
+
+        for (const entry of regInfo.entries) {
+            const byteCount = this.getBytesCount(entry.registerType);
+            if (offset + byteCount > bytesLength) continue;
+            const value = this.readValue(dataView, offset, entry.registerType);
+            if (value === undefined || isNaN(value)) continue;
+            try { entry.onActual(value); } catch (e) {
+                console.error('button onActual error:', e);
+            }
+        }
+    }
+
     async updateSingleInput(regId) {
         try {
             const regKey = String(regId);
             const regInfo = this.caches.inputs.get(regKey);
-
             if (!regInfo || !regInfo.element) {
                 console.warn(`Input для регистра ${regId} не найден`);
                 return;
             }
-
             const dataView = await api.readModbus();
             const bytesLength = dataView.byteLength;
-
             const offset = parseInt(regId) * 2;
             const byteCount = this.getBytesCount(regInfo.registerType);
-
             if (offset + byteCount > bytesLength) {
                 console.warn(`Недостаточно данных для регистра ${regId}`);
                 return;
             }
-
             const value = this.readValue(dataView, offset, regInfo.registerType);
-
             if (value !== undefined && !isNaN(value) && regInfo.element) {
                 const displayValue = this._formatValue(value, regInfo.element, regInfo.registerType);
-
                 if (regInfo.element.value !== displayValue) {
                     regInfo.element.value = displayValue;
                     regInfo.originalValue = displayValue;
@@ -459,17 +418,9 @@ export class ModbusUpdater {
         }
     }
 
-    markAsSending(regId) {
-        this.sendingRegisters.add(String(regId));
-    }
-
-    unmarkAsSending(regId) {
-        this.sendingRegisters.delete(String(regId));
-    }
-
-    isSending(regId) {
-        return this.sendingRegisters.has(String(regId));
-    }
+    markAsSending(regId) { this.sendingRegisters.add(String(regId)); }
+    unmarkAsSending(regId) { this.sendingRegisters.delete(String(regId)); }
+    isSending(regId) { return this.sendingRegisters.has(String(regId)); }
 }
 
 export const modbusUpdater = new ModbusUpdater();
