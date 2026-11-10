@@ -1226,3 +1226,39 @@ p, span, h2 {
 .pulse-fast {
     animation: pulseOpacity 0.6s ease-in-out infinite;
 }
+
+/* ===== button (Simple-Scada style) ===== */
+.button-block .btn {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    background-color: #ffffff;
+    color: #333;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.button-block .btn:hover {
+    border-color: #999;
+}
+
+.button-block .btn.pressed {
+    transform: scale(0.97);
+}
+
+.button-block .btn:disabled,
+.button-block.sending .btn {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.button-block .btn.error {
+    border-color: #e53935;
+    background-color: #ffebee !important;
+}

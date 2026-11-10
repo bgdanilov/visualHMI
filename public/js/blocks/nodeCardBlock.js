@@ -2,17 +2,16 @@
 import { BaseBlock } from './baseBlock.js';
 import { blockRegistry } from '../core/blockRegistry.js';
 
-const HOLD_MS = 500;
-const TAP_THRESHOLD_MS = 100;
+const HOLD_MS = 800;
+const TAP_THRESHOLD_MS = 200;
 
-// Селектор всего интерактивного — клик по нему не считается кликом по карточке
 const INTERACTIVE_SELECTOR = [
     'button', 'input',
     '.toggle', '.page-button', '.send-button',
-    '.input', '.input-reset', '.input-save'
+    '.input', '.input-reset', '.input-save',
+    '.btn'
 ].join(',');
 
-// Иконки-подсказки для longPress: "popup:<type>"
 const HINT_ICONS = {
     trend: `
         <svg viewBox="0 0 30 30" width="30" height="30" aria-hidden="true">
@@ -43,7 +42,6 @@ const HINT_ICONS = {
 
 const HINT_DEFAULT = HINT_ICONS.menu;
 
-
 export class NodeCardBlock extends BaseBlock {
     constructor(data, context) {
         super(data, context);
@@ -65,10 +63,6 @@ export class NodeCardBlock extends BaseBlock {
         root.style.minWidth = `${width}px`;
         root.style.minHeight = `${height}px`;
 
-        const isToggle = !!this.data.toggle;
-        if (isToggle) root.classList.add('has-toggle');
-
-        // Подсказка «три точки» — для любого longPress с popup:
         const longPress = this.data.longPress;
         let hintHtml = '';
         if (typeof longPress === 'string' && longPress.startsWith('popup:')) {
@@ -77,33 +71,14 @@ export class NodeCardBlock extends BaseBlock {
             hintHtml = `<span class="hint-icon">${hintSvg}</span>`;
         }
 
-        const stateDotHtml = `<span class="state-dot"></span>`;
-        const holdHtml = `<div class="hold-indicator"></div>`;
-
-        root.innerHTML = `${hintHtml}${stateDotHtml}${holdHtml}`;
+        root.innerHTML = `${hintHtml}<span class="state-dot"></span><div class="hold-indicator"></div>`;
 
         this.el = root;
 
         this._renderChildren(root);
-
-        // 🔥 Регистрация в updater: если это toggle ИЛИ задано onCondition
-        const hasReg = this.data.regAddress !== undefined;
-        const onCondition = typeof this.data.onCondition === 'string'
-            ? this.data.onCondition
-            : null;
-
-        if (hasReg && (isToggle || onCondition)) {
-            root.dataset.reg  = this.data.regAddress;
-            root.dataset.type = this.data.regType || 'b0';
-            this.ctx.updater.addNodeCard(
-                this.data.regAddress,
-                root,
-                this.data.regType || 'b0',
-                onCondition
-            );
-        }
-
-        this._setupInteractivity(root);
+        this._registerRules(root);
+        this._setupClick(root);
+        this._setupLongPress(root);
 
         return root;
     }
@@ -137,12 +112,10 @@ export class NodeCardBlock extends BaseBlock {
 
                 childEl.classList.remove('block');
                 childEl.classList.add('node');
-
                 childEl.style.position = 'absolute';
                 childEl.style.left = `${childData.x || 0}px`;
                 childEl.style.top = `${childData.y || 0}px`;
                 childEl.style.margin = '0';
-
                 if (childData.plain) childEl.classList.add('plain');
 
                 root.appendChild(childEl);
@@ -154,11 +127,109 @@ export class NodeCardBlock extends BaseBlock {
         }
     }
 
-    // ============ ИНТЕРАКТИВ ============
+    // ============ RULES (индикация) ============
 
-    _setupInteractivity(root) {
+    _registerRules(root) {
+        const rules = Array.isArray(this.data.rules) ? this.data.rules : null;
+        if (!rules || !rules.length) return;
+
+        const byReg = new Map();
+        rules.forEach((rule, idx) => {
+            if (!rule.reg) return;
+            const { regId, regType } = splitRegSpec(rule.reg, 'u2');
+            if (!byReg.has(regId)) byReg.set(regId, { regType, rules: [] });
+            byReg.get(regId).rules.push({
+                expr: rule.if,
+                then: rule.then || {},
+                order: idx
+            });
+        });
+
+        for (const [regId, info] of byReg) {
+            this.ctx.updater.addNodeCardRules(regId, root, info.regType, info.rules);
+        }
+    }
+
+    // ============ CLICK ============
+
+    _setupClick(root) {
+        const clickCfg = this.data.click;
+        if (!clickCfg || clickCfg.regAddress === undefined) return;
+
+        const regId   = parseInt(clickCfg.regAddress);
+        const regType = clickCfg.regType || 'b0';
+        const toggle  = clickCfg.toggle === true;
+        const fixedValue = clickCfg.value !== undefined ? parseFloat(clickCfg.value) : null;
+        const confirm = clickCfg.confirm === true;
+
+        root.addEventListener('click', async (e) => {
+            if (this._suppressClick) { e.preventDefault(); e.stopPropagation(); return; }
+            if (this.ctx.popup.isOpen()) return;
+            if (e.target.closest(INTERACTIVE_SELECTOR)) return;
+            if (this._isProcessing) return;
+
+            let value;
+
+            if (toggle) {
+                // читаем текущее значение
+                let actual;
+                try {
+                    const dataView = await this.ctx.api.readModbus();
+                    actual = this.ctx.updater.readValue(dataView, regId * 2, regType);
+                } catch (err) {
+                    console.error('node-card click read error:', err);
+                    return;
+                }
+                if (actual === undefined || isNaN(actual)) return;
+                value = (Number(actual) === 0) ? 1 : 0;
+            } else {
+                if (fixedValue === null) {
+                    console.warn(`node-card "${this.data.name}": click без value и toggle`);
+                    return;
+                }
+                value = fixedValue;
+            }
+
+            if (confirm) {
+                const name = this.data.name || this.data.title || 'карточки';
+                const action = toggle ? (value === 1 ? 'включить' : 'выключить') : `записать ${value}`;
+                const ok = await this.ctx.confirm.ask({
+                    title: 'Вы уверены?',
+                    text: `Вы собираетесь <b>${action}</b> <b>${name}</b>.<br>Продолжить?`,
+                    confirmText: 'Да',
+                    cancelText: 'Отмена',
+                    danger: value === 0
+                });
+                if (!ok) return;
+            }
+
+            this._isProcessing = true;
+            root.classList.add('sending');
+
+            try {
+                await this.ctx.api.writeRegister(regId, value, regType);
+                await new Promise(r => setTimeout(r, 50));
+                await this.ctx.updater.update();
+            } catch (err) {
+                console.error('node-card click write error:', err);
+                root.style.borderColor = 'red';
+                setTimeout(() => { root.style.borderColor = ''; }, 1500);
+            } finally {
+                this._isProcessing = false;
+                root.classList.remove('sending');
+            }
+        });
+    }
+
+    // ============ LONGPRESS ============
+
+    _setupLongPress(root) {
+        const action = this.data.longPress;
+        if (!action || action === 'none') return;
+
         root.addEventListener('pointerdown', (e) => {
             if (e.button !== undefined && e.button !== 0) return;
+            if (e.target.closest(INTERACTIVE_SELECTOR)) return;
             this._pointerDown = true;
             this._holdStartTime = Date.now();
 
@@ -171,7 +242,6 @@ export class NodeCardBlock extends BaseBlock {
                 root.classList.remove('holding');
                 root.classList.add('triggered');
                 setTimeout(() => root.classList.remove('triggered'), 350);
-
                 this._triggerLongPress(root);
             }, HOLD_MS);
         });
@@ -187,70 +257,13 @@ export class NodeCardBlock extends BaseBlock {
             const heldFor = Date.now() - this._holdStartTime;
             if (heldFor >= TAP_THRESHOLD_MS) {
                 this._suppressClick = true;
-                setTimeout(() => { this._suppressClick = false; }, 300);
+                setTimeout(() => { this._suppressClick = false; }, 500);
             }
         };
 
         root.addEventListener('pointerup', cancelHold);
         root.addEventListener('pointercancel', cancelHold);
         root.addEventListener('pointerleave', cancelHold);
-
-        root.addEventListener('click', async (e) => {
-            if (this._suppressClick) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            if (this.ctx.popup.isOpen()) return;
-            if (e.target.closest(INTERACTIVE_SELECTOR)) return;
-
-            // Клик по карточке имеет смысл только для toggle
-            if (this.data.toggle) {
-                await this._handleToggle();
-            }
-        });
-    }
-
-    async _handleToggle() {
-        if (this._isProcessing) return;
-
-        const root = this.el;
-        const regAddress = this.data.regAddress;
-        const regType = this.data.regType || 'b0';
-
-        const isOn = root.classList.contains('on');
-        const newState = isOn ? 0 : 1;
-
-        if (this.data.requireConfirm !== false) {
-            const name = this.data.name || this.data.title || 'узел';
-            const action = isOn ? 'выключить' : 'включить';
-            const ok = await this.ctx.confirm.ask({
-                title: 'Вы уверены?',
-                text: `Вы собираетесь <b>${action}</b> <b>${name}</b>.<br>Продолжить?`,
-                confirmText: `Да, ${action}`,
-                cancelText: 'Отмена',
-                danger: isOn
-            });
-            if (!ok) return;
-        }
-
-        this._isProcessing = true;
-        root._isProcessing = true;
-        root.style.opacity = '0.7';
-
-        try {
-            await this.ctx.api.writeRegister(regAddress, newState, regType);
-            await new Promise(r => setTimeout(r, 400));
-            await this.ctx.updater.update();
-        } catch (error) {
-            console.error('❌ node-card toggle error:', error);
-            root.style.borderColor = 'red';
-            setTimeout(() => { root.style.borderColor = ''; }, 1500);
-        } finally {
-            this._isProcessing = false;
-            root._isProcessing = false;
-            root.style.opacity = '1';
-        }
     }
 
     _triggerLongPress(anchor) {
@@ -260,10 +273,7 @@ export class NodeCardBlock extends BaseBlock {
         if (action.startsWith('popup:')) {
             const type = action.slice('popup:'.length);
             const data = Object.assign(
-                {
-                    title: this.data.name || this.data.title,
-                    reg: this.data.regAddress
-                },
+                { title: this.data.name || this.data.title, reg: this.data.regAddress },
                 this.data.popupData || {}
             );
             this.ctx.popup.show({ type, anchor, data });
@@ -271,4 +281,15 @@ export class NodeCardBlock extends BaseBlock {
             console.warn(`node-card: неизвестное действие longPress "${action}"`);
         }
     }
+}
+
+/** "9:u2" → { regId: 9, regType: "u2" }, "9" → { regId: 9, regType: defaultType } */
+function splitRegSpec(spec, defaultType) {
+    if (typeof spec === 'number') return { regId: spec, regType: defaultType };
+    const s = String(spec);
+    if (s.includes(':')) {
+        const [addr, type] = s.split(':');
+        return { regId: parseInt(addr), regType: type || defaultType };
+    }
+    return { regId: parseInt(s), regType: defaultType };
 }

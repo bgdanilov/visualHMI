@@ -19,5 +19,6 @@ export const BLOCK_TYPES = {
     PAGE_BUTTON: 'page-button',
     IMAGE: 'image',
     NODE_CARD: 'node-card',
-    SVG: 'svg'
+    SVG: 'svg',
+    BUTTON: 'button'          // 🔥 новое
 };

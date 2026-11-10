@@ -13,6 +13,7 @@ import { SendButtonBlock } from './sendButtonBlock.js';
 import { TitleInputBlock } from './titleInputBlock.js';
 import { NodeCardBlock } from './nodeCardBlock.js';
 import { SvgBlock } from './svgBlock.js';
+import { ButtonBlock } from './buttonBlock.js';       // 🔥 новое
 
 blockRegistry.register(BLOCK_TYPES.ONLY_TITLE, OnlyTitleBlock);
 blockRegistry.register(BLOCK_TYPES.ONLY_NUMBER, OnlyNumberBlock);
@@ -25,3 +26,4 @@ blockRegistry.register(BLOCK_TYPES.SEND_BUTTON, SendButtonBlock);
 blockRegistry.register(BLOCK_TYPES.TITLE_INPUT, TitleInputBlock);
 blockRegistry.register(BLOCK_TYPES.NODE_CARD, NodeCardBlock);
 blockRegistry.register('svg', SvgBlock);
+blockRegistry.register(BLOCK_TYPES.BUTTON, ButtonBlock);  // 🔥 новое
