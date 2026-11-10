@@ -11,7 +11,7 @@ export class ModbusUpdater {
             inputs: new Map(),
             toggles: new Map(),
             nodeCards: new Map(),
-            svgs: new Map()          // ← кэш для SVG-блоков
+            svgs: new Map()
         };
         this.sendingRegisters = new Set();
         this.editingInputs = new Set();
@@ -99,12 +99,12 @@ export class ModbusUpdater {
         return parseFloat(value).toFixed(decimalPlaces);
     }
 
-    addSpan(regId, span, registerType, formatSpec) {
+    addSpan(regId, span, registerType, formatSpec, scale = 1) {
         const key = String(regId);
         if (!this.caches.spans.has(key)) {
             this.caches.spans.set(key, { registerType, spans: [] });
         }
-        this.caches.spans.get(key).spans.push({ element: span, formatSpec });
+        this.caches.spans.get(key).spans.push({ element: span, formatSpec, scale });
     }
 
     addInput(regId, input, registerType) {
@@ -158,12 +158,20 @@ export class ModbusUpdater {
         }
     }
 
-    addNodeCard(regId, card, registerType) {
+    /**
+     * Регистрация node-card.
+     * @param {number} regId
+     * @param {HTMLElement} card
+     * @param {string} registerType — тип чтения (u2, s2, f4, bN)
+     * @param {string|null} onCondition — выражение вида "> 0", "== 3", "range 1..5".
+     *   Если null — старое поведение по биту из card.dataset.type.
+     */
+    addNodeCard(regId, card, registerType, onCondition = null) {
         const key = String(regId);
         if (!this.caches.nodeCards.has(key)) {
             this.caches.nodeCards.set(key, { registerType, cards: [] });
         }
-        this.caches.nodeCards.get(key).cards.push(card);
+        this.caches.nodeCards.get(key).cards.push({ card, onCondition });
     }
 
     // 🔥 НОВЫЙ МЕТОД: регистрация SVG-правила
@@ -177,11 +185,11 @@ export class ModbusUpdater {
             item => item.block === blockInstance && item.regKey === regKey
         );
         if (existing) return;
-        
-        this.caches.svgs.get(key).push({ 
-            block: blockInstance, 
-            regKey, 
-            registerType 
+
+        this.caches.svgs.get(key).push({
+            block: blockInstance,
+            regKey,
+            registerType
         });
     }
 
@@ -210,6 +218,48 @@ export class ModbusUpdater {
         }
     }
 
+    /**
+     * Мини-парсер условий (тот же синтаксис, что у SVG-правил):
+     *   "> 0", "== 3", "!= 5", ">= 2.5", "<= 100", "range 1..5"
+     * @returns {boolean}
+     */
+    _evaluateCondition(expr, value) {
+        const v = Number(value);
+        if (!Number.isFinite(v)) return false;
+
+        const s = String(expr).trim();
+        if (!s) return true;
+
+        // range a..b
+        const range = s.match(/^range\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)$/);
+        if (range) {
+            const a = parseFloat(range[1]);
+            const b = parseFloat(range[2]);
+            return v >= Math.min(a, b) && v <= Math.max(a, b);
+        }
+
+        // сравнения
+        const cmp = s.match(/^(==|!=|>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$/);
+        if (cmp) {
+            const [, op, numStr] = cmp;
+            const n = parseFloat(numStr);
+            switch (op) {
+                case '==': return v === n;
+                case '!=': return v !== n;
+                case '>=': return v >= n;
+                case '<=': return v <= n;
+                case '>':  return v >  n;
+                case '<':  return v <  n;
+            }
+        }
+
+        // просто число — «равно»
+        if (/^-?\d+(?:\.\d+)?$/.test(s)) return v === parseFloat(s);
+
+        console.warn(`node-card: неизвестное условие "${expr}"`);
+        return false;
+    }
+
     async update() {
         try {
             const dataView = await api.readModbus();
@@ -225,10 +275,14 @@ export class ModbusUpdater {
                     continue;
                 }
 
-                const value = this.readValue(dataView, offset, regInfo.registerType);
+                const rawValue = this.readValue(dataView, offset, regInfo.registerType);
 
-                if (value !== undefined && !isNaN(value)) {
-                    regInfo.spans.forEach(({ element, formatSpec }) => {
+                if (rawValue !== undefined && !isNaN(rawValue)) {
+                    regInfo.spans.forEach(({ element, formatSpec, scale }) => {
+                        const value = (scale !== undefined && scale !== 1)
+                            ? rawValue * scale
+                            : rawValue;
+
                         const displayValue = formatSpec
                             ? this._applyFormat(formatSpec, value, regInfo.registerType)
                             : String(value);
@@ -276,26 +330,35 @@ export class ModbusUpdater {
             // --- ОБНОВЛЕНИЕ NODE-CARD ---
             for (const [regId, regInfo] of this.caches.nodeCards) {
                 const offset = parseInt(regId) * 2;
-                if (offset + 2 > bytesLength) {
+                const byteCount = this.getBytesCount(regInfo.registerType);
+
+                if (offset + byteCount > bytesLength) {
                     console.warn(`Недостаточно данных для регистра ${regId}`);
                     continue;
                 }
 
-                const rawValue = dataView.getUint16(offset, true);
+                const rawValue = this.readValue(dataView, offset, regInfo.registerType);
+                if (rawValue === undefined || isNaN(rawValue)) continue;
 
-                regInfo.cards.forEach(card => {
+                regInfo.cards.forEach(({ card, onCondition }) => {
                     if (card._isProcessing) return;
 
-                    const cardRegType = card.dataset.type || regInfo.registerType || 'b0';
+                    let isOn;
 
-                    if (cardRegType.startsWith('b')) {
+                    if (onCondition) {
+                        // 🔥 произвольное условие против сырого значения
+                        isOn = this._evaluateCondition(onCondition, rawValue);
+                    } else {
+                        // старое поведение — бит из card.dataset.type
+                        const cardRegType = card.dataset.type || regInfo.registerType || 'b0';
+                        if (!cardRegType.startsWith('b')) return;
                         const bitIndex = parseInt(cardRegType.substring(1));
-                        if (bitIndex >= 0 && bitIndex <= 15) {
-                            const isOn = ((rawValue >> bitIndex) & 1) === 1;
-                            card.classList.toggle('on', isOn);
-                            card.classList.toggle('off', !isOn);
-                        }
+                        if (!(bitIndex >= 0 && bitIndex <= 15)) return;
+                        isOn = ((rawValue >> bitIndex) & 1) === 1;
                     }
+
+                    card.classList.toggle('on',  isOn);
+                    card.classList.toggle('off', !isOn);
                 });
             }
 

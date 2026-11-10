@@ -11,7 +11,7 @@ export class TitleNumberBlock extends BaseBlock {
             return null;
         }
 
-        const p = parseBlockFormat(this.data.format[0], this.data.format[1]);
+        const p = parseBlockFormat(this.data.format[0], this.data.format[1], this.data.format[2]);
         const text = (this.data.text || '').replace(/\n/g, '<br>');
 
         root.innerHTML = `
@@ -26,7 +26,7 @@ export class TitleNumberBlock extends BaseBlock {
 
         const span = root.querySelector('span.number');
         if (span) {
-            this.ctx.updater.addSpan(p.regAddress, span, p.regType, p.formatSpec);
+            this.ctx.updater.addSpan(p.regAddress, span, p.regType, p.formatSpec, p.scale);
         }
         return root;
     }

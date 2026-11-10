@@ -13,7 +13,6 @@ const INTERACTIVE_SELECTOR = [
 ].join(',');
 
 // Иконки-подсказки для longPress: "popup:<type>"
-// Иконки-подсказки для longPress: "popup:<type>"
 const HINT_ICONS = {
     trend: `
         <svg viewBox="0 0 30 30" width="30" height="30" aria-hidden="true">
@@ -87,13 +86,20 @@ export class NodeCardBlock extends BaseBlock {
 
         this._renderChildren(root);
 
-        if (isToggle && this.data.regAddress !== undefined) {
-            root.dataset.reg = this.data.regAddress;
+        // 🔥 Регистрация в updater: если это toggle ИЛИ задано onCondition
+        const hasReg = this.data.regAddress !== undefined;
+        const onCondition = typeof this.data.onCondition === 'string'
+            ? this.data.onCondition
+            : null;
+
+        if (hasReg && (isToggle || onCondition)) {
+            root.dataset.reg  = this.data.regAddress;
             root.dataset.type = this.data.regType || 'b0';
             this.ctx.updater.addNodeCard(
                 this.data.regAddress,
                 root,
-                this.data.regType || 'b0'
+                this.data.regType || 'b0',
+                onCondition
             );
         }
 

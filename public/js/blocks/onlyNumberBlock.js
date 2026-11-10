@@ -10,7 +10,7 @@ export class OnlyNumberBlock extends BaseBlock {
         let value = '--';
 
         if (this.data.format) {
-            const p = parseBlockFormat(this.data.format[0], this.data.format[1]);
+            const p = parseBlockFormat(this.data.format[0], this.data.format[1], this.data.format[2]);
             prefix = p.formatPrefix;
             postfix = p.formatPostfix;
             regAddress = p.regAddress;
@@ -35,7 +35,7 @@ export class OnlyNumberBlock extends BaseBlock {
 
         const span = root.querySelector('span.number');
         if (span && regAddress !== undefined) {
-            this.ctx.updater.addSpan(regAddress, span, regType, formatSpec);
+            this.ctx.updater.addSpan(regAddress, span, regType, formatSpec, p.scale);
         }
         return root;
     }

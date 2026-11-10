@@ -2,9 +2,13 @@
 
 /**
  * Парсит строку формата вида "%2.2f" и спецификацию регистра "20:b0".
- * Возвращает { regAddress, regType, formatPrefix, formatPostfix, formatSpec }.
+ * Возвращает { regAddress, regType, formatPrefix, formatPostfix, formatSpec, scale }.
+ *
+ * @param {string} formatString — строка формата, напр. "%4.1f С"
+ * @param {number|string} regSpec — адрес регистра (0) или "0:b2"
+ * @param {number|string} [scale=1] — масштаб вывода: число (0.1) или "1/10"
  */
- export function parseBlockFormat(formatString, regSpec) {
+ export function parseBlockFormat(formatString, regSpec, scale = 1) {
     let i = 0;
     let formatPrefix = '';
     let formatSpec = null;
@@ -55,7 +59,23 @@
         })[last] || 'u2';
     }
 
-    return { regAddress, regType, formatPrefix, formatPostfix, formatSpec };
+    // 🔥 Масштаб вывода: число или строка "1/N"
+    let scaleFactor = 1;
+    if (scale !== undefined && scale !== null) {
+        if (typeof scale === 'number') {
+            scaleFactor = scale;
+        } else if (typeof scale === 'string') {
+            const m = scale.trim().match(/^1\s*\/\s*(\d+(?:\.\d+)?)$/);
+            if (m) {
+                scaleFactor = 1 / parseFloat(m[1]);
+            } else {
+                const n = parseFloat(scale);
+                if (!isNaN(n)) scaleFactor = n;
+            }
+        }
+    }
+
+    return { regAddress, regType, formatPrefix, formatPostfix, formatSpec, scale: scaleFactor };
 }
 
 /**

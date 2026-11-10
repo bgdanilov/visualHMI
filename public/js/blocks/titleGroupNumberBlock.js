@@ -14,8 +14,8 @@ export class TitleGroupNumberBlock extends BaseBlock {
             titleHtml = `<span class="title">${text}</span>`;
         }
 
-        const rowsHtml = formatEntries.map(([formatString, regSpec]) => {
-            const p = parseBlockFormat(formatString, regSpec);
+        const rowsHtml = formatEntries.map(([formatString, regSpec, scale]) => {
+            const p = parseBlockFormat(formatString, regSpec, scale);
             return `
                 <div class="value">
                     <span class="prefix">${p.formatPrefix}</span>
@@ -27,13 +27,13 @@ export class TitleGroupNumberBlock extends BaseBlock {
         root.innerHTML = titleHtml + rowsHtml;
         this.el = root;
 
-        formatEntries.forEach(([formatString, regSpec]) => {
-            const p = parseBlockFormat(formatString, regSpec);
+        formatEntries.forEach(([formatString, regSpec, scale]) => {
+            const p = parseBlockFormat(formatString, regSpec, scale);
             const span = root.querySelector(
                 `span.number[data-reg="${p.regAddress}"][data-type="${p.regType}"]`
             );
             if (span) {
-                this.ctx.updater.addSpan(p.regAddress, span, p.regType, p.formatSpec);
+                this.ctx.updater.addSpan(p.regAddress, span, p.regType, p.formatSpec, p.scale);
             }
         });
 
