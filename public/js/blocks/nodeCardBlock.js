@@ -1,6 +1,7 @@
 // public/js/blocks/nodeCardBlock.js
 import { BaseBlock } from './baseBlock.js';
 import { blockRegistry } from '../core/blockRegistry.js';
+import { parseRegSpec } from '../utils/regSpec.js';
 
 const HOLD_MS = 800;
 const TAP_THRESHOLD_MS = 200;
@@ -42,6 +43,14 @@ const HINT_ICONS = {
 
 const HINT_DEFAULT = HINT_ICONS.menu;
 
+/**
+ * node-card — карточка с детьми, click/longPress, rules.
+ *
+ * Шаг 1 (render): создаёт корень + рисует детей через blockRegistry.
+ * Шаг 2 (register): _registerRules() → updater.addNodeCardRules(...).
+ *   Дети регистрируются сами (каждый в своём render).
+ * Шаг 3 (update): updater.update() сам применяет rules к card.
+ */
 export class NodeCardBlock extends BaseBlock {
     constructor(data, context) {
         super(data, context);
@@ -50,7 +59,6 @@ export class NodeCardBlock extends BaseBlock {
         this._holdStartTime = 0;
         this._suppressClick = false;
         this._isProcessing = false;
-        this._pointerDown = false;
     }
 
     render() {
@@ -136,7 +144,7 @@ export class NodeCardBlock extends BaseBlock {
         const byReg = new Map();
         rules.forEach((rule, idx) => {
             if (!rule.reg) return;
-            const { regId, regType } = splitRegSpec(rule.reg, 'u2');
+            const { regId, regType } = parseRegSpec(rule.reg, 'u2');
             if (!byReg.has(regId)) byReg.set(regId, { regType, rules: [] });
             byReg.get(regId).rules.push({
                 expr: rule.if,
@@ -161,7 +169,7 @@ export class NodeCardBlock extends BaseBlock {
             return;
         }
 
-        const { regId, regType } = splitRegSpec(clickCfg.reg, 'b0');
+        const { regId, regType } = parseRegSpec(clickCfg.reg, 'b0');
 
         const toggle     = clickCfg.toggle === true;
         const fixedValue = clickCfg.value !== undefined ? parseFloat(clickCfg.value) : null;
@@ -173,16 +181,12 @@ export class NodeCardBlock extends BaseBlock {
             if (e.target.closest(INTERACTIVE_SELECTOR)) return;
             if (this._isProcessing) return;
 
-            // Флаг ДО любого await — иначе двойной тап проходит
             this._isProcessing = true;
 
             try {
                 let value;
 
                 if (toggle) {
-                    // Берём последний известный снимок (от регулярного опроса
-                    // или от предыдущего действия). Отдельный readModbus()
-                    // не нужен: сервер отдаёт mmap as-is, гонка только добавляется.
                     const view = this.ctx.api.lastDataView;
                     if (!view) {
                         console.warn(`node-card "${this.data.name}": ещё нет данных с ПЛК`);
@@ -241,7 +245,6 @@ export class NodeCardBlock extends BaseBlock {
         root.addEventListener('pointerdown', (e) => {
             if (e.button !== undefined && e.button !== 0) return;
             if (e.target.closest(INTERACTIVE_SELECTOR)) return;
-            this._pointerDown = true;
             this._holdStartTime = Date.now();
 
             root.style.setProperty('--hold-ms', HOLD_MS + 'ms');
@@ -263,7 +266,6 @@ export class NodeCardBlock extends BaseBlock {
                 this._holdTimer = null;
             }
             root.classList.remove('holding');
-            this._pointerDown = false;
 
             const heldFor = Date.now() - this._holdStartTime;
             if (heldFor >= TAP_THRESHOLD_MS) {
@@ -292,15 +294,4 @@ export class NodeCardBlock extends BaseBlock {
             console.warn(`node-card: неизвестное действие longPress "${action}"`);
         }
     }
-}
-
-/** "9:u2" → { regId: 9, regType: "u2" }, "9" → { regId: 9, regType: defaultType } */
-function splitRegSpec(spec, defaultType) {
-    if (typeof spec === 'number') return { regId: spec, regType: defaultType };
-    const s = String(spec);
-    if (s.includes(':')) {
-        const [addr, type] = s.split(':');
-        return { regId: parseInt(addr), regType: type || defaultType };
-    }
-    return { regId: parseInt(s), regType: defaultType };
 }

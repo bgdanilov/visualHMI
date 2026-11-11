@@ -1,6 +1,7 @@
 // public/js/blocks/svgBlock.js
 import { BaseBlock } from './baseBlock.js';
 import { modbusUpdater } from '../core/modbusUpdater.js';
+import { evalCondition } from '../utils/condition.js';
 
 export class SvgBlock extends BaseBlock {
     render() {
@@ -16,11 +17,10 @@ export class SvgBlock extends BaseBlock {
         root.style.alignItems = 'center';
         root.style.justifyContent = 'center';
         root.style.transition = 'color 0.3s ease, opacity 0.3s ease, transform 0.3s ease';
-        root.style.overflow = 'hidden'; // Оставляем, чтобы ничего не вылезало
-        
+        root.style.overflow = 'hidden';
+
         if (typeof src !== 'string' || !src.startsWith('/')) {
-            root.innerHTML = `<span style="color:#e74c3c; font-size:12px;">⚠️ Bad SVG src</span>`;
-            this.el = root;
+            root.innerHTML = `<span style="color:#e74c3c; font-size:12px; text-align:center;">⚠️ Bad SVG src</span>`;
             return root;
         }
 
@@ -32,14 +32,14 @@ export class SvgBlock extends BaseBlock {
             .then(svgText => {
                 root.innerHTML = svgText;
                 this.svgRoot = root.querySelector('svg');
-                
+
                 if (this.svgRoot) {
                     this.svgRoot.style.width = '100%';
                     this.svgRoot.style.height = '100%';
                     this.svgRoot.style.display = 'block';
                     this.svgRoot.setAttribute('fill', 'currentColor');
                 }
-                
+
                 this._registerRules();
                 this._initRules();
             })
@@ -89,128 +89,40 @@ export class SvgBlock extends BaseBlock {
         this._lastValues[regKey] = value;
 
         rules.forEach(rule => {
-            if (this._evaluate(rule.if, value)) {
+            if (evalCondition(rule.if, value)) {
                 this._applyEffects(rule.then, value);
             }
         });
     }
 
-    // --- ВЫЧИСЛЕНИЕ УСЛОВИЯ ---
-    _evaluate(condition, value) {
-        if (condition === undefined || condition === null || condition === '') return true;
-
-        const v = Number(value);
-        if (!Number.isFinite(v)) return false;
-
-        try {
-            return this._evalExpr(String(condition), v);
-        } catch (e) {
-            console.warn(`Неподдерживаемое условие: "${condition}"`, e);
-            return false;
-        }
-    }
-
-    _evalExpr(expr, v) {
-        expr = String(expr).trim();
-        if (!expr) return true;
-
-        if (expr.startsWith('(') && expr.endsWith(')')) {
-            let depth = 0;
-            let coversAll = true;
-            for (let i = 0; i < expr.length; i++) {
-                if (expr[i] === '(') depth++;
-                else if (expr[i] === ')') depth--;
-                if (depth === 0 && i < expr.length - 1) { coversAll = false; break; }
-            }
-            if (coversAll) return this._evalExpr(expr.slice(1, -1), v);
-        }
-
-        const orParts = this._splitTopLevel(expr, '||');
-        if (orParts.length > 1) return orParts.some(p => this._evalExpr(p, v));
-
-        const andParts = this._splitTopLevel(expr, '&&');
-        if (andParts.length > 1) return andParts.every(p => this._evalExpr(p, v));
-
-        const rangeMatch = expr.match(/^range\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)$/);
-        if (rangeMatch) {
-            const a = parseFloat(rangeMatch[1]);
-            const b = parseFloat(rangeMatch[2]);
-            return v >= Math.min(a, b) && v <= Math.max(a, b);
-        }
-
-        const cmpMatch = expr.match(/^(==|!=|>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$/);
-        if (cmpMatch) {
-            const [, op, numStr] = cmpMatch;
-            const num = parseFloat(numStr);
-            switch (op) {
-                case '==': return v === num;
-                case '!=': return v !== num;
-                case '>=': return v >= num;
-                case '<=': return v <= num;
-                case '>':  return v >  num;
-                case '<':  return v <  num;
-            }
-        }
-
-        if (/^-?\d+(?:\.\d+)?$/.test(expr)) return v === parseFloat(expr);
-
-        throw new Error(`неизвестный токен: "${expr}"`);
-    }
-
-    _splitTopLevel(expr, sep) {
-        const parts = [];
-        let depth = 0;
-        let start = 0;
-        for (let i = 0; i < expr.length; i++) {
-            const ch = expr[i];
-            if (ch === '(') depth++;
-            else if (ch === ')') depth--;
-            if (depth === 0 && expr.startsWith(sep, i)) {
-                parts.push(expr.slice(start, i));
-                i += sep.length - 1;
-                start = i + 1;
-            }
-        }
-        if (parts.length === 0) return [expr];
-        parts.push(expr.slice(start));
-        return parts;
-    }
-
     // --- ПРИМЕНЕНИЕ ЭФФЕКТОВ ---
     _applyEffects(effects, value) {
         if (!effects) return;
-        
-        // Ищем цель (target), если она есть
-        const target = effects.target && this.svgRoot 
-            ? this.svgRoot.querySelector(effects.target) 
+
+        const target = effects.target && this.svgRoot
+            ? this.svgRoot.querySelector(effects.target)
             : null;
-        
-        // ЦВЕТ: если указан target — красим только его, иначе весь блок
+
         if (effects.color !== undefined) {
             const colorEl = target || this.el;
             if (effects.color === null) colorEl.style.color = '';
             else colorEl.style.color = effects.color;
         }
-        
-        // Для анимаций цель ищется так же
+
         const animEl = target || this.el;
-        
-        // Вращение
+
         if (effects.spin !== undefined) {
             this._applySpin(effects.spin, animEl);
         }
-        
-        // Пульсация
+
         if ('pulse' in effects) {
             this._applyPulse(effects.pulse, animEl);
         }
-        
-        // Прозрачность (оставим на весь блок)
+
         if (effects.opacity !== undefined) {
             this.el.style.opacity = effects.opacity;
         }
-        
-        // Скрытие/показ (оставим на весь блок)
+
         if (effects.visible !== undefined) {
             this.el.style.display = effects.visible ? 'inline-flex' : 'none';
         }

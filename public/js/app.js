@@ -28,8 +28,8 @@ class App {
             numpad: numpadManager,
             validator,
             notification,
-            popup: popupService,       // ← новое
-            confirm: confirmService   // ← новое
+            popup: popupService,
+            confirm: confirmService
         };
 
         this.renderer = new BlockRenderer(this.ctx);
@@ -43,13 +43,12 @@ class App {
     _setupScaling() {
         const CANVAS_W = CONFIG.CANVAS_W;
         const CANVAS_H = CONFIG.CANVAS_H;
-    
+
         const el = this.renderArea;
-    
-        // Размер холста — из CONFIG. Это единственное место, где он задаётся.
+
         el.style.width  = `${CANVAS_W}px`;
         el.style.height = `${CANVAS_H}px`;
-    
+
         const fit = () => {
             const scale = Math.min(
                 window.innerWidth / CANVAS_W,
@@ -61,11 +60,10 @@ class App {
             el.style.left = `${(window.innerWidth - CANVAS_W * scale) / 2}px`;
             el.style.top  = `${(window.innerHeight - CANVAS_H * scale) / 2}px`;
         };
-    
+
         fit();
         window.addEventListener('resize', fit);
-    
-        // Показываем холст после того, как размеры выставлены
+
         el.style.visibility = 'visible';
     }
 
@@ -97,17 +95,20 @@ class App {
         }
     }
 
+    /** Приводит данные из blocksData.json к объекту { pageKey: blocks[] }. */
+    _normalizePages(data) {
+        if (Array.isArray(data)) {
+            return { main: data };
+        }
+        if (data && typeof data === 'object') {
+            return data;
+        }
+        throw new Error('Неверный формат blocksData.json');
+    }
+
     async _loadPages() {
         const data = await api.loadStaticJSON(CONFIG.BLOCKS);
-
-        if (Array.isArray(data)) {
-            this.pages = { main: data };
-        } else if (data && typeof data === 'object') {
-            this.pages = data;
-        } else {
-            throw new Error('Неверный формат blocksData.json');
-        }
-
+        this.pages = this._normalizePages(data);
         return this.pages;
     }
 
@@ -142,17 +143,13 @@ class App {
     async _startEditMode() {
         await this._loadPages();
         const firstPage = Object.keys(this.pages)[0];
-
         this._renderPage(firstPage);
 
         this.updateInterval = setInterval(async () => {
             try {
-                const data = await api.loadStaticJSON(CONFIG.BLOCKS);
-                let pages = data;
-                if (Array.isArray(data)) {
-                    pages = { main: data };
-                }
-                this.pages = pages;
+                this.pages = this._normalizePages(
+                    await api.loadStaticJSON(CONFIG.BLOCKS)
+                );
                 if (this.currentPage && this.pages[this.currentPage]) {
                     this._renderPage(this.currentPage);
                 } else {

@@ -20,14 +20,7 @@ class PopupService {
 
     // ============ ПУБЛИЧНЫЙ API ============
 
-    /**
-     * Открыть попап рядом с элементом-якорем.
-     * @param {Object} opts
-     * @param {string} opts.type    — 'trend' | 'menu' | ... (зарегистрированный тип)
-     * @param {HTMLElement} opts.anchor — элемент, рядом с которым позиционировать
-     * @param {Object} [opts.data]  — данные для попапа
-     */
-     show({ type, anchor, data = {} }) {
+    show({ type, anchor, data = {} }) {
         const render = this._renders.get(type);
         if (!render) {
             console.warn(`⚠️ popupService: неизвестный тип попапа "${type}"`);
@@ -64,13 +57,11 @@ class PopupService {
         this._closeCurrent();
     }
 
-    /** Проверка: открыт ли попап указанного типа. */
     isOpen(type = null) {
         if (!this._popup || !this._popup.classList.contains('visible')) return false;
         return type ? this._type === type : true;
     }
 
-    /** Регистрация кастомного попапа. */
     register(type, render) {
         this._renders.set(type, render);
     }
@@ -97,7 +88,6 @@ class PopupService {
 
     _ensurePopup() {
         if (this._popup) {
-            // Очищаем содержимое, оставляем корень
             this._popup.innerHTML = '';
             this._popup.className = 'popup';
             return;
@@ -114,25 +104,20 @@ class PopupService {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        // Размеры попапа могут быть любыми — читаем после рендера
         const popupRect = this._popup.getBoundingClientRect();
         const w = popupRect.width || 320;
         const h = popupRect.height || POPUP_H_DEFAULT;
 
-        // Попробовать слева от якоря
         let left = r.left - w - OFFSET;
         let top = r.top;
 
-        // Не влезает слева — справа
         if (left < 8) left = r.right + OFFSET;
 
-        // Не влезает ни слева, ни справа — снизу
         if (left + w > vw - 8) {
             left = Math.max(8, Math.min(r.left, vw - w - 8));
             top = r.bottom + OFFSET;
         }
 
-        // Не влезает снизу — прижимаем
         if (top + h > vh - 8) top = Math.max(8, vh - h - 8);
         if (top < 8) top = 8;
 
@@ -167,7 +152,6 @@ class PopupService {
                 close();
             }, { signal });
 
-            // Заглушка истории — фейковые данные
             let history = this._generateSeries(30);
             const chart = popup.querySelector('.chart');
 
@@ -248,36 +232,31 @@ class PopupService {
                 </div>
             `;
 
-            this.register('menu', (popup, data, { close, signal }) => {
-                popup.classList.add('ctx-popup');
-                // ...popup.innerHTML без изменений...
-    
-                popup.querySelector('.popup-close').addEventListener('click', (e) => {
+            popup.querySelector('.popup-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                close();
+            }, { signal });
+
+            const slider = popup.querySelector('.slider');
+            const sliderVal = popup.querySelector('[data-slider-val]');
+            slider.addEventListener('input', (e) => {
+                sliderVal.textContent = e.target.value + ' %';
+            }, { signal });
+            slider.addEventListener('change', (e) => {
+                console.log('Уставка влажности:', e.target.value, '% для', data.title);
+            }, { signal });
+
+            popup.querySelectorAll('.ctx-item').forEach(item => {
+                item.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    const action = item.dataset.action;
+                    if (action === 'trend') {
+                        this.show({ type: 'trend', anchor: this._anchor, data: { title } });
+                        return;
+                    }
+                    console.log('Действие:', action, 'для', data.title);
                     close();
                 }, { signal });
-    
-                const slider = popup.querySelector('.slider');
-                const sliderVal = popup.querySelector('[data-slider-val]');
-                slider.addEventListener('input', (e) => {
-                    sliderVal.textContent = e.target.value + ' %';
-                }, { signal });
-                slider.addEventListener('change', (e) => {
-                    console.log('Уставка влажности:', e.target.value, '% для', data.title);
-                }, { signal });
-    
-                popup.querySelectorAll('.ctx-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const action = item.dataset.action;
-                        if (action === 'trend') {
-                            this.show({ type: 'trend', anchor: this._anchor, data: { title } });
-                            return;
-                        }
-                        console.log('Действие:', action, 'для', data.title);
-                        close();
-                    }, { signal });
-                });
             });
         });
     }

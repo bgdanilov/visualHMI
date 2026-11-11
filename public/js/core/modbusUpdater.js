@@ -1,6 +1,7 @@
 // public/js/core/modbusUpdater.js
 import { api } from '../api/apiClient.js';
 import { evalCondition } from '../utils/condition.js';
+import { applyFormat } from '../utils/format.js';
 
 const DEFAULT_DECIMAL_PLACES = 3;
 
@@ -30,38 +31,6 @@ export class ModbusUpdater {
     }
 
     // ============ ФОРМАТИРОВАНИЕ ============
-
-    _applyFormat(formatSpec, value, regType) {
-        const specifier = formatSpec.slice(-1);
-        const m = formatSpec.match(/^%([#0\- +])?(\d+)?(\.(\d+))?([diufegGc])$/);
-        const width = m ? parseInt(m[2]) || 0 : 0;
-        const prec = m ? parseInt(m[4]) : -1;
-
-        let s;
-        switch (specifier) {
-            case 'f': s = value.toFixed(prec >= 0 ? prec : 2); break;
-            case 'e': s = value.toExponential(prec >= 0 ? prec : 2); break;
-            case 'E': s = value.toExponential(prec >= 0 ? prec : 2).toUpperCase(); break;
-            case 'g': s = prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4); break;
-            case 'G': s = (prec >= 0 ? value.toPrecision(prec) : value.toPrecision(4)).toUpperCase(); break;
-            case 'd': case 'i': s = String(Math.round(value)); break;
-            case 'u': s = String(Math.max(0, Math.round(value))); break;
-            case 'c': s = String(value); break;
-            default: s = String(value);
-        }
-
-        if (width > s.length) {
-            const flag = m ? m[1] || '' : '';
-            if (flag === '0' && !['x', 'X'].includes(specifier)) {
-                s = s.padStart(width, '0');
-            } else if (flag === '-') {
-                s = s.padEnd(width, ' ');
-            } else {
-                s = s.padStart(width, ' ');
-            }
-        }
-        return s;
-    }
 
     _isFloatType(registerType) { return registerType === 'f4'; }
 
@@ -132,13 +101,6 @@ export class ModbusUpdater {
 
     // ============ NODE-CARD (rules) ============
 
-    /**
-     * Регистрация rules для node-card (mode: 'effects').
-     * @param {number} regId
-     * @param {HTMLElement} card
-     * @param {string} registerType
-     * @param {Array<{expr:string, then:object, order:number}>} rules
-     */
     addNodeCardRules(regId, card, registerType, rules) {
         const key = String(regId);
         if (!this.caches.nodeCards.has(key)) {
@@ -223,7 +185,7 @@ export class ModbusUpdater {
                     regInfo.spans.forEach(({ element, formatSpec, scale }) => {
                         const value = (scale !== undefined && scale !== 1) ? rawValue * scale : rawValue;
                         const displayValue = formatSpec
-                            ? this._applyFormat(formatSpec, value, regInfo.registerType)
+                            ? applyFormat(formatSpec, value)
                             : String(value);
                         if (element.textContent !== displayValue) element.textContent = displayValue;
                     });
@@ -247,7 +209,6 @@ export class ModbusUpdater {
                             const isOn = ((rawValue >> bitIndex) & 1) === 1;
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
-                           // button.classList.add('toggle-button');
                             if (button.dataset.textOn || button.dataset.textOff) {
                                 button.textContent = isOn
                                     ? (button.dataset.textOn || 'Вкл')
@@ -334,11 +295,6 @@ export class ModbusUpdater {
 
     // ============ NODE-CARD RULES APPLICATION ============
 
-    /**
-     * Применяет rules к карточке.
-     * class — приоритетный (первое истинное побеждает).
-     * color/background/borderColor/opacity/visible — накопительные.
-     */
     _applyNodeCardRules(card, rawValue, rules) {
         const knownClasses = new Set();
         rules.forEach(r => { if (r.then?.class) knownClasses.add(r.then.class); });
@@ -394,8 +350,6 @@ export class ModbusUpdater {
         const regInfo = this.caches.toggles.get(key);
         if (!regInfo) return;
 
-        // Свежий снимок: нужен именно после writeRegister,
-        // lastDataView может быть от регулярного опроса ДО записи.
         const dataView = await api.readModbus();
         const bytesLength = dataView.byteLength;
         const offset = parseInt(regId) * 2;

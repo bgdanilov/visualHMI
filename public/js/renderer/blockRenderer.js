@@ -3,13 +3,8 @@ import { blockRegistry } from '../core/blockRegistry.js';
 
 export class BlockRenderer {
     constructor(context) {
-        this.ctx = context;      // { renderArea, updater, api, numpad, validator, notification }
-        this.blocks = new Map(); // id → BaseBlock
-        this._counter = 0;
-    }
-
-    setRenderArea(el) {
-        this.ctx.renderArea = el;
+        this.ctx = context;
+        this.blocks = new Map(); // HTMLElement → BaseBlock
     }
 
     renderBlocks(blocksData) {
@@ -24,10 +19,9 @@ export class BlockRenderer {
                 const block = new Cls(data, this.ctx);
                 const el = block.render();
                 if (!el) continue;
-                if (!el.id) el.id = `block-${++this._counter}`;
                 this.ctx.renderArea.appendChild(el);
                 block.mounted();
-                this.blocks.set(el.id, block);
+                this.blocks.set(el, block);
             } catch (err) {
                 console.error(`❌ Ошибка рендера блока "${data.type}":`, err);
             }

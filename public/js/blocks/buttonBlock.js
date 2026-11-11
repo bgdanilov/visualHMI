@@ -1,5 +1,6 @@
 // public/js/blocks/buttonBlock.js
 import { BaseBlock } from './baseBlock.js';
+import { flash } from '../utils/flash.js';
 
 export class ButtonBlock extends BaseBlock {
     constructor(data, context) {
@@ -69,6 +70,8 @@ export class ButtonBlock extends BaseBlock {
     }
 
     unmounted() {
+        // Подписок нет — addButton хранит ссылку в кеше updater'а,
+        // кеш чистится при смене страницы (clearCaches).
     }
 
     // ============ РЕЖИМЫ ============
@@ -149,8 +152,7 @@ export class ButtonBlock extends BaseBlock {
             await this.ctx.updater.updateButton(this._regId);
         } catch (e) {
             console.error('button write error:', e);
-            this._btn.classList.add('error');
-            setTimeout(() => this._btn.classList.remove('error'), 1500);
+            flash(this.el, 'error', 1500);
         } finally {
             this._isProcessing = false;
             this._btn.disabled = false;
