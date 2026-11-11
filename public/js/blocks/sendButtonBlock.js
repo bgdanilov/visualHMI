@@ -134,33 +134,22 @@ export class SendButtonBlock extends BaseBlock {
 
             results.forEach((result, index) => {
                 const regData = registersToSend[index];
+                const el = regData.element;
 
                 if (result.status === 'fulfilled') {
                     successCount++;
                     this.ctx.updater.updateOriginalValue(regData.regAddress, regData.value);
-                    this._updateInputDirtyState(regData.element, regData.regAddress);
 
-                    if (regData.element) {
-                        regData.element.style.backgroundColor = '#e8f5e9';
-                        regData.element.style.borderColor = 'green';
-                        setTimeout(() => {
-                            regData.element.style.backgroundColor = '';
-                            regData.element.style.borderColor = '#ccc';
-                        }, 1000);
+                    // Элемент мог быть удалён (смена страницы / ре-рендер)
+                    if (el && document.body.contains(el)) {
+                        this._flashInput(el, 'success');
                     }
-
-                    this.ctx.updater.editingInputs.delete(regData.regKey);
                 } else {
                     errorCount++;
                     console.error(`❌ Ошибка регистра ${regData.regAddress}:`, result.reason);
 
-                    if (regData.element) {
-                        regData.element.style.backgroundColor = '#ffebee';
-                        regData.element.style.borderColor = 'red';
-                        setTimeout(() => {
-                            regData.element.style.backgroundColor = '';
-                            regData.element.style.borderColor = '#ccc';
-                        }, 2000);
+                    if (el && document.body.contains(el)) {
+                        this._flashInput(el, 'error');
                     }
                 }
             });
@@ -201,9 +190,9 @@ export class SendButtonBlock extends BaseBlock {
             button.classList.remove('sending');
             button.classList.add('error');
 
-            for (const reg of regs) {
-                this.ctx.updater.editingInputs.delete(String(reg));
-            }
+           // for (const reg of regs) {
+            //    this.ctx.updater.editingInputs.delete(String(reg));
+           // }
 
             setTimeout(() => {
                 button.textContent = this._originalText;
@@ -220,5 +209,16 @@ export class SendButtonBlock extends BaseBlock {
         const isDirty = this.ctx.updater.isDirty(regKey);
         input.classList.toggle('input-changed', isDirty);
         window.dispatchEvent(new CustomEvent('input-dirty-change'));
+    }
+
+    _flashInput(el, kind) {
+        const isSuccess = kind === 'success';
+        el.style.backgroundColor = isSuccess ? '#e8f5e9' : '#ffebee';
+        el.style.borderColor     = isSuccess ? 'green'   : 'red';
+        setTimeout(() => {
+            if (!document.body.contains(el)) return;
+            el.style.backgroundColor = '';
+            el.style.borderColor = '#ccc';
+        }, isSuccess ? 1000 : 2000);
     }
 }

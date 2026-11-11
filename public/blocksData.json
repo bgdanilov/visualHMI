@@ -21,6 +21,7 @@
       "x": 380,
       "y": 10
     },
+
     {
       "type": "node-card",
       "x": 125,
@@ -28,73 +29,32 @@
       "width": 160,
       "height": 345,
       "name": "Заслонка входная",
+
       "click": {
-        "regAddress": 256,
-        "regType": "b0",
+        "reg": "256:b0",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {
-          "reg": "256:b0",
-          "if": "== 1",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "256:b0",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        { "reg": "256:b0", "if": "== 1", "then": { "class": "on"  } },
+        { "reg": "256:b0", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:trend",
-      "popupData": {
-        "reg": 16,
-        "title": "Заслонка входная"
-      },
+      "popupData": { "reg": 16, "title": "Заслонка входная" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 80,
-          "text": "Заслонка входная"
-        },
-        {
-          "type": "image",
-          "x": 55,
-          "y": 20,
-          "src": "/images/damper.jpg",
-          "width": 50,
-          "height": 50,
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Температура",
-          "format": ["%4.1f C", "1:s2", 0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 210,
-          "plain": true,
-          "text": "Влажность",
-          "format": [
-            "%4.1f C",
-            "2:s2",
-            0.1
-          ]
-        }
+        { "type": "only-title", "x": 20, "y": 80, "text": "Заслонка входная" },
+        { "type": "image", "x": 55, "y": 20, "src": "/images/damper.jpg",
+          "width": 50, "height": 50, "objectFit": "contain", "plain": true },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Температура", "format": ["%4.1f C", "1:s2", 0.1] },
+        { "type": "title-number", "x": 20, "y": 210, "plain": true,
+          "text": "Влажность", "format": ["%4.1f C", "2:s2", 0.1] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 395,
@@ -102,76 +62,32 @@
       "width": 160,
       "height": 345,
       "name": "Заслонка выходная",
+
       "click": {
-        "regAddress": 256,
-        "regType": "b0",
+        "reg": "256:b0",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {
-          "reg": "256:b0",
-          "if": "== 1",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "256:b0",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        { "reg": "256:b0", "if": "== 1", "then": { "class": "on"  } },
+        { "reg": "256:b0", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:trend",
-      "popupData": {
-        "reg": 17,
-        "title": "Заслонка выходная"
-      },
+      "popupData": { "reg": 17, "title": "Заслонка выходная" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 80,
-          "text": "Заслонка выходная"
-        },
-        {
-          "type": "image",
-          "x": 55,
-          "y": 20,
-          "src": "/images/damper.jpg",
-          "width": 50,
-          "height": 50,
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Температура",
-          "format": [
-            "%4.1f C",
-            "3:s2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 210,
-          "plain": true,
-          "text": "Влажность",
-          "format": [
-            "%4.1f C",
-            "4:u2",
-            0.1
-          ]
-        }
+        { "type": "only-title", "x": 20, "y": 80, "text": "Заслонка выходная" },
+        { "type": "image", "x": 55, "y": 20, "src": "/images/damper.jpg",
+          "width": 50, "height": 50, "objectFit": "contain", "plain": true },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Температура", "format": ["%4.1f C", "3:s2", 0.1] },
+        { "type": "title-number", "x": 20, "y": 210, "plain": true,
+          "text": "Влажность", "format": ["%4.1f C", "4:u2", 0.1] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 295,
@@ -179,91 +95,38 @@
       "width": 160,
       "height": 345,
       "name": "Приточка",
+
       "click": {
-        "regAddress": 256,
-        "regType": "b2",
+        "reg": "256:b2",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {"reg": "27:u2", "if": "> 0", "then": {"class": "on"}},
-        {"reg": "27:u2", "if": "== 0", "then": {"class": "off"}}
+        { "reg": "27:u2", "if": "> 0",  "then": { "class": "on"  } },
+        { "reg": "27:u2", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:trend",
-      "popupData": {
-        "reg": 16,
-        "title": "Приточка"
-      },
+      "popupData": { "reg": 16, "title": "Приточка" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 95,
-          "text": "Приточка"
-        },
-        {
-          "type": "svg",
-          "x": 60,
-          "y": 20,
-          "src": "/icons/fan.svg",
-          "width": 50,
-          "height": 50,
-          "plain": true,
+        { "type": "only-title", "x": 20, "y": 95, "text": "Приточка" },
+        { "type": "svg", "x": 60, "y": 20, "src": "/icons/fan.svg",
+          "width": 50, "height": 50, "plain": true,
           "rules": [
-            {
-              "reg": "27:u2",
-              "if": "== 1",
-              "then": {
-                "spin": "normal",
-                "color": "#2ecc71"
-              }
-            },
-            {
-              "reg": "27:u2",
-              "if": "== 3",
-              "then": {
-                "spin": null,
-                "color": "#7f8c8d"
-              }
-            }
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Скорость",
-          "format": [
-            "%4.1f м/с",
-            "5:u2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 210,
-          "plain": true,
-          "text": "Загрузка",
-          "format": [
-            "%3d %",
-            "32:u2"
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 270,
-          "plain": true,
-          "text": "Фильтр",
-          "format": [
-            "%1c",
-            "259:b0"
-          ]
-        }
+            { "reg": "27:u2", "if": "== 1", "then": { "spin": "normal", "color": "#2ecc71" } },
+            { "reg": "27:u2", "if": "== 3", "then": { "spin": null,     "color": "#7f8c8d" } }
+          ] },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Скорость", "format": ["%4.1f м/с", "5:u2", 0.1] },
+        { "type": "title-number", "x": 20, "y": 210, "plain": true,
+          "text": "Загрузка", "format": ["%3d %", "32:u2"] },
+        { "type": "title-number", "x": 20, "y": 270, "plain": true,
+          "text": "Фильтр", "format": ["%1c", "259:b0"] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 565,
@@ -271,103 +134,38 @@
       "width": 160,
       "height": 345,
       "name": "Вытяжка",
+
       "click": {
-        "regAddress": 256,
-        "regType": "b3",
+        "reg": "256:b3",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {
-          "reg": "26:u2",
-          "if": "> 0",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "26:u2",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        { "reg": "26:u2", "if": "> 0",  "then": { "class": "on"  } },
+        { "reg": "26:u2", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:trend",
-      "popupData": {
-        "reg": 18,
-        "title": "Вытяжка"
-      },
+      "popupData": { "reg": 18, "title": "Вытяжка" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 95,
-          "text": "Вытяжка"
-        },
-        {
-          "type": "svg",
-          "x": 60,
-          "y": 20,
-          "src": "/icons/fan.svg",
-          "width": 50,
-          "height": 50,
-          "plain": true,
+        { "type": "only-title", "x": 20, "y": 95, "text": "Вытяжка" },
+        { "type": "svg", "x": 60, "y": 20, "src": "/icons/fan.svg",
+          "width": 50, "height": 50, "plain": true,
           "rules": [
-            {
-              "reg": "26:u2",
-              "if": "== 1",
-              "then": {
-                "spin": "normal",
-                "color": "#2ecc71"
-              }
-            },
-            {
-              "reg": "26:u2",
-              "if": "== 3",
-              "then": {
-                "spin": null,
-                "color": "#7f8c8d"
-              }
-            }
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Скорость",
-          "format": [
-            "%4.1f м/с",
-            "6:u2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 210,
-          "plain": true,
-          "text": "Загрузка",
-          "format": [
-            "%3d %",
-            "33:u2"
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 270,
-          "plain": true,
-          "text": "Фильтр",
-          "format": [
-            "%1c",
-            "259:b1"
-          ]
-        }
+            { "reg": "26:u2", "if": "== 1", "then": { "spin": "normal", "color": "#2ecc71" } },
+            { "reg": "26:u2", "if": "== 3", "then": { "spin": null,     "color": "#7f8c8d" } }
+          ] },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Скорость", "format": ["%4.1f м/с", "6:u2", 0.1] },
+        { "type": "title-number", "x": 20, "y": 210, "plain": true,
+          "text": "Загрузка", "format": ["%3d %", "33:u2"] },
+        { "type": "title-number", "x": 20, "y": 270, "plain": true,
+          "text": "Фильтр", "format": ["%1c", "259:b1"] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 465,
@@ -375,132 +173,42 @@
       "width": 260,
       "height": 345,
       "name": "Электронагреватель",
+
       "click": {
-        "regAddress": 256,
-        "regType": "b10",
+        "reg": "256:b10",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {
-          "reg": "9:u2",
-          "if": "> 10",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "9:u2",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        { "reg": "9:u2", "if": "> 10", "then": { "class": "on"  } },
+        { "reg": "9:u2", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:menu",
-      "popupData": {
-        "reg": 19,
-        "title": "Электронагреватель"
-      },
+      "popupData": { "reg": 19, "title": "Электронагреватель" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 95,
-          "text": "Электронагреватель"
-        },
-        {
-          "type": "svg",
-          "x": 90,
-          "y": 20,
-          "src": "/icons/heater.svg",
-          "width": 50,
-          "height": 50,
-          "plain": true,
+        { "type": "only-title", "x": 20, "y": 95, "text": "Электронагреватель" },
+        { "type": "svg", "x": 90, "y": 20, "src": "/icons/heater.svg",
+          "width": 50, "height": 50, "plain": true,
           "rules": [
-            {
-              "reg": "9:u2",
-              "if": "> 0",
-              "then": {
-                "color": "#2ecc71"
-              }
-            },
-            {
-              "reg": "9:u2",
-              "if": "> 0",
-              "then": {
-                "target": ".pulse",
-                "pulse": "slow",
-                "color": "#E65100"
-              }
-            },
-            {
-              "reg": "9:u2",
-              "if": "== 0",
-              "then": {
-                "color": "#7f8c8d"
-              }
-            },
-            {
-              "reg": "9:u2",
-              "if": "== 0",
-              "then": {
-                "target": ".pulse",
-                "pulse": null,
-                "color": null
-              }
-            }
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Температура",
-          "format": [
-            "%4.1f С",
-            "07:s2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 150,
-          "y": 150,
-          "plain": true,
-          "text": "Шаг",
-          "format": [
-            "%2i",
-            0
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 230,
-          "plain": true,
-          "text": "Мощность",
-          "format": [
-            "%5.1f кВт",
-            "9:u2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 150,
-          "y": 230,
-          "plain": true,
-          "text": "Влажность",
-          "format": [
-            "%4.1f %",
-            "8:u2",
-            0.1
-          ]
-        }
+            { "reg": "9:u2", "if": "> 0",  "then": { "color": "#2ecc71" } },
+            { "reg": "9:u2", "if": "> 0",  "then": { "target": ".pulse", "pulse": "slow", "color": "#E65100" } },
+            { "reg": "9:u2", "if": "== 0", "then": { "color": "#7f8c8d" } },
+            { "reg": "9:u2", "if": "== 0", "then": { "target": ".pulse", "pulse": null, "color": null } }
+          ] },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Температура", "format": ["%4.1f С", "07:s2", 0.1] },
+        { "type": "title-number", "x": 150, "y": 150, "plain": true,
+          "text": "Шаг", "format": ["%2i", 0] },
+        { "type": "title-number", "x": 20, "y": 230, "plain": true,
+          "text": "Мощность", "format": ["%5.1f кВт", "9:u2", 0.1] },
+        { "type": "title-number", "x": 150, "y": 230, "plain": true,
+          "text": "Влажность", "format": ["%4.1f %", "8:u2", 0.1] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 735,
@@ -508,145 +216,54 @@
       "width": 150,
       "height": 500,
       "name": "Рекуператор",
-      "rules": [
-        {
-          "reg": "28:u2",
-          "if": "> 0",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "28:u2",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
-      ],
-      "longPress": "popup:trend",
-      "popupData": {
-        "reg": 20,
-        "title": "Рекуператор"
+
+      "click": {
+        "reg": "28:u2",
+        "toggle": true,
+        "confirm": true
       },
+
+      "rules": [
+        { "reg": "28:u2", "if": "> 0",  "then": { "class": "on"  } },
+        { "reg": "28:u2", "if": "== 0", "then": { "class": "off" } }
+      ],
+
+      "longPress": "popup:trend",
+      "popupData": { "reg": 20, "title": "Рекуператор" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 110,
-          "text": "Рекупе- ратор"
-        },
-        {
-          "type": "svg",
-          "x": 25,
-          "y": 20,
-          "src": "/icons/reco.svg",
-          "width": 90,
-          "height": 90,
-          "plain": true,
+        { "type": "only-title", "x": 20, "y": 110, "text": "Рекупе- ратор" },
+        { "type": "svg", "x": 25, "y": 20, "src": "/icons/reco.svg",
+          "width": 90, "height": 90, "plain": true,
           "rules": [
-            {
-              "reg": "28:u2",
-              "if": "> 0",
-              "then": {
-                "color": "#2ecc71"
-              }
-            },
-            {
-              "reg": "28:u2",
-              "if": "> 0",
-              "then": {
-                "target": ".rotation",
-                "spin": "normal"
-              }
-            },
-            {
-              "reg": "28:u2",
-              "if": "== 0",
-              "then": {
-                "color": "#7f8c8d"
-              }
-            },
-            {
-              "reg": "28:u2",
-              "if": "== 0",
-              "then": {
-                "target": ".rotation",
-                "spin": null
-              }
-            }
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 190,
-          "plain": true,
-          "text": "Скорость",
-          "format": [
-            "%4d шаг/с",
-            "28:u2"
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 270,
-          "plain": true,
-          "text": "Влажность",
-          "format": [
-            "%4.1f %",
-            0
-          ]
-        },
-        {
-          "type": "button",
-          "name": "Джог Вкл",
-          "x": 20,
-          "y": 330,
-          "width": 100,
-          "height": 70,
-          "regAddress": 256,
-          "regType": "b6",
-          "mode": "momentary",
+            { "reg": "28:u2", "if": "> 0",  "then": { "color": "#2ecc71" } },
+            { "reg": "28:u2", "if": "> 0",  "then": { "target": ".rotation", "spin": "normal" } },
+            { "reg": "28:u2", "if": "== 0", "then": { "color": "#7f8c8d" } },
+            { "reg": "28:u2", "if": "== 0", "then": { "target": ".rotation", "spin": null } }
+          ] },
+        { "type": "title-number", "x": 20, "y": 190, "plain": true,
+          "text": "Скорость", "format": ["%4d шаг/с", "28:u2"] },
+        { "type": "title-number", "x": 20, "y": 270, "plain": true,
+          "text": "Влажность", "format": ["%4.1f %", 0] },
+
+        { "type": "button", "name": "Джог Вкл",
+          "x": 20, "y": 330, "width": 100, "height": 70,
+          "regAddress": 256, "regType": "b6", "mode": "momentary",
           "states": [
-            {
-              "value": 1,
-              "text": "Вкл",
-              "color": "#c8e6c9"
-            },
-            {
-              "value": 0,
-              "text": "Выкл",
-              "color": "#ffffff"
-            }
-          ]
-        },
-        {
-          "type": "button",
-          "name": "Джог Выкл",
-          "x": 20,
-          "y": 410,
-          "width": 100,
-          "height": 70,
-          "regAddress": 256,
-          "regType": "b7",
-          "mode": "momentary",
+            { "value": 1, "text": "Вкл", "color": "#c8e6c9" },
+            { "value": 0, "text": "Вкл", "color": "#ffffff" }
+          ] },
+
+        { "type": "button", "name": "Джог Выкл",
+          "x": 20, "y": 410, "width": 100, "height": 70,
+          "regAddress": 256, "regType": "b7", "mode": "momentary",
           "states": [
-            {
-              "value": 1,
-              "text": "Выкл",
-              "color": "#c8e6c9"
-            },
-            {
-              "value": 0,
-              "text": "Выкл",
-              "color": "#ffffff"
-            }
-          ]
-        }
+            { "value": 1, "text": "Выкл", "color": "#c8e6c9" },
+            { "value": 0, "text": "Выкл", "color": "#ffffff" }
+          ] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 895,
@@ -654,76 +271,32 @@
       "width": 160,
       "height": 345,
       "name": "Фильтр",
+
       "click": {
-        "regAddress": 20,
-        "regType": "b6",
+        "reg": "20:b6",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {
-          "reg": "20:b6",
-          "if": "== 1",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "20:b6",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        { "reg": "20:b6", "if": "== 1", "then": { "class": "on"  } },
+        { "reg": "20:b6", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:trend",
-      "popupData": {
-        "reg": 21,
-        "title": "Фильтр"
-      },
+      "popupData": { "reg": 21, "title": "Фильтр" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 95,
-          "text": "Фильтр"
-        },
-        {
-          "type": "image",
-          "x": 55,
-          "y": 20,
-          "src": "/images/filter-out.jpg",
-          "width": 50,
-          "height": 50,
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Температура",
-          "format": [
-            "%4.1f C",
-            "17:s2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 210,
-          "plain": true,
-          "text": "Влажность",
-          "format": [
-            "%4.1f %",
-            "18:u2",
-            0.1
-          ]
-        }
+        { "type": "only-title", "x": 20, "y": 95, "text": "Фильтр" },
+        { "type": "image", "x": 55, "y": 20, "src": "/images/filter-out.jpg",
+          "width": 50, "height": 50, "objectFit": "contain", "plain": true },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Температура", "format": ["%4.1f C", "17:s2", 0.1] },
+        { "type": "title-number", "x": 20, "y": 210, "plain": true,
+          "text": "Влажность", "format": ["%4.1f %", "18:u2", 0.1] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 895,
@@ -731,135 +304,39 @@
       "width": 440,
       "height": 345,
       "name": "Водяной охд./нагреватель",
+
       "longPress": "popup:menu",
-      "popupData": {
-        "reg": 22,
-        "title": "Положение крана"
-      },
+      "popupData": { "reg": 22, "title": "Положение крана" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 60,
-          "y": 30,
-          "text": "Водяной охд./нагреватель"
-        },
-        {
-          "type": "svg",
-          "x": 20,
-          "y": 75,
-          "src": "/icons/water-pump.svg",
-          "width": 50,
-          "height": 50,
-          "plain": true,
+        { "type": "only-title", "x": 60, "y": 30, "text": "Водяной охд./нагреватель" },
+        { "type": "svg", "x": 20, "y": 75, "src": "/icons/water-pump.svg",
+          "width": 50, "height": 50, "plain": true,
           "rules": [
-            {
-              "reg": "256:b8",
-              "if": "== 1",
-              "then": {
-                "pulse": "slow",
-                "color": "#2ecc71"
-              }
-            },
-            {
-              "reg": "256:b8",
-              "if": "== 0",
-              "then": {
-                "pulse": null,
-                "color": "#7f8c8d"
-              }
-            }
-          ]
-        },
-        {
-          "type": "toggle-button",
-          "x": 90,
-          "y": 70,
-          "plain": true,
-          "regAddress": 20,
-          "regType": "b7",
-          "textOff": "Насос вод.",
-          "textOn": "Насос вод."
-        },
-        {
-          "type": "title-number",
-          "x": 260,
-          "y": 90,
-          "plain": true,
-          "text": "Температура воды",
-          "format": [
-            "%4.1f С",
-            "10:u2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 260,
-          "y": 150,
-          "plain": true,
-          "text": "Давление воды",
-          "format": [
-            "%3d кПа",
-            "19:u2"
-          ]
-        },
-        {
-          "type": "image",
-          "x": 20,
-          "y": 180,
-          "src": "/images/valve.jpg",
-          "width": 50,
-          "height": 50,
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "toggle-button",
-          "x": 90,
-          "y": 170,
-          "plain": true,
-          "regAddress": 20,
-          "regType": "b8",
-          "textOff": "Кран 3-х.",
-          "textOn": "Кран 3-х."
-        },
-        {
-          "type": "title-number",
-          "x": 260,
-          "y": 210,
-          "plain": true,
-          "text": "Положение крана",
-          "format": [
-            "%2d",
-            "43:u2"
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 280,
-          "plain": true,
-          "text": "Температура воздуха",
-          "format": [
-            "%4.1f С",
-            "15:s2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 260,
-          "y": 280,
-          "plain": true,
-          "text": "Влажность воздуха",
-          "format": [
-            "%4.1f %",
-            "16:u2",
-            0.1
-          ]
-        }
+            { "reg": "256:b8", "if": "== 1", "then": { "pulse": "slow", "color": "#2ecc71" } },
+            { "reg": "256:b8", "if": "== 0", "then": { "pulse": null,   "color": "#7f8c8d" } }
+          ] },
+        { "type": "toggle-button", "x": 90, "y": 70, "plain": true,
+          "regAddress": 20, "regType": "b7",
+          "textOff": "Насос вод.", "textOn": "Насос вод." },
+        { "type": "title-number", "x": 260, "y": 90, "plain": true,
+          "text": "Температура воды", "format": ["%4.1f С", "10:u2", 0.1] },
+        { "type": "title-number", "x": 260, "y": 150, "plain": true,
+          "text": "Давление воды", "format": ["%3d кПа", "19:u2"] },
+        { "type": "image", "x": 20, "y": 180, "src": "/images/valve.jpg",
+          "width": 50, "height": 50, "objectFit": "contain", "plain": true },
+        { "type": "toggle-button", "x": 90, "y": 170, "plain": true,
+          "regAddress": 20, "regType": "b8",
+          "textOff": "Кран 3-х.", "textOn": "Кран 3-х." },
+        { "type": "title-number", "x": 260, "y": 210, "plain": true,
+          "text": "Положение крана", "format": ["%2d", "43:u2"] },
+        { "type": "title-number", "x": 20, "y": 280, "plain": true,
+          "text": "Температура воздуха", "format": ["%4.1f С", "15:s2", 0.1] },
+        { "type": "title-number", "x": 260, "y": 280, "plain": true,
+          "text": "Влажность воздуха", "format": ["%4.1f %", "16:u2", 0.1] }
       ]
     },
+
     {
       "type": "node-card",
       "x": 1345,
@@ -867,76 +344,32 @@
       "width": 150,
       "height": 345,
       "name": "Увлажнитель",
+
       "click": {
-        "regAddress": 45,
-        "regType": "u2",
+        "reg": "45:u2",
         "toggle": true,
         "confirm": true
       },
+
       "rules": [
-        {
-          "reg": "45:u2",
-          "if": "> 0",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "45:u2",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        { "reg": "45:u2", "if": "> 0",  "then": { "class": "on"  } },
+        { "reg": "45:u2", "if": "== 0", "then": { "class": "off" } }
       ],
+
       "longPress": "popup:trend",
-      "popupData": {
-        "reg": 23,
-        "title": "Увлажнитель"
-      },
+      "popupData": { "reg": 23, "title": "Увлажнитель" },
+
       "children": [
-        {
-          "type": "only-title",
-          "x": 20,
-          "y": 80,
-          "text": "Увлажни- тель"
-        },
-        {
-          "type": "image",
-          "x": 55,
-          "y": 20,
-          "src": "/images/hydro.jpg",
-          "width": 50,
-          "height": 50,
-          "objectFit": "contain",
-          "plain": true
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 150,
-          "plain": true,
-          "text": "Температура",
-          "format": [
-            "%4.1f С",
-            "13:u2",
-            0.1
-          ]
-        },
-        {
-          "type": "title-number",
-          "x": 20,
-          "y": 210,
-          "plain": true,
-          "text": "Влажность",
-          "format": [
-            "%5.1f %",
-            "14:u2",
-            0.1
-          ]
-        }
+        { "type": "only-title", "x": 20, "y": 80, "text": "Увлажни- тель" },
+        { "type": "image", "x": 55, "y": 20, "src": "/images/hydro.jpg",
+          "width": 50, "height": 50, "objectFit": "contain", "plain": true },
+        { "type": "title-number", "x": 20, "y": 150, "plain": true,
+          "text": "Температура", "format": ["%4.1f С", "13:u2", 0.1] },
+        { "type": "title-number", "x": 20, "y": 210, "plain": true,
+          "text": "Влажность", "format": ["%5.1f %", "14:u2", 0.1] }
       ]
     },
+
     {
       "type": "button",
       "name": "Режим работы",
@@ -948,16 +381,8 @@
       "regType": "b11",
       "mode": "maintained",
       "states": [
-        {
-          "value": 1,
-          "text": "Ручное",
-          "color": "#c7ab0b"
-        },
-        {
-          "value": 0,
-          "text": "Автомат",
-          "color": "#c8e6c9"
-        }
+        { "value": 1, "text": "Ручное",  "color": "#c7ab0b" },
+        { "value": 0, "text": "Автомат", "color": "#c8e6c9" }
       ],
       "confirm": true
     }
@@ -1509,7 +934,7 @@
       "y": 10
     },
     {
-      "regAddress": 20,
+      "regAddress": 256,
       "regType": "b0",
       "description": "Источник",
       "type": "toggle-button",
@@ -1519,7 +944,7 @@
       "y": 100
     },
     {
-      "regAddress": 20,
+      "regAddress": 256,
       "regType": "b1",
       "description": "Кнопка форсировки",
       "type": "toggle-button",

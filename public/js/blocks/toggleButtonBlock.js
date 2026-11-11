@@ -63,12 +63,10 @@ export class ToggleButtonBlock extends BaseBlock {
 
         button.addEventListener('click', async () => {
             if (isProcessing || button.disabled) return;
+            if (this.ctx.popup.isOpen()) return;
 
             const isOn = button.classList.contains('on');
             const newState = isOn ? 0 : 1;
-
-            const textOn = button.dataset.textOn || 'Вкл';
-            const textOff = button.dataset.textOff || 'Выкл';
 
             isProcessing = true;
             button.disabled = true;
@@ -76,17 +74,15 @@ export class ToggleButtonBlock extends BaseBlock {
 
             try {
                 await this.ctx.api.writeRegister(regAddress, newState, registerType);
-                await new Promise(resolve => setTimeout(resolve, 400));
-                await this.ctx.updater.update();
+                await new Promise(resolve => setTimeout(resolve, 50));
+                // Точечно — только этот регистр, а не весь буфер
+                await this.ctx.updater.updateToggle(regAddress);
             } catch (error) {
-                console.error('❌ Ошибка:', error);
+                console.error('❌ Ошибка toggle-button:', error);
                 button.textContent = '❌';
                 button.style.borderColor = 'red';
-
                 setTimeout(() => {
-                    button.textContent = isOn ? textOn : textOff;
                     button.style.borderColor = '';
-                    button.classList.remove('waiting');
                 }, 1500);
             } finally {
                 setTimeout(() => {

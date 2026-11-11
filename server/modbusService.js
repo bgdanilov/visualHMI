@@ -65,7 +65,7 @@ class ModbusService {
         if (!this.isInitialized || !this.source) {
             throw new Error('Данные не инициализированы');
         }
-        return this.source.subarray(0);
+        return Buffer.from(this.source);   // ← копия, атомарный снимок
     }
 
     getBufferName() {

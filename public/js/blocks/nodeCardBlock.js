@@ -154,13 +154,18 @@ export class NodeCardBlock extends BaseBlock {
 
     _setupClick(root) {
         const clickCfg = this.data.click;
-        if (!clickCfg || clickCfg.regAddress === undefined) return;
+        if (!clickCfg) return;
 
-        const regId   = parseInt(clickCfg.regAddress);
-        const regType = clickCfg.regType || 'b0';
-        const toggle  = clickCfg.toggle === true;
+        if (!clickCfg.reg) {
+            console.warn(`node-card "${this.data.name}": click без reg`);
+            return;
+        }
+
+        const { regId, regType } = splitRegSpec(clickCfg.reg, 'b0');
+
+        const toggle     = clickCfg.toggle === true;
         const fixedValue = clickCfg.value !== undefined ? parseFloat(clickCfg.value) : null;
-        const confirm = clickCfg.confirm === true;
+        const confirm    = clickCfg.confirm === true;
 
         root.addEventListener('click', async (e) => {
             if (this._suppressClick) { e.preventDefault(); e.stopPropagation(); return; }
@@ -168,48 +173,54 @@ export class NodeCardBlock extends BaseBlock {
             if (e.target.closest(INTERACTIVE_SELECTOR)) return;
             if (this._isProcessing) return;
 
-            let value;
-
-            if (toggle) {
-                // читаем текущее значение
-                let actual;
-                try {
-                    const dataView = await this.ctx.api.readModbus();
-                    actual = this.ctx.updater.readValue(dataView, regId * 2, regType);
-                } catch (err) {
-                    console.error('node-card click read error:', err);
-                    return;
-                }
-                if (actual === undefined || isNaN(actual)) return;
-                value = (Number(actual) === 0) ? 1 : 0;
-            } else {
-                if (fixedValue === null) {
-                    console.warn(`node-card "${this.data.name}": click без value и toggle`);
-                    return;
-                }
-                value = fixedValue;
-            }
-
-            if (confirm) {
-                const name = this.data.name || this.data.title || 'карточки';
-                const action = toggle ? (value === 1 ? 'включить' : 'выключить') : `записать ${value}`;
-                const ok = await this.ctx.confirm.ask({
-                    title: 'Вы уверены?',
-                    text: `Вы собираетесь <b>${action}</b> <b>${name}</b>.<br>Продолжить?`,
-                    confirmText: 'Да',
-                    cancelText: 'Отмена',
-                    danger: value === 0
-                });
-                if (!ok) return;
-            }
-
+            // Флаг ДО любого await — иначе двойной тап проходит
             this._isProcessing = true;
-            root.classList.add('sending');
 
             try {
+                let value;
+
+                if (toggle) {
+                    // Берём последний известный снимок (от регулярного опроса
+                    // или от предыдущего действия). Отдельный readModbus()
+                    // не нужен: сервер отдаёт mmap as-is, гонка только добавляется.
+                    const view = this.ctx.api.lastDataView;
+                    if (!view) {
+                        console.warn(`node-card "${this.data.name}": ещё нет данных с ПЛК`);
+                        return;
+                    }
+                    const actual = this.ctx.updater.readValue(view, regId * 2, regType);
+                    if (actual === undefined || isNaN(actual)) {
+                        console.warn(`node-card "${this.data.name}": не прочитать регистр ${regId}:${regType}`);
+                        return;
+                    }
+                    value = (Number(actual) === 0) ? 1 : 0;
+                } else {
+                    if (fixedValue === null) {
+                        console.warn(`node-card "${this.data.name}": click без value и toggle`);
+                        return;
+                    }
+                    value = fixedValue;
+                }
+
+                if (confirm) {
+                    const name = this.data.name || this.data.title || 'карточки';
+                    const action = toggle
+                        ? (value === 1 ? 'включить' : 'выключить')
+                        : `записать ${value}`;
+                    const ok = await this.ctx.confirm.ask({
+                        title: 'Вы уверены?',
+                        text: `Вы собираетесь <b>${action}</b> <b>${name}</b>.<br>Продолжить?`,
+                        confirmText: 'Да',
+                        cancelText: 'Отмена',
+                        danger: value === 0
+                    });
+                    if (!ok) return;
+                }
+
+                root.classList.add('sending');
                 await this.ctx.api.writeRegister(regId, value, regType);
                 await new Promise(r => setTimeout(r, 50));
-                await this.ctx.updater.update();
+                await this.ctx.updater.updateButton(regId);
             } catch (err) {
                 console.error('node-card click write error:', err);
                 root.style.borderColor = 'red';

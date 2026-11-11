@@ -54,14 +54,14 @@ export class ImageBlock extends BaseBlock {
         const initialSpinClass = spin ? this._resolveSpinClass(spinSpeed) : '';
 
         root.innerHTML = `
-            <img
-                src="${src}"
-                alt="${this.esc(alt)}"
-                title="${this.esc(title)}"
-                class="${initialSpinClass}"
-                style="object-fit: ${objectFit}; display: block; width: 100%; height: 100%;"
-                loading="lazy"
-            >`;
+        <img
+            src="${this.esc(src)}"
+            alt="${this.esc(alt)}"
+            title="${this.esc(title)}"
+            class="${initialSpinClass}"
+            style="object-fit: ${this.esc(objectFit)}; display: block; width: 100%; height: 100%;"
+            loading="lazy"
+        >`;
 
         const img = root.querySelector('img');
 

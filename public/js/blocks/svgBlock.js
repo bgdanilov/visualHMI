@@ -17,6 +17,12 @@ export class SvgBlock extends BaseBlock {
         root.style.justifyContent = 'center';
         root.style.transition = 'color 0.3s ease, opacity 0.3s ease, transform 0.3s ease';
         root.style.overflow = 'hidden'; // Оставляем, чтобы ничего не вылезало
+        
+        if (typeof src !== 'string' || !src.startsWith('/')) {
+            root.innerHTML = `<span style="color:#e74c3c; font-size:12px;">⚠️ Bad SVG src</span>`;
+            this.el = root;
+            return root;
+        }
 
         fetch(src)
             .then(res => {

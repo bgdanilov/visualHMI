@@ -247,7 +247,7 @@ export class ModbusUpdater {
                             const isOn = ((rawValue >> bitIndex) & 1) === 1;
                             button.classList.toggle('on', isOn);
                             button.classList.toggle('off', !isOn);
-                            button.classList.add('toggle-button');
+                           // button.classList.add('toggle-button');
                             if (button.dataset.textOn || button.dataset.textOff) {
                                 button.textContent = isOn
                                     ? (button.dataset.textOn || 'Вкл')
@@ -387,6 +387,39 @@ export class ModbusUpdater {
                 console.error('button onActual error:', e);
             }
         }
+    }
+
+    async updateToggle(regId) {
+        const key = String(regId);
+        const regInfo = this.caches.toggles.get(key);
+        if (!regInfo) return;
+
+        // Свежий снимок: нужен именно после writeRegister,
+        // lastDataView может быть от регулярного опроса ДО записи.
+        const dataView = await api.readModbus();
+        const bytesLength = dataView.byteLength;
+        const offset = parseInt(regId) * 2;
+        if (offset + 2 > bytesLength) return;
+
+        const rawValue = dataView.getUint16(offset, true);
+
+        regInfo.toggles.forEach(button => {
+            if (button.disabled) return;
+            const buttonRegType = button.dataset.type || regInfo.registerType || 'b0';
+            if (buttonRegType?.startsWith('b')) {
+                const bitIndex = parseInt(buttonRegType.substring(1));
+                if (bitIndex >= 0 && bitIndex <= 15) {
+                    const isOn = ((rawValue >> bitIndex) & 1) === 1;
+                    button.classList.toggle('on', isOn);
+                    button.classList.toggle('off', !isOn);
+                    if (button.dataset.textOn || button.dataset.textOff) {
+                        button.textContent = isOn
+                            ? (button.dataset.textOn || 'Вкл')
+                            : (button.dataset.textOff || 'Выкл');
+                    }
+                }
+            }
+        });
     }
 
     async updateSingleInput(regId) {

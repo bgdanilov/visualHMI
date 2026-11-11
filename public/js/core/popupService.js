@@ -15,6 +15,7 @@ class PopupService {
 
         // Регистрируем встроенные типы попапов
         this._registerBuiltins();
+        this._abort = null;
     }
 
     // ============ ПУБЛИЧНЫЙ API ============
@@ -26,14 +27,13 @@ class PopupService {
      * @param {HTMLElement} opts.anchor — элемент, рядом с которым позиционировать
      * @param {Object} [opts.data]  — данные для попапа
      */
-    show({ type, anchor, data = {} }) {
+     show({ type, anchor, data = {} }) {
         const render = this._renders.get(type);
         if (!render) {
             console.warn(`⚠️ popupService: неизвестный тип попапа "${type}"`);
             return;
         }
 
-        // Если открыт другой попап — закрыть
         if (this._popup) this._closeCurrent();
 
         this._type = type;
@@ -43,17 +43,21 @@ class PopupService {
         this._ensureBackdrop();
         this._ensurePopup();
 
-        // Рендер содержимого
-        render(this._popup, data, {
-            close: () => this.hide()
-        });
+        this._abort = new AbortController();
+        const signal = this._abort.signal;
 
-        // Позиционирование
-        this._position();
-
-        // Показать
-        this._popup.classList.add('visible');
-        this._backdrop.classList.add('visible');
+        try {
+            render(this._popup, data, {
+                close: () => this.hide(),
+                signal
+            });
+            this._position();
+            this._popup.classList.add('visible');
+            this._backdrop.classList.add('visible');
+        } catch (err) {
+            console.error('popupService: ошибка рендера попапа', err);
+            this._closeCurrent();
+        }
     }
 
     hide() {
@@ -75,6 +79,7 @@ class PopupService {
 
     _closeCurrent() {
         if (this._liveTimer) { clearInterval(this._liveTimer); this._liveTimer = null; }
+        if (this._abort) { this._abort.abort(); this._abort = null; }
         if (this._popup) this._popup.classList.remove('visible');
         if (this._backdrop) this._backdrop.classList.remove('visible');
         this._anchor = null;
@@ -139,7 +144,7 @@ class PopupService {
 
     _registerBuiltins() {
         // --- trend ---
-        this.register('trend', (popup, data, { close }) => {
+        this.register('trend', (popup, data, { close, signal }) => {
             popup.classList.add('trend-popup');
 
             const title = data.title || 'Тренд';
@@ -160,7 +165,7 @@ class PopupService {
             popup.querySelector('.popup-close').addEventListener('click', (e) => {
                 e.stopPropagation();
                 close();
-            });
+            }, { signal });
 
             // Заглушка истории — фейковые данные
             let history = this._generateSeries(30);
@@ -188,7 +193,7 @@ class PopupService {
         });
 
         // --- menu ---
-        this.register('menu', (popup, data, { close }) => {
+        this.register('menu', (popup, data, { close, signal }) => {
             popup.classList.add('ctx-popup');
 
             const title = data.title || 'Меню';
@@ -243,36 +248,35 @@ class PopupService {
                 </div>
             `;
 
-            popup.querySelector('.popup-close').addEventListener('click', (e) => {
-                e.stopPropagation();
-                close();
-            });
-
-            const slider = popup.querySelector('.slider');
-            const sliderVal = popup.querySelector('[data-slider-val]');
-            slider.addEventListener('input', (e) => {
-                sliderVal.textContent = e.target.value + ' %';
-            });
-            slider.addEventListener('change', (e) => {
-                console.log('Уставка влажности:', e.target.value, '% для', data.title);
-            });
-
-            popup.querySelectorAll('.ctx-item').forEach(item => {
-                item.addEventListener('click', (e) => {
+            this.register('menu', (popup, data, { close, signal }) => {
+                popup.classList.add('ctx-popup');
+                // ...popup.innerHTML без изменений...
+    
+                popup.querySelector('.popup-close').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const action = item.dataset.action;
-                    if (action === 'trend') {
-                        // Переоткрываем попап тренда для того же якоря
-                        const anchor = this._anchor;
-                        this.show({
-                            type: 'trend',
-                            anchor,
-                            data: { title }
-                        });
-                        return;
-                    }
-                    console.log('Действие:', action, 'для', data.title);
                     close();
+                }, { signal });
+    
+                const slider = popup.querySelector('.slider');
+                const sliderVal = popup.querySelector('[data-slider-val]');
+                slider.addEventListener('input', (e) => {
+                    sliderVal.textContent = e.target.value + ' %';
+                }, { signal });
+                slider.addEventListener('change', (e) => {
+                    console.log('Уставка влажности:', e.target.value, '% для', data.title);
+                }, { signal });
+    
+                popup.querySelectorAll('.ctx-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const action = item.dataset.action;
+                        if (action === 'trend') {
+                            this.show({ type: 'trend', anchor: this._anchor, data: { title } });
+                            return;
+                        }
+                        console.log('Действие:', action, 'для', data.title);
+                        close();
+                    }, { signal });
                 });
             });
         });
