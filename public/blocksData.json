@@ -78,10 +78,7 @@
           "y": 150,
           "plain": true,
           "text": "Температура",
-          "format": [
-            "%4.1f C",
-            "1:s2",
-            0.1
+          "format": ["%4.1f C", "1:s2", 0.1
           ]
         },
         {
@@ -189,20 +186,8 @@
         "confirm": true
       },
       "rules": [
-        {
-          "reg": "27:u2",
-          "if": "> 0",
-          "then": {
-            "class": "on"
-          }
-        },
-        {
-          "reg": "27:u2",
-          "if": "== 0",
-          "then": {
-            "class": "off"
-          }
-        }
+        {"reg": "27:u2", "if": "> 0", "then": {"class": "on"}},
+        {"reg": "27:u2", "if": "== 0", "then": {"class": "off"}}
       ],
       "longPress": "popup:trend",
       "popupData": {

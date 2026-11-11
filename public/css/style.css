@@ -100,7 +100,7 @@ p, span, h2 {
 
 .block .value,
 .node .value {
-    display: flex;
+   /* display: flex;*/
     justify-content: center;
     align-items: baseline;
     gap: 5px;
@@ -146,6 +146,10 @@ p, span, h2 {
 .node .postfix {
     white-space: pre;
     font-size: 1.2rem;
+}
+
+.node .value > span.number {
+    white-space: inherit;
 }
 
 /* ============================================
