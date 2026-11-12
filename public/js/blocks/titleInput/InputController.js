@@ -1,4 +1,5 @@
 // public/js/blocks/titleInput/InputController.js
+import { flash } from '../../utils/flash.js';
 
 const DECIMAL_WARNING_COOLDOWN_MS = 2000;
 
@@ -8,19 +9,8 @@ const DECIMAL_WARNING_COOLDOWN_MS = 2000;
  * — валидация и коррекция через ctx.validator
  * — открытие numpad
  * — сохранение одного поля (кнопка 💾)
- *
- * Все подписки на DOM-события устанавливаются в attach().
- * Состояние (numpadOpen, decimalWarningTimer) — внутри экземпляра.
  */
 export class InputController {
-    /**
-     * @param {Object} params
-     * @param {HTMLInputElement} params.input
-     * @param {HTMLButtonElement|null} params.resetBtn
-     * @param {HTMLButtonElement|null} params.saveBtn
-     * @param {ReturnType<import('../../utils/parseInputConfig.js').parseInputConfig>} params.cfg
-     * @param {Object} params.ctx — контекст блока (updater, validator, numpad, notification, api)
-     */
     constructor({ input, resetBtn, saveBtn, cfg, ctx }) {
         this.input    = input;
         this.resetBtn = resetBtn;
@@ -82,7 +72,7 @@ export class InputController {
             return true;
         }
         this.ctx.notification.error(result.error, { title: 'Ошибка ввода', duration: 3000 });
-        this._flashError();
+        flash(this.input, 'error');
         return false;
     }
 
@@ -92,26 +82,6 @@ export class InputController {
         const isDirty = this.ctx.updater.isDirty(this.regKey);
         this.input.classList.toggle('input-changed', isDirty);
         window.dispatchEvent(new CustomEvent('input-dirty-change'));
-    }
-
-    // ============ СТИЛИ (флаш ошибки) ============
-
-    _flashError() {
-        this.input.style.backgroundColor = '#ffebee';
-        this.input.style.borderColor = 'red';
-        setTimeout(() => {
-            this.input.style.backgroundColor = '';
-            this.input.style.borderColor = '#ccc';
-        }, 2000);
-    }
-
-    _flashSuccess() {
-        this.input.style.backgroundColor = '#e8f5e9';
-        this.input.style.borderColor = 'green';
-        setTimeout(() => {
-            this.input.style.backgroundColor = '';
-            this.input.style.borderColor = '#ccc';
-        }, 1000);
     }
 
     // ============ ПРЕДУПРЕЖДЕНИЕ О ДЕСЯТИЧНЫХ ============
@@ -152,11 +122,9 @@ export class InputController {
     }
 
     _bindInput() {
-        // Единственный input-обработчик: и фильтр формата, и dirty.
         this.input.addEventListener('input', () => {
             const v = this.input.value;
 
-            // Битовый регистр — в поле только 0 или 1
             if (this.isBit) {
                 const filtered = v.replace(/[^01]/g, '');
                 if (filtered !== v) {
@@ -310,7 +278,7 @@ export class InputController {
         const result = this._validate(value);
         if (!result.valid) {
             this.ctx.notification.error(result.error, { title: 'Ошибка валидации', duration: 4000 });
-            this._flashError();
+            flash(this.input, 'error');
             return false;
         }
 
@@ -333,14 +301,14 @@ export class InputController {
             await this.ctx.api.writeRegister(this.cfg.regAddress, finalValue, this.cfg.regType);
             this.ctx.updater.updateOriginalValue(this.cfg.regAddress, finalValue);
             this._updateDirtyState();
-            this._flashSuccess();
+            flash(this.input, 'success');
             this.ctx.notification.success(`Значение ${finalValue} сохранено`, {
                 title: 'Успешно', duration: 2000
             });
             return true;
         } catch (error) {
             console.error('❌ Ошибка сохранения:', error);
-            this._flashError();
+            flash(this.input, 'error');
             this.ctx.notification.error(error.message || 'Ошибка сохранения', {
                 title: 'Ошибка', duration: 4000
             });

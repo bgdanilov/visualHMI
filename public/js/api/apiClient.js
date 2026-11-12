@@ -5,6 +5,10 @@ class ApiClient {
     constructor() {
         this.baseUrl = '';
         this.timeout = CONFIG.API_TIMEOUT_MS;
+        // Последний успешный снимок /api/modbus.
+        // Обновляется ЛЮБЫМ успешным readModbus().
+        // Читатели (click-обработчики) используют его, если свежий запрос не нужен.
+        this.lastDataView = null;
     }
 
     async _fetchWithTimeout(url, options = {}) {
@@ -31,38 +35,32 @@ class ApiClient {
         const response = await this._fetchWithTimeout(
             `/api/loadConfig?file=${encodeURIComponent(fileName)}`
         );
-        
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
         return response.json();
     }
 
     async loadStaticJSON(fileName) {
         const response = await this._fetchWithTimeout(`/${fileName}`);
-        
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
         return response.json();
     }
 
     async readModbus() {
         const response = await this._fetchWithTimeout('/api/modbus');
-        
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
         const bytes = new Uint8Array(await response.arrayBuffer());
-        return new DataView(bytes.buffer);
+        const view = new DataView(bytes.buffer);
+        this.lastDataView = view;   // ← НОВОЕ
+        return view;
     }
 
-    // 🔥 БЕЗ ОКРУГЛЕНИЯ - просто отправляем то, что пришло
     async writeRegister(regId, value, registerType = 'u2') {
-        // Преобразуем в число, если нужно
         let numericValue;
         if (registerType === 'f4' || registerType === 'u2' || registerType === 's2') {
             numericValue = parseFloat(value);
@@ -78,30 +76,21 @@ class ApiClient {
             numericValue = value;
         }
 
-        console.log(`📤 Отправка регистра ${regId}:`, { 
-            значение: numericValue, 
-            тип: registerType 
-        });
-
         const response = await this._fetchWithTimeout(`/api/registers/${regId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                state: numericValue, 
-                registerType 
-            })
+            body: JSON.stringify({ state: numericValue, registerType })
         });
 
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
             throw new Error(error.error || `HTTP ${response.status}`);
         }
-
         return response.json();
     }
 
     async writeMultipleRegisters(registers) {
-        const promises = registers.map(({ regId, value, type }) => 
+        const promises = registers.map(({ regId, value, type }) =>
             this.writeRegister(regId, value, type)
         );
         return Promise.all(promises);

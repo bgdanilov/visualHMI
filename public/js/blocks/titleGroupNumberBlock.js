@@ -11,16 +11,16 @@ export class TitleGroupNumberBlock extends BaseBlock {
 
         let titleHtml = '';
         if (text) {
-            titleHtml = `<span class="title">${text}</span>`;
+            titleHtml = `<span class="title">${this.esc(text)}</span>`;
         }
 
         const rowsHtml = formatEntries.map(([formatString, regSpec, scale]) => {
             const p = parseBlockFormat(formatString, regSpec, scale);
             return `
                 <div class="value">
-                    <span class="prefix">${p.formatPrefix}</span>
-                    <span class="number" data-reg="${p.regAddress}" data-type="${p.regType}">--</span>
-                    <span class="postfix">${p.formatPostfix}</span>
+                    <span class="prefix">${this.esc(p.formatPrefix)}</span>
+                    <span class="number" data-reg="${p.regAddress}" data-type="${this.esc(p.regType)}">--</span>
+                    <span class="postfix">${this.esc(p.formatPostfix)}</span>
                 </div>`;
         }).join('');
 

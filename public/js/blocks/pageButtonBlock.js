@@ -9,9 +9,9 @@ export class PageButtonBlock extends BaseBlock {
         const targetPage = this.data.targetPage;
 
         root.innerHTML = `
-            <div class="value">
-                <button class="page-button" data-target="${targetPage}">${text}</button>
-            </div>`;
+        <div class="value">
+            <button class="page-button" data-target="${this.esc(targetPage)}">${this.esc(text)}</button>
+        </div>`;
 
         const btn = root.querySelector('.page-button');
         btn.addEventListener('click', () => {

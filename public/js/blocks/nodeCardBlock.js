@@ -1,6 +1,7 @@
 // public/js/blocks/nodeCardBlock.js
 import { BaseBlock } from './baseBlock.js';
 import { blockRegistry } from '../core/blockRegistry.js';
+import { parseRegSpec } from '../utils/regSpec.js';
 
 const HOLD_MS = 800;
 const TAP_THRESHOLD_MS = 200;
@@ -42,6 +43,14 @@ const HINT_ICONS = {
 
 const HINT_DEFAULT = HINT_ICONS.menu;
 
+/**
+ * node-card — карточка с детьми, click/longPress, rules.
+ *
+ * Шаг 1 (render): создаёт корень + рисует детей через blockRegistry.
+ * Шаг 2 (register): _registerRules() → updater.addNodeCardRules(...).
+ *   Дети регистрируются сами (каждый в своём render).
+ * Шаг 3 (update): updater.update() сам применяет rules к card.
+ */
 export class NodeCardBlock extends BaseBlock {
     constructor(data, context) {
         super(data, context);
@@ -50,7 +59,6 @@ export class NodeCardBlock extends BaseBlock {
         this._holdStartTime = 0;
         this._suppressClick = false;
         this._isProcessing = false;
-        this._pointerDown = false;
     }
 
     render() {
@@ -136,7 +144,7 @@ export class NodeCardBlock extends BaseBlock {
         const byReg = new Map();
         rules.forEach((rule, idx) => {
             if (!rule.reg) return;
-            const { regId, regType } = splitRegSpec(rule.reg, 'u2');
+            const { regId, regType } = parseRegSpec(rule.reg, 'u2');
             if (!byReg.has(regId)) byReg.set(regId, { regType, rules: [] });
             byReg.get(regId).rules.push({
                 expr: rule.if,
@@ -154,13 +162,18 @@ export class NodeCardBlock extends BaseBlock {
 
     _setupClick(root) {
         const clickCfg = this.data.click;
-        if (!clickCfg || clickCfg.regAddress === undefined) return;
+        if (!clickCfg) return;
 
-        const regId   = parseInt(clickCfg.regAddress);
-        const regType = clickCfg.regType || 'b0';
-        const toggle  = clickCfg.toggle === true;
+        if (!clickCfg.reg) {
+            console.warn(`node-card "${this.data.name}": click без reg`);
+            return;
+        }
+
+        const { regId, regType } = parseRegSpec(clickCfg.reg, 'b0');
+
+        const toggle     = clickCfg.toggle === true;
         const fixedValue = clickCfg.value !== undefined ? parseFloat(clickCfg.value) : null;
-        const confirm = clickCfg.confirm === true;
+        const confirm    = clickCfg.confirm === true;
 
         root.addEventListener('click', async (e) => {
             if (this._suppressClick) { e.preventDefault(); e.stopPropagation(); return; }
@@ -168,48 +181,50 @@ export class NodeCardBlock extends BaseBlock {
             if (e.target.closest(INTERACTIVE_SELECTOR)) return;
             if (this._isProcessing) return;
 
-            let value;
-
-            if (toggle) {
-                // читаем текущее значение
-                let actual;
-                try {
-                    const dataView = await this.ctx.api.readModbus();
-                    actual = this.ctx.updater.readValue(dataView, regId * 2, regType);
-                } catch (err) {
-                    console.error('node-card click read error:', err);
-                    return;
-                }
-                if (actual === undefined || isNaN(actual)) return;
-                value = (Number(actual) === 0) ? 1 : 0;
-            } else {
-                if (fixedValue === null) {
-                    console.warn(`node-card "${this.data.name}": click без value и toggle`);
-                    return;
-                }
-                value = fixedValue;
-            }
-
-            if (confirm) {
-                const name = this.data.name || this.data.title || 'карточки';
-                const action = toggle ? (value === 1 ? 'включить' : 'выключить') : `записать ${value}`;
-                const ok = await this.ctx.confirm.ask({
-                    title: 'Вы уверены?',
-                    text: `Вы собираетесь <b>${action}</b> <b>${name}</b>.<br>Продолжить?`,
-                    confirmText: 'Да',
-                    cancelText: 'Отмена',
-                    danger: value === 0
-                });
-                if (!ok) return;
-            }
-
             this._isProcessing = true;
-            root.classList.add('sending');
 
             try {
+                let value;
+
+                if (toggle) {
+                    const view = this.ctx.api.lastDataView;
+                    if (!view) {
+                        console.warn(`node-card "${this.data.name}": ещё нет данных с ПЛК`);
+                        return;
+                    }
+                    const actual = this.ctx.updater.readValue(view, regId * 2, regType);
+                    if (actual === undefined || isNaN(actual)) {
+                        console.warn(`node-card "${this.data.name}": не прочитать регистр ${regId}:${regType}`);
+                        return;
+                    }
+                    value = (Number(actual) === 0) ? 1 : 0;
+                } else {
+                    if (fixedValue === null) {
+                        console.warn(`node-card "${this.data.name}": click без value и toggle`);
+                        return;
+                    }
+                    value = fixedValue;
+                }
+
+                if (confirm) {
+                    const name = this.data.name || this.data.title || 'карточки';
+                    const action = toggle
+                        ? (value === 1 ? 'включить' : 'выключить')
+                        : `записать ${value}`;
+                    const ok = await this.ctx.confirm.ask({
+                        title: 'Вы уверены?',
+                        text: `Вы собираетесь <b>${action}</b> <b>${name}</b>.<br>Продолжить?`,
+                        confirmText: 'Да',
+                        cancelText: 'Отмена',
+                        danger: value === 0
+                    });
+                    if (!ok) return;
+                }
+
+                root.classList.add('sending');
                 await this.ctx.api.writeRegister(regId, value, regType);
                 await new Promise(r => setTimeout(r, 50));
-                await this.ctx.updater.update();
+                await this.ctx.updater.updateButton(regId);
             } catch (err) {
                 console.error('node-card click write error:', err);
                 root.style.borderColor = 'red';
@@ -230,7 +245,6 @@ export class NodeCardBlock extends BaseBlock {
         root.addEventListener('pointerdown', (e) => {
             if (e.button !== undefined && e.button !== 0) return;
             if (e.target.closest(INTERACTIVE_SELECTOR)) return;
-            this._pointerDown = true;
             this._holdStartTime = Date.now();
 
             root.style.setProperty('--hold-ms', HOLD_MS + 'ms');
@@ -252,7 +266,6 @@ export class NodeCardBlock extends BaseBlock {
                 this._holdTimer = null;
             }
             root.classList.remove('holding');
-            this._pointerDown = false;
 
             const heldFor = Date.now() - this._holdStartTime;
             if (heldFor >= TAP_THRESHOLD_MS) {
@@ -281,15 +294,4 @@ export class NodeCardBlock extends BaseBlock {
             console.warn(`node-card: неизвестное действие longPress "${action}"`);
         }
     }
-}
-
-/** "9:u2" → { regId: 9, regType: "u2" }, "9" → { regId: 9, regType: defaultType } */
-function splitRegSpec(spec, defaultType) {
-    if (typeof spec === 'number') return { regId: spec, regType: defaultType };
-    const s = String(spec);
-    if (s.includes(':')) {
-        const [addr, type] = s.split(':');
-        return { regId: parseInt(addr), regType: type || defaultType };
-    }
-    return { regId: parseInt(s), regType: defaultType };
 }

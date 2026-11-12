@@ -12,14 +12,14 @@ export class TitleNumberBlock extends BaseBlock {
         }
 
         const p = parseBlockFormat(this.data.format[0], this.data.format[1], this.data.format[2]);
-        const text = (this.data.text || '').replace(/\n/g, '<br>');
+        const text = this.esc(this.data.text || '').replace(/\n/g, '<br>');
 
         root.innerHTML = `
             <span class="title">${text}</span>
             <div class="value">
-                <span class="prefix">${p.formatPrefix}</span>
-                <span class="number" data-reg="${p.regAddress}" data-type="${p.regType}">--</span>
-                <span class="postfix">${p.formatPostfix}</span>
+                <span class="prefix">${this.esc(p.formatPrefix)}</span>
+                <span class="number" data-reg="${p.regAddress}" data-type="${this.esc(p.regType)}">--</span>
+                <span class="postfix">${this.esc(p.formatPostfix)}</span>
             </div>`;
 
         this.el = root;

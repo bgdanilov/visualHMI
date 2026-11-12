@@ -25,11 +25,11 @@ export class OnlyNumberBlock extends BaseBlock {
         }
 
         root.innerHTML = `
-            <div class="value">
-                <span class="prefix">${prefix}</span>
-                <span class="number" data-reg="${regAddress}" data-type="${regType}">${value}</span>
-                <span class="postfix">${postfix}</span>
-            </div>`;
+        <div class="value">
+            <span class="prefix">${this.esc(prefix)}</span>
+            <span class="number" data-reg="${regAddress}" data-type="${this.esc(regType)}">${value}</span>
+            <span class="postfix">${this.esc(postfix)}</span>
+        </div>`;
 
         this.el = root;
 
