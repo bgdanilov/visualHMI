@@ -36,9 +36,7 @@
 | `plain` | нет | boolean | `true` | Без фона/рамки |
 
 **Пример:**
-```json
 { "type": "only-title", "x": 20, "y": 20, "text": "Заслонка входная", "plain": true }
-```
 
 ---
 
@@ -58,14 +56,10 @@
 \* Либо `format`, либо `regAddress` + `regType`.
 
 **Пример (с format):**
-```json
 { "type": "only-number", "x": 20, "y": 80, "format": ["P = %4.1f кВт", 2], "plain": true }
-```
 
 **Пример (без format):**
-```json
 { "type": "only-number", "x": 20, "y": 80, "regAddress": 2, "regType": "f4", "prefix": "P = ", "postfix": " кВт" }
-```
 
 ---
 
@@ -80,7 +74,6 @@
 | `plain` | нет | boolean | `true` | Без фона/рамки |
 
 **Пример:**
-```json
 {
   "type": "title-number",
   "x": 20, "y": 150,
@@ -88,7 +81,6 @@
   "format": ["%4.1f С", 0],
   "plain": true
 }
-```
 
 ---
 
@@ -103,7 +95,6 @@
 | `plain` | нет | boolean | `true` | Без фона/рамки |
 
 **Пример:**
-```json
 {
   "type": "title-group-number",
   "x": 20, "y": 160,
@@ -113,7 +104,6 @@
     ["Влажность%4i %", 2]
   ]
 }
-```
 
 > Все строки, кроме первой, выровнены по правому краю.
 
@@ -136,7 +126,6 @@
 | `plain` | нет | boolean | `true` | Без фона/рамки |
 
 **Пример:**
-```json
 {
   "type": "toggle-button",
   "x": 20, "y": 260,
@@ -147,7 +136,6 @@
   "prefix": "Заслонка: ",
   "plain": true
 }
-```
 
 > Клик → запись `0/1` в регистр, подтверждение не спрашивается (для подтверждения — используй `node-card` с `toggle: true`).
 
@@ -163,9 +151,7 @@
 | `targetPage` | да | string | `"main"` | Ключ страницы из `blocksData.json` |
 
 **Пример:**
-```json
 { "type": "page-button", "x": 20, "y": 20, "text": "На главную", "targetPage": "main" }
-```
 
 > `targetPage` должен существовать в `blocksData.json` как ключ верхнего уровня (`main`, `shit`, `settings`).
 
@@ -184,14 +170,12 @@
 > Для каждого регистра должен быть `title-input` на этой же странице с тем же `regAddress`.
 
 **Пример:**
-```json
 {
   "type": "send-button",
   "x": 400, "y": 430,
   "regAddress": [16, 18, 20, 21],
   "text": "Сохранить"
 }
-```
 
 ---
 
@@ -217,7 +201,6 @@
 | `plain` | нет | boolean | `true` | Без фона/рамки |
 
 **Пример:**
-```json
 {
   "type": "image",
   "x": 55, "y": 20,
@@ -226,7 +209,6 @@
   "objectFit": "contain",
   "plain": true
 }
-```
 
 ---
 
@@ -245,13 +227,11 @@
 | `plain` | нет | boolean | `true` | Без фона/рамки |
 
 **Правило:**
-```json
 {
   "reg": "20:b2",
   "if": "== 1",
   "then": { "spin": "normal", "color": "#2ecc71" }
 }
-```
 
 | Поле | Обяз. | Описание |
 |---|---|---|
@@ -285,7 +265,6 @@
 | `scale` | number | `1.5` | Масштаб |
 
 **Пример:**
-```json
 {
   "type": "svg",
   "x": 60, "y": 20,
@@ -297,7 +276,6 @@
     { "reg": "20:b2", "if": "== 0", "then": { "spin": null, "color": "#7f8c8d" } }
   ]
 }
-```
 
 ---
 
@@ -323,7 +301,6 @@
 \* Либо `format`, либо `regAddress` + `regType`.
 
 **Пример:**
-```json
 {
   "type": "title-input",
   "x": 400, "y": 210,
@@ -333,7 +310,6 @@
   "max": 100,
   "size": 5
 }
-```
 
 > Клик по полю открывает numpad. `Enter` — сохранить в поле. `Esc` — отменить.
 > Для битовых регистров (`b0`…) numpad разрешает только `0` и `1`.
@@ -351,13 +327,17 @@
 | `width` | нет | number | `160` | Ширина (по умолчанию 210) |
 | `height` | нет | number | `345` | Высота (по умолчанию 345) |
 | `name` | нет | string | `"Заслонка"` | Имя для confirm/popup |
-| `toggle` | нет | boolean | `true` | Клик по пустому месту шлёт запись |
-| `regAddress` | если `toggle` | number | `20` | Номер регистра |
-| `regType` | если `toggle` | string | `"b0"` | Тип |
-| `requireConfirm` | нет | boolean | `true` | Спрашивать подтверждение (по умолчанию `true`) |
+| `click` | нет | object | `{"reg": "20:b0", "toggle": true, "confirm": true}` | Поведение по клику |
+| `rules` | нет | array | `[...]` | Правила для визуального состояния (добавляют классы `on`/`off`) |
 | `longPress` | нет | string | `"popup:trend"` | Действие по долгому нажатию |
 | `popupData` | нет | object | `{"reg": 16, "title": "Заслонка"}` | Данные для popup |
 | `children` | нет | array | `[...]` | Дочерние блоки |
+
+**`click` — объект:**
+- `reg` — `"N:type"` (например, `"20:b0"`).
+- `toggle` — если `true`, читает текущее и пишет инвертированное (0→1, 1→0).
+- `confirm` — если `true`, спрашивает «Вы уверены?».
+- `value` — если `toggle: false`, пишет это фиксированное значение.
 
 **`longPress` — варианты:**
 
@@ -373,16 +353,20 @@
 Любой блок из этого документа, кроме `node-card` (вложенность запрещена). Координаты `x`/`y` детей — **относительно карточки**, не холста.
 
 **Пример:**
-```json
 {
   "type": "node-card",
   "x": 395, "y": 180,
   "width": 160, "height": 345,
   "name": "Заслонка выходная",
-  "toggle": true,
-  "regAddress": 20,
-  "regType": "b1",
-  "requireConfirm": true,
+  "click": {
+    "reg": "256:b0",
+    "toggle": true,
+    "confirm": true
+  },
+  "rules": [
+    { "reg": "256:b0", "if": "== 1", "then": { "class": "on"  } },
+    { "reg": "256:b0", "if": "== 0", "then": { "class": "off" } }
+  ],
   "longPress": "popup:trend",
   "popupData": { "reg": 17, "title": "Заслонка выходная" },
   "children": [
@@ -393,14 +377,79 @@
       "text": "Температура", "format": ["%4.1f С", 0] }
   ]
 }
-```
 
 **Поведение:**
-- `toggle: true` — клик по пустому месту → confirm → запись.
-- `toggle: false` — клик по пустому месту **ничего не делает**.
+- `click.toggle: true` — клик по пустому месту → confirm (если `confirm: true`) → запись инвертированного значения.
+- `click.toggle: false` — клик по пустому месту пишет `click.value`.
+- Нет `click` — клик по пустому месту ничего не делает.
 - Клик по кнопкам/полям внутри — обрабатывается ими, карточка не реагирует.
-- Долгое нажатие (500 мс) — открывает `longPress`-popup.
+- Долгое нажатие (800 мс) — открывает `longPress`-popup.
 - Иконка в левом верхнем углу — подсказка (стрелка / три точки / шестерёнка).
+
+---
+
+### 12. `button` — простая кнопка со стейтами
+
+Кнопка с фиксированными состояниями. Поддерживает два режима: `maintained` (переключение по клику) и `momentary` (нажал-отпустил).
+
+| Поле | Обяз. | Тип | Пример | Описание |
+|---|---|---|---|---|
+| `type` | да | string | `"button"` | — |
+| `x`, `y` | да | number | `20`, `330` | Позиция |
+| `width` | нет | number | `100` | Ширина (по умолчанию 140) |
+| `height` | нет | number | `70` | Высота (по умолчанию 50) |
+| `name` | нет | string | `"Джог Вкл"` | Имя для confirm |
+| `regAddress` | да | number | `256` | Номер регистра |
+| `regType` | да | string | `"b6"` | Тип |
+| `mode` | нет | string | `"momentary"` | `maintained` (по умолчанию) / `momentary` |
+| `states` | да | array | `[...]` | Массив состояний |
+| `confirm` | нет | boolean | `true` | Спрашивать подтверждение (только для `maintained`) |
+| `inversion` | нет | boolean | `true` | Перевернуть on/off визуально |
+| `plain` | нет | boolean | `true` | Без фона/рамки |
+
+**Элемент `states`:**
+{ "value": 1, "text": "Вкл", "color": "#c8e6c9", "class": "on" }
+
+- `value` — что писать в регистр.
+- `text` — текст на кнопке.
+- `color` — цвет фона.
+- `class` — CSS-класс (опционально).
+
+**Пример (maintained):**
+{
+  "type": "button",
+  "name": "Режим работы",
+  "x": 125, "y": 915,
+  "width": 140,
+  "height": 80,
+  "regAddress": 256,
+  "regType": "b11",
+  "mode": "maintained",
+  "confirm": true,
+  "states": [
+    { "value": 1, "text": "Ручное",  "color": "#c7ab0b" },
+    { "value": 0, "text": "Автомат", "color": "#c8e6c9" }
+  ]
+}
+
+**Пример (momentary):**
+{
+  "type": "button",
+  "name": "Джог Вкл",
+  "x": 20, "y": 330,
+  "width": 100, "height": 70,
+  "regAddress": 256,
+  "regType": "b6",
+  "mode": "momentary",
+  "states": [
+    { "value": 1, "text": "Вкл", "color": "#c8e6c9" },
+    { "value": 0, "text": "Вкл", "color": "#ffffff" }
+  ]
+}
+
+**Поведение:**
+- `maintained` — клик переключает на следующее состояние по кругу. Если `confirm: true` — спрашивает.
+- `momentary` — `pointerdown` пишет `states[0].value`, `pointerup` — `states[1].value`. Без confirm.
 
 ---
 
@@ -433,7 +482,6 @@
 
 ## 📄 Пример полной страницы
 
-```json
 {
   "main": [
     { "type": "page-button", "x": 10, "y": 10, "text": "Настройки", "targetPage": "settings" },
@@ -443,10 +491,11 @@
       "x": 100, "y": 100,
       "width": 200, "height": 300,
       "name": "Приточка",
-      "toggle": true,
-      "regAddress": 20,
-      "regType": "b0",
-      "requireConfirm": true,
+      "click": { "reg": "20:b0", "toggle": true, "confirm": true },
+      "rules": [
+        { "reg": "20:b0", "if": "== 1", "then": { "class": "on"  } },
+        { "reg": "20:b0", "if": "== 0", "then": { "class": "off" } }
+      ],
       "longPress": "popup:trend",
       "popupData": { "reg": 16, "title": "Приточка" },
       "children": [
@@ -477,7 +526,6 @@
     }
   ]
 }
-```
 
 ---
 
@@ -491,7 +539,7 @@
 | `format` не работает | Неправильный спецификатор | См. «Формат числа» |
 | Кнопка «Сохранить» неактивна | Нет «грязных» `title-input` с этими регистрами | Измени значение в `title-input` |
 | `popup` не открывается | `longPress` = `"popup:xxx"`, но `xxx` не зарегистрирован | См. «longPress — варианты» |
-| `node-card` не реагирует на клик | `toggle: false` | Поставь `"toggle": true` и `regAddress` |
+| `node-card` не реагирует на клик | Нет `click` или `click.toggle: false` без `value` | Поставь `"click": { "reg": "20:b0", "toggle": true }` |
 | `node-card` не реагирует на long-press | Драйвер не генерирует `pointerdown` | Проверь в DevTools Console |
 
 ---
